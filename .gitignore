@@ -1,6 +1,6 @@
 x64
 Resources
 *.sln
-*.vcproj
-*.vcproj.filters
-*.vcproj.user
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
