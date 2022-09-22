@@ -80,6 +80,123 @@ class GraphObject {
 			polygon->second.draw(cnt, shader_program);
 	}
 
+	std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
+		std::vector<Texture> textures;
+		for (unsigned int i = 0; i < material->GetTextureCount(type); i++) {
+			aiString str;
+			material->GetTexture(type, i, &str);
+
+			std::string path(str.data);
+			if (path[0] == '*') {
+				path.erase(path.begin());
+				path = "inline_texture" + path + "." + std::string(scene->mTextures[std::stoi(path)]->achFormatHint);
+			}
+
+			Texture texture(directory + "/" + path, true);
+			textures.push_back(texture);
+		}
+		return textures;
+	}
+
+	Polygon process_mesh(aiMesh* mesh, const aiScene* scene, std::string& directory, Matrix transform) {
+		std::vector < Vect2 > tex_coords;
+		std::vector < Vect3 > positions, normals;
+		std::vector<unsigned int> indices;
+
+		Matrix norm_transform = transform.inverse().transpose();
+		for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+			positions.push_back(transform * Vect3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
+			normals.push_back(norm_transform * Vect3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
+			if (mesh->mTextureCoords[0])
+				tex_coords.push_back(Vect2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
+			else
+				tex_coords.push_back(Vect2(0, 0));
+		}
+		Polygon polygon_mesh(positions.size());
+		polygon_mesh.set_positions(positions, false);
+		polygon_mesh.set_normals(normals);
+		polygon_mesh.set_tex_coords(tex_coords);
+
+		for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+			aiFace face = mesh->mFaces[i];
+			for (unsigned int j = 0; j < face.mNumIndices; j++)
+				indices.push_back(face.mIndices[j]);
+		}
+		//std::reverse(indices.begin(), indices.end());
+		polygon_mesh.set_indices(indices);
+
+		polygon_mesh.material.diffuse = Vect3(1, 1, 1);
+		if (mesh->mMaterialIndex >= 0) {
+			aiColor3D color(0, 0, 0);
+			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+			std::vector<Texture> diffuse_textures = loadMaterialTextures(material, aiTextureType_DIFFUSE, scene, directory);
+			if (!diffuse_textures.empty())
+				polygon_mesh.material.diffuse_map = diffuse_textures[0];
+			//std::cout << material->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
+
+			std::vector<Texture> specular_textures = loadMaterialTextures(material, aiTextureType_SPECULAR, scene, directory);
+			if (!specular_textures.empty())
+				polygon_mesh.material.specular_map = specular_textures[0];
+			//std::cout << material->GetTextureCount(aiTextureType_SPECULAR) << "\n";
+
+			std::vector<Texture> emissive_textures = loadMaterialTextures(material, aiTextureType_EMISSIVE, scene, directory);
+			if (!emissive_textures.empty())
+				polygon_mesh.material.emission_map = emissive_textures[0];
+			//std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";
+
+			material->Get(AI_MATKEY_COLOR_AMBIENT, color);
+			polygon_mesh.material.ambient = Vect3(color.r, color.g, color.b);
+			//polygon_mesh.material.ambient.print();
+
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+			polygon_mesh.material.diffuse = Vect3(color.r, color.g, color.b);
+			//polygon_mesh.material.diffuse.print();
+
+			material->Get(AI_MATKEY_COLOR_SPECULAR, color);
+			polygon_mesh.material.specular = Vect3(color.r, color.g, color.b);
+			//polygon_mesh.material.specular.print();
+
+			material->Get(AI_MATKEY_COLOR_EMISSIVE, color);
+			polygon_mesh.material.emission = Vect3(color.r, color.g, color.b);
+			//polygon_mesh.material.emission.print();
+
+			float opacity;
+			material->Get(AI_MATKEY_OPACITY, opacity);
+			polygon_mesh.material.alpha = opacity;
+			//std::cout << polygon_mesh.material.alpha << "\n";
+
+			float shininess;
+			material->Get(AI_MATKEY_SHININESS, shininess);
+			polygon_mesh.material.shininess = shininess;
+			//std::cout << polygon_mesh.material.shininess << "\n";
+
+			if (polygon_mesh.material.shininess > 0)
+				polygon_mesh.material.specular = Vect3(1, 1, 1);
+		}
+
+		return polygon_mesh;
+	}
+
+	void process_node(aiNode* node, const aiScene* scene, std::string& directory, Matrix transform) {
+		Matrix trans(4, 4, 0);
+		aiMatrix4x4 cur_transform = node->mTransformation;
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++)
+				trans[i][j] = cur_transform[i][j];
+		}
+		transform = trans * transform;
+
+		for (int i = 0; i < node->mNumMeshes; i++) {
+			polygons[polygons.size()] = process_mesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform);
+			polygons[polygons.size() - 1].set_matrix_buffer(matrix_buffer);
+		}
+
+		for (unsigned int i = 0; i < node->mNumChildren; i++) {
+			process_node(node->mChildren[i], scene, directory, transform);
+		}
+	}
+
 public:
 	bool transparent = false;
 
@@ -417,6 +534,30 @@ public:
 
 		Matrix model_matrix = get_matrix(model_id);
 		change_matrix(model_matrix * scale_matrix(scale) * model_matrix.inverse(), model_id);
+	}
+
+	void import_from_file(std::string path) {
+		polygons.clear();
+
+		Assimp::Importer importer;
+		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals);
+
+		if (scene == NULL || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || scene->mRootNode == NULL) {
+			std::cout << "ERROR::GRAPH_OBJECT::IMPORT\n" << importer.GetErrorString() << "\n";
+			assert(0);
+		}
+		std::string directory = path.substr(0, path.find_last_of('/'));
+
+		for (int i = 0; i < scene->mNumTextures; i++) {
+			aiTexture* tex = scene->mTextures[i];
+
+			if (tex->mHeight == 0) {
+				std::ofstream fout(directory + "/inline_texture" + std::to_string(i) + "." + std::string(tex->achFormatHint), std::ios::binary);
+				fout.write((const char*)tex->pcData, tex->mWidth);
+			}
+		}
+
+		process_node(scene->mRootNode, scene, directory, one_matrix(4));
 	}
 
 	~GraphObject() {

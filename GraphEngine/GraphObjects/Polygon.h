@@ -64,7 +64,7 @@ class Polygon {
 	Matrix polygon_trans = one_matrix(4);
 
 	int count_points;
-	unsigned int vertex_array, vertex_buffer, index_buffer;
+	unsigned int vertex_array = 0, vertex_buffer = 0, index_buffer = 0;
 	std::vector < Vect2 > tex_coords;
 	std::vector < Vect3 > positions, normals;
 	std::vector < unsigned int > indices;
@@ -104,25 +104,23 @@ class Polygon {
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(float) * 6 * count_points));
 		glEnableVertexAttribArray(2);
 
-		if (count_points > 0) {
-			glGenBuffers(1, &index_buffer);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+		glGenBuffers(1, &index_buffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
 
+		if (count_points > 0 && indices.empty()) {
 			indices.resize((count_points - 2) * 3);
 			for (int i = 0; i < count_points - 2; i++) {
 				indices[3 * i] = 0;
 				indices[3 * i + 1] = i + 1;
 				indices[3 * i + 2] = i + 2;
 			}
-
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
 		}
+		if (!indices.empty())
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)* indices.size(), &indices[0], GL_STATIC_DRAW);
 
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		if (count_points > 0)
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
 	void delete_uniforms(Shader* shader_program) {
@@ -167,8 +165,6 @@ public:
 		positions.resize(count_points);
 		normals.resize(count_points);
 		tex_coords.resize(count_points);
-		vertex_array = 0;
-		vertex_buffer = 0;
 		
 		create_vertex_array();
 	}
@@ -192,7 +188,6 @@ public:
 		set_matrix_buffer(other.matrix_buffer);
 
 		glBindVertexArray(vertex_array);
-		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 		glBindBuffer(GL_COPY_READ_BUFFER, other.vertex_buffer);
 		glBindBuffer(GL_COPY_WRITE_BUFFER, vertex_buffer);
 
@@ -200,7 +195,6 @@ public:
 
 		glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
 		glBindBuffer(GL_COPY_READ_BUFFER, 0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 
 		return *this;

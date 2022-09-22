@@ -52,7 +52,7 @@ float calc_shadow(Light light, vec3 light_dir, vec3 normal, int id) {
     if (!light.shadow)
         return 0.0;
 
-    float bias = 0.001;
+    float bias = 0.01;
     
     vec4 frag_pos_light_space = light.light_space * vec4(frag_pos, 1.0);
     frag_pos_light_space = frag_pos_light_space / frag_pos_light_space.w;

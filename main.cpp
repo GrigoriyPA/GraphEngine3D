@@ -1,5 +1,6 @@
 #include <chrono>
 #include <iostream>
+#include <stdio.h>
 #include <string>
 #include "GraphEngine/GraphEngine.h"
 #include "config.h"
@@ -77,7 +78,11 @@ signed main() {
 
     RenderingSequence render(&scene);
 
-    int obj_id = scene.add_object(get_cube(3));
+    int obj_id = scene.add_object(GraphObject(1));
+    scene[obj_id].import_from_file("Resources/Objects/test_car/thunder_master_hypercar_mark_i_by_alex.ka..glb");
+    scene[obj_id].add_model(scale_matrix(Vect3(-1, 1, 1)) * trans_matrix(Vect3(0, -0.5, 5)) * rotate_matrix(Vect3(0, 1, 0), PI));
+    
+    /*obj_id = scene.add_object(get_cube(3));
     Material material;
     material.shininess = 64;
     material.diffuse_map = Texture("Resources/Textures/diffuse/box.png");
@@ -105,7 +110,6 @@ signed main() {
     obj->scene_id = { obj_id, model_id };
     render.add_object(obj);
 
-
     obj_id = scene.add_object(GraphObject(1));
     int pol_id = scene[obj_id].add_polygon(Polygon(4));
     scene[obj_id][pol_id].set_positions({
@@ -127,9 +131,9 @@ signed main() {
     obj = new Point(Vect3(0, 0, 0), loc_id, &scene);
     scene.delete_object(loc_id, 0);
     obj->scene_id = { obj_id, model_id };
-    render.add_object(obj);
+    render.add_object(obj);*
 
-    SpotLight light(Vect3(-2, -2, -2), Vect3(1, 1, 1), PI / 4.0, 1.2 * PI / 4.0);
+    SpotLight light(Vect3(2, 2, 2), Vect3(-1, -1, 1), PI / 4.0, 1.2 * PI / 4.0);
     light.ambient = Vect3(0.1, 0.1, 0.1);
     light.diffuse = Vect3(0.6, 0.6, 0.6);
     light.specular = Vect3(0.8, 0.8, 0.8);
@@ -137,8 +141,36 @@ signed main() {
     light.set_shadow_distance(1, 40);
     light.shadow = true;
     scene.set_light(1, &light);
-    scene.add_object(light.get_light_object());
+    scene.add_object(light.get_light_object());*/
     //scene.add_object(light.get_shadow_box());
+
+    obj_id = scene.add_object(GraphObject(1));
+    int pol_id = scene[obj_id].add_polygon(Polygon(4));
+    scene[obj_id][pol_id].set_positions({
+        Vect3(1, 0, 1),
+        Vect3(1, 0, -1),
+        Vect3(-1, 0, -1),
+        Vect3(-1, 0, 1)
+    });
+    scene[obj_id][pol_id].set_tex_coords({
+        Vect2(1, 1),
+        Vect2(1, 0),
+        Vect2(0, 0),
+        Vect2(0, 1)
+    });
+    scene[obj_id][pol_id].invert_points_order();
+    scene[obj_id][pol_id].material.diffuse = Vect3(1, 1, 1);
+    scene[obj_id][pol_id].material.alpha = 0.5;
+    scene[obj_id].transparent = true;
+    scene[obj_id].add_model(trans_matrix(Vect3(0, -0.5, 5)) * scale_matrix(10));
+
+    DirLight light(Vect3(-1, -1, 1));
+    light.ambient = Vect3(0.1, 0.1, 0.1);
+    light.diffuse = Vect3(0.6, 0.6, 0.6);
+    light.specular = Vect3(0.8, 0.8, 0.8);
+    light.shadow_position = Vect3(2, 0, 2);
+    light.shadow = true;
+    scene.set_light(1, &light);
     
 
     for (; window_interface.running; ) {

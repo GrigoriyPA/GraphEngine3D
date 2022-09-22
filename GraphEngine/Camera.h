@@ -30,7 +30,7 @@ public:
 		direction = Vect3(0, 0, 1);
 
 		last_position = position;
-		horizont = direction.horizont();
+		horizont = -direction.horizont();
 
 		set_projection_matrix();
 	}
@@ -50,7 +50,7 @@ public:
 
 		last_position = position;
 
-		horizont = direction.horizont();
+		horizont = -direction.horizont();
 		set_projection_matrix();
 	}
 
@@ -62,7 +62,7 @@ public:
 
 		this->direction = direction.normalize();
 
-		horizont = direction.horizont();
+		horizont = -direction.horizont();
 	}
 
 	double get_screen_ratio() {
