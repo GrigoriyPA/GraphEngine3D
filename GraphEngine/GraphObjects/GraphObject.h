@@ -99,56 +99,6 @@ public:
 
 		create_matrix_buffer();
 	}
-
-	GraphObject(std::string path) {
-		std::ifstream graph_object_file(path + ".obj");
-
-		if (graph_object_file.fail()) {
-			std::cout << "ERROR::GRAPH_OBJECT::BUILDER\n" << "The graph object file does not exist.\n";
-			assert(0);
-		}
-
-		int count_models, count_polygons;
-		graph_object_file >> max_count_models >> border_bit >> transparent >> count_models >> count_polygons;
-
-		used_memory.resize(max_count_models, -1);
-		matrix_buffer = 0;
-
-		create_matrix_buffer();
-
-		for (; count_models; count_models--) {
-			int model_id, memory_id, border;
-			graph_object_file >> model_id >> memory_id >> border;
-
-			Matrix model_matrix(4, 4, 0);
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++)
-					graph_object_file >> model_matrix[i][j];
-			}
-
-			used_memory[memory_id] = model_id;
-			models[model_id] = Model(model_matrix, false, memory_id);
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * memory_id, sizeof(float) * 16, &model_matrix.value_vector()[0]);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
-
-		for (; count_polygons; count_polygons--) {
-			int polygon_id;
-			graph_object_file >> polygon_id;
-
-			std::string polygon_information, temp;
-			for (; temp != "|"; graph_object_file >> temp)
-				polygon_information += " " + temp;
-			Polygon polygon(polygon_information);
-
-			polygons[polygon_id] = polygon;
-			polygons[polygon_id].set_matrix_buffer(matrix_buffer);
-		}
-
-		set_center();
-	}
 	
 	GraphObject& operator=(const GraphObject& other) {
 		delete_buffers();
@@ -467,22 +417,6 @@ public:
 
 		Matrix model_matrix = get_matrix(model_id);
 		change_matrix(model_matrix * scale_matrix(scale) * model_matrix.inverse(), model_id);
-	}
-
-	void save(std::string path) {
-		std::ofstream graph_object_file(path + ".obj");
-
-		graph_object_file << max_count_models << " " << border_bit << " " << transparent << " " << models.size() << " " << polygons.size() << "\n";
-		for (std::unordered_map < int, Model >::iterator model = models.begin(); model != models.end(); model++) {
-			graph_object_file << model->first << " " << model->second.used_memory << " " << model->second.border;
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++)
-					graph_object_file << " " << model->second.matrix[i][j];
-			}
-			graph_object_file << "\n";
-		}
-		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
-			graph_object_file << polygon->first << " " << polygon->second.get_information() << " |\n";
 	}
 
 	~GraphObject() {

@@ -14,26 +14,6 @@ public:
 
 	Texture diffuse_map, specular_map, emission_map;
 
-	Material() {
-	}
-
-	Material(std::string information) {
-		std::vector < std::string > split_string = split(information);
-
-		int id = 0;
-		light = std::stoi(split_string[id++]);
-		shininess = std::stold(split_string[id++]);
-		alpha = std::stold(split_string[id++]);
-		for (int i = 0; i < 3; i++)
-			ambient[i] = std::stold(split_string[id++]);
-		for (int i = 0; i < 3; i++)
-			diffuse[i] = std::stold(split_string[id++]);
-		for (int i = 0; i < 3; i++)
-			specular[i] = std::stold(split_string[id++]);
-		for (int i = 0; i < 3; i++)
-			emission[i] = std::stold(split_string[id++]);
-	}
-
 	void set_uniforms(Shader* shader_program) {
 		try {
 			shader_program->use();
@@ -75,14 +55,6 @@ public:
 			assert(0);
 		}
 	}
-
-	std::string get_information() {
-		std::string information;
-		information += std::to_string(light) + " " + std::to_string(shininess) + " " + std::to_string(alpha) + " ";
-		information += ambient.value_string() + " " + diffuse.value_string() + " " + specular.value_string() + " " + emission.value_string();
-
-		return information;
-	}
 };
 
 
@@ -92,9 +64,10 @@ class Polygon {
 	Matrix polygon_trans = one_matrix(4);
 
 	int count_points;
-	unsigned int vertex_array, vertex_buffer;
+	unsigned int vertex_array, vertex_buffer, index_buffer;
 	std::vector < Vect2 > tex_coords;
 	std::vector < Vect3 > positions, normals;
+	std::vector < unsigned int > indices;
 	Vect3 center;
 
 	void set_uniforms(Shader* shader_program) {
@@ -131,12 +104,11 @@ class Polygon {
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(float) * 6 * count_points));
 		glEnableVertexAttribArray(2);
 
-		unsigned int ebo;
 		if (count_points > 0) {
-			glGenBuffers(1, &ebo);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+			glGenBuffers(1, &index_buffer);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
 
-			std::vector < unsigned int > indices((count_points - 2) * 3);
+			indices.resize((count_points - 2) * 3);
 			for (int i = 0; i < count_points - 2; i++) {
 				indices[3 * i] = 0;
 				indices[3 * i + 1] = i + 1;
@@ -149,10 +121,8 @@ class Polygon {
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		if (count_points > 0) {
+		if (count_points > 0)
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-			glDeleteBuffers(1, &ebo);
-		}
 	}
 
 	void delete_uniforms(Shader* shader_program) {
@@ -174,6 +144,7 @@ class Polygon {
 	void delete_buffers() {
 		glDeleteVertexArrays(1, &vertex_array);
 		glDeleteBuffers(1, &vertex_buffer);
+		glDeleteBuffers(1, &index_buffer);
 	}
 
 public:
@@ -202,51 +173,6 @@ public:
 		create_vertex_array();
 	}
 
-	Polygon(std::string information) {
-		vertex_array = 0;
-		vertex_buffer = 0;
-
-		std::vector < std::string > split_string = split(information);
-
-		int id = 0;
-		frame = std::stoi(split_string[id++]);
-		border_width = std::stold(split_string[id++]);
-		count_points = std::stoi(split_string[id++]);
-
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++)
-				polygon_trans[i][j] = std::stold(split_string[id++]);
-		}
-
-		positions.resize(count_points);
-		for (Vect3& position : positions) {
-			for (int i = 0; i < 3; i++)
-				position[i] = std::stold(split_string[id++]);
-		}
-
-		normals.resize(count_points);
-		for (Vect3& normal : normals) {
-			for (int i = 0; i < 3; i++)
-				normal[i] = std::stold(split_string[id++]);
-		}
-
-		tex_coords.resize(count_points);
-		for (Vect2& tex_coord : tex_coords) {
-			for (int i = 0; i < 2; i++)
-				tex_coord[i] = std::stold(split_string[id++]);
-		}
-
-		std::string material_information;
-		for (; id < split_string.size(); id++)
-			material_information += " " + split_string[id];
-		material = Material(material_information);
-
-		create_vertex_array();
-		set_positions(positions, false);
-		set_normals(normals);
-		set_tex_coords(tex_coords);
-	}
-
 	Polygon& operator=(const Polygon& other) {
 		delete_buffers();
 
@@ -254,6 +180,7 @@ public:
 		polygon_trans = other.polygon_trans;
 		positions = other.positions;
 		normals = other.normals;
+		indices = other.indices;
 		count_points = other.count_points;
 		center = other.center;
 		frame = other.frame;
@@ -357,6 +284,21 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
+	void set_indices(std::vector < unsigned int > indices) {
+		this->indices = indices;
+
+		glBindVertexArray(vertex_array);
+
+		glDeleteBuffers(1, &index_buffer);
+		glGenBuffers(1, &index_buffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), &indices[0], GL_STATIC_DRAW);
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+
 	void set_matrix_buffer(unsigned int matrix_buffer) {
 		if (matrix_buffer == 0)
 			return;
@@ -431,30 +373,12 @@ public:
 
 		glBindVertexArray(vertex_array);
 		if (!frame)
-			glDrawElementsInstanced(GL_TRIANGLES, (count_points - 2) * 3, GL_UNSIGNED_INT, 0, count);
+			glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, count);
 		else
-			glDrawElementsInstanced(GL_LINE_LOOP, (count_points - 2) * 3, GL_UNSIGNED_INT, 0, count);
+			glDrawElementsInstanced(GL_LINE_LOOP, indices.size(), GL_UNSIGNED_INT, 0, count);
 		glBindVertexArray(0);
 
 		delete_uniforms(shader_program);
-	}
-
-	std::string get_information() {
-		std::string information;
-		information += std::to_string(frame) + " " + std::to_string(border_width) + " " + std::to_string(count_points);
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++)
-				information += " " + std::to_string(polygon_trans[i][j]);
-		}
-		for (Vect3 position : positions)
-			information += " " + position.value_string();
-		for (Vect3 normal : normals)
-			information += " " + normal.value_string();
-		for (Vect2 tex_coord : tex_coords)
-			information += " " + tex_coord.value_string();
-		information += " " + material.get_information();
-
-		return information;
 	}
 
 	~Polygon() {
