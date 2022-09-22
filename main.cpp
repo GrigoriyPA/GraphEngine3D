@@ -129,23 +129,6 @@ signed main() {
     obj->scene_id = { obj_id, model_id };
     render.add_object(obj);
 
-    obj_id = scene.add_object(GraphObject("Resources/Objects/test"));
-    model_id = 0;
-    //obj_id = scene.add_object(get_cylinder(20, true));
-    //material = Material();
-    //material.ambient = Vect3(1, 0.5, 0.31) ^ scene.get_gamma();
-    //material.diffuse = Vect3(1, 0.5, 0.31) ^ scene.get_gamma();
-    //material.specular = Vect3(0.5, 0.5, 0.5) ^ scene.get_gamma();
-    //material.shininess = 64;
-    //scene[obj_id].set_material(material);
-    //scene[obj_id].add_model(trans_matrix(Vect3(5, 0, 5)) * scale_matrix(Vect3(0.5, 2, 0.5)));
-    //scene[obj_id].save("Resources/Objects/test");
-    loc_id = -1;
-    obj = new Point(Vect3(0, 0, 0), loc_id, &scene);
-    scene.delete_object(loc_id, 0);
-    obj->scene_id = { obj_id, model_id };
-    render.add_object(obj);
-
     SpotLight light(Vect3(-2, -2, -2), Vect3(1, 1, 1), PI / 4.0, 1.2 * PI / 4.0);
     light.ambient = Vect3(0.1, 0.1, 0.1);
     light.diffuse = Vect3(0.6, 0.6, 0.6);

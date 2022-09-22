@@ -4,3 +4,4 @@ Resources
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+.vs/

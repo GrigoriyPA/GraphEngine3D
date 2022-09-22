@@ -12,7 +12,7 @@ class Shader {
 	std::string vertex_shader_code, fragment_shader_code;
 
 	unsigned int load_vertex_shader(std::string vertex_shader_path) {
-		std::ifstream vertex_shader_file(vertex_shader_path + ".vert_sh");
+		std::ifstream vertex_shader_file(vertex_shader_path + ".glsl");
 
 		if (vertex_shader_file.fail()) {
 			std::cout << "ERROR::SHADER::LOAD_VERTEX_SHADER\n" << "The vertex shader file does not exist.\n";
@@ -42,7 +42,7 @@ class Shader {
 	}
 
 	unsigned int load_fragment_shader(std::string fragment_shader_path) {
-		std::ifstream fragment_shader_file(fragment_shader_path + ".frag_sh");
+		std::ifstream fragment_shader_file(fragment_shader_path + ".glsl");
 
 		if (fragment_shader_file.fail()) {
 			std::cout << "ERROR::SHADER::LOAD_FRAGMENT_SHADER\n" << "The fragment shader file does not exist.\n";
