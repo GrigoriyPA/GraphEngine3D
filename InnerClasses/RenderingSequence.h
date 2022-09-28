@@ -13,7 +13,7 @@ class RenderingSequence {
 	std::vector < RenderObject* > selected_objects;
 	std::vector < RenderObject* > objects;
 	std::map < std::pair < int, int >, int > object_id;
-	Vect3 stable_point, temp_point, intersect_point;
+	eng::Vect3 stable_point, temp_point, intersect_point;
 	GraphEngine* scene;
 
 	bool can_switch_to_point() {
@@ -367,6 +367,14 @@ public:
                 break;
             }
 
+			case sf::Event::KeyReleased: {
+				if (event.key.code == sf::Keyboard::R) {
+					if (input_state == 1 || can_switch_to_point())
+						switch_input_state();
+				}
+				break;
+			}
+
             default:
                 break;
         }
@@ -376,16 +384,16 @@ public:
 		check_active_button(cur_active_button);
 		active_object = object_id[scene->get_center_object_id(intersect_point)];
 
-		Matrix trans = trans_matrix(scene->cam.get_change_vector(stable_point));
+		eng::Matrix trans = trans_matrix(scene->cam.get_change_vector(stable_point));
 		stable_point = trans * stable_point;
 
 		double delt = pow(SCROLL_SENSITIVITY, scroll);
-		Vect3 new_point = (stable_point - scene->cam.position) * delt + scene->cam.position;
+		eng::Vect3 new_point = (stable_point - scene->cam.position) * delt + scene->cam.position;
 		trans = trans * trans_matrix(new_point - stable_point);
 		stable_point = new_point;
 		scroll = 0;
 
-		if ((trans * Vect3(0, 0, 0)).length() > eps) {
+		if ((trans * eng::Vect3(0, 0, 0)).length() > eps) {
 			for (RenderObject* object : objects) {
 				if (object->connect)
 					object->move(trans);
@@ -393,7 +401,7 @@ public:
 		}
 
 		if (input_state == 1) {
-			Vect3 new_temp_point = scene->cam.position + scene->cam.get_direction() * point_distance;
+			eng::Vect3 new_temp_point = scene->cam.position + scene->cam.get_direction() * point_distance;
 			if ((new_temp_point - temp_point).length() > eps)
 				objects[0]->move(trans_matrix(new_temp_point - temp_point));
 			temp_point = new_temp_point;

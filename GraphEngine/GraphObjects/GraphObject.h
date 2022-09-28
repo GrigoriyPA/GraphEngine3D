@@ -11,9 +11,9 @@
 struct Model {
 	bool border;
 	int used_memory;
-	Matrix matrix;
+	eng::Matrix matrix;
 
-	Model(Matrix matrix = one_matrix(4), bool border = false, int used_memory = -1) {
+	Model(eng::Matrix matrix = eng::one_matrix(4), bool border = false, int used_memory = -1) {
 		this->matrix = matrix;
 		this->border = border;
 		this->used_memory = used_memory;
@@ -24,7 +24,7 @@ struct Model {
 class GraphObject {
 	int count_borders = 0, border_bit = 1;
 	double eps = 0.00001;
-	Vect3 center = Vect3(0, 0, 0);
+	eng::Vect3 center = eng::Vect3(0, 0, 0);
 
 	int max_count_models;
 	unsigned int matrix_buffer;
@@ -98,19 +98,19 @@ class GraphObject {
 		return textures;
 	}
 
-	Polygon process_mesh(aiMesh* mesh, const aiScene* scene, std::string& directory, Matrix transform) {
-		std::vector < Vect2 > tex_coords;
-		std::vector < Vect3 > positions, normals;
+	Polygon process_mesh(aiMesh* mesh, const aiScene* scene, std::string& directory, eng::Matrix transform) {
+		std::vector < eng::Vect2 > tex_coords;
+		std::vector < eng::Vect3 > positions, normals;
 		std::vector<unsigned int> indices;
 
-		Matrix norm_transform = transform.inverse().transpose();
+		eng::Matrix norm_transform = transform.inverse().transpose();
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-			positions.push_back(transform * Vect3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
-			normals.push_back(norm_transform * Vect3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
+			positions.push_back(transform * eng::Vect3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
+			normals.push_back(norm_transform * eng::Vect3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
 			if (mesh->mTextureCoords[0])
-				tex_coords.push_back(Vect2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
+				tex_coords.push_back(eng::Vect2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
 			else
-				tex_coords.push_back(Vect2(0, 0));
+				tex_coords.push_back(eng::Vect2(0, 0));
 		}
 		Polygon polygon_mesh(positions.size());
 		polygon_mesh.set_positions(positions, false);
@@ -122,10 +122,9 @@ class GraphObject {
 			for (unsigned int j = 0; j < face.mNumIndices; j++)
 				indices.push_back(face.mIndices[j]);
 		}
-		//std::reverse(indices.begin(), indices.end());
 		polygon_mesh.set_indices(indices);
 
-		polygon_mesh.material.diffuse = Vect3(1, 1, 1);
+		polygon_mesh.material.diffuse = eng::Vect3(1, 1, 1);
 		if (mesh->mMaterialIndex >= 0) {
 			aiColor3D color(0, 0, 0);
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -146,19 +145,19 @@ class GraphObject {
 			//std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";
 
 			material->Get(AI_MATKEY_COLOR_AMBIENT, color);
-			polygon_mesh.material.ambient = Vect3(color.r, color.g, color.b);
+			polygon_mesh.material.ambient = eng::Vect3(color.r, color.g, color.b);
 			//polygon_mesh.material.ambient.print();
 
 			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-			polygon_mesh.material.diffuse = Vect3(color.r, color.g, color.b);
+			polygon_mesh.material.diffuse = eng::Vect3(color.r, color.g, color.b);
 			//polygon_mesh.material.diffuse.print();
 
 			material->Get(AI_MATKEY_COLOR_SPECULAR, color);
-			polygon_mesh.material.specular = Vect3(color.r, color.g, color.b);
+			polygon_mesh.material.specular = eng::Vect3(color.r, color.g, color.b);
 			//polygon_mesh.material.specular.print();
 
 			material->Get(AI_MATKEY_COLOR_EMISSIVE, color);
-			polygon_mesh.material.emission = Vect3(color.r, color.g, color.b);
+			polygon_mesh.material.emission = eng::Vect3(color.r, color.g, color.b);
 			//polygon_mesh.material.emission.print();
 
 			float opacity;
@@ -172,14 +171,14 @@ class GraphObject {
 			//std::cout << polygon_mesh.material.shininess << "\n";
 
 			if (polygon_mesh.material.shininess > 0)
-				polygon_mesh.material.specular = Vect3(1, 1, 1);
+				polygon_mesh.material.specular = eng::Vect3(1, 1, 1);
 		}
 
 		return polygon_mesh;
 	}
 
-	void process_node(aiNode* node, const aiScene* scene, std::string& directory, Matrix transform) {
-		Matrix trans(4, 4, 0);
+	void process_node(aiNode* node, const aiScene* scene, std::string& directory, eng::Matrix transform) {
+		eng::Matrix trans(4, 4, 0);
 		aiMatrix4x4 cur_transform = node->mTransformation;
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < 4; j++)
@@ -190,6 +189,7 @@ class GraphObject {
 		for (int i = 0; i < node->mNumMeshes; i++) {
 			polygons[polygons.size()] = process_mesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform);
 			polygons[polygons.size() - 1].set_matrix_buffer(matrix_buffer);
+			break;
 		}
 
 		for (unsigned int i = 0; i < node->mNumChildren; i++) {
@@ -256,10 +256,10 @@ public:
 	}
 
 	void set_center() {
-		center = Vect3(0, 0, 0);
-		std::vector < Vect3 > used_positions;
+		center = eng::Vect3(0, 0, 0);
+		std::vector < eng::Vect3 > used_positions;
 		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++) {
-			for (Vect3 position : polygon->second.get_positions()) {
+			for (eng::Vect3 position : polygon->second.get_positions()) {
 				if (std::count(used_positions.begin(), used_positions.end(), position))
 					continue;
 
@@ -276,7 +276,7 @@ public:
 			polygon->second.material = material;
 	}
 
-	void set_matrix(Matrix trans, int model_id) {
+	void set_matrix(eng::Matrix trans, int model_id) {
 		if (!models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::SET_MATRIX\n" << "Invalid model id.\n";
 			assert(0);
@@ -318,7 +318,7 @@ public:
 		return models_description;
 	}
 
-	Vect3 get_center(int model_id) {
+	eng::Vect3 get_center(int model_id) {
 		if (!models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::GET_CENTER\n" << "Invalid model id.\n";
 			assert(0);
@@ -327,7 +327,7 @@ public:
 		return models[model_id].matrix * center;
 	}
 
-	Vect3 get_polygon_center(int model_id, int polygon_id) {
+	eng::Vect3 get_polygon_center(int model_id, int polygon_id) {
 		if (!models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::GET_POLYGON_CENTER\n" << "Invalid model id.\n";
 			assert(0);
@@ -341,7 +341,7 @@ public:
 		return models[model_id].matrix * polygons[polygon_id].get_center();
 	}
 
-	std::vector < Vect3 > get_polygon_positions(int model_id, int polygon_id) {
+	std::vector < eng::Vect3 > get_polygon_positions(int model_id, int polygon_id) {
 		if (!models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::GET_POLYGON_CENTER\n" << "Invalid model id.\n";
 			assert(0);
@@ -352,20 +352,24 @@ public:
 			assert(0);
 		}
 
-		std::vector < Vect3 > positions;
-		for (Vect3 position : polygons[polygon_id].get_positions())
+		std::vector < eng::Vect3 > positions;
+		for (eng::Vect3 position : polygons[polygon_id].get_positions())
 			positions.push_back(models[model_id].matrix * position);
 
 		return positions;
 	}
 
-	Matrix get_matrix(int model_id) {
+	eng::Matrix get_matrix(int model_id) {
 		if (!models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::GET_MATRIX\n" << "Invalid model id.\n";
 			assert(0);
 		}
 
 		return models[model_id].matrix;
+	}
+
+	int get_count_polygons() {
+		return polygons.size();
 	}
 
 	int get_count_models() {
@@ -396,7 +400,7 @@ public:
 		return free_polygon_id;
 	}
 
-	int add_model(Matrix matrix = one_matrix(4)) {
+	int add_model(eng::Matrix matrix = eng::one_matrix(4)) {
 		if (models.size() == max_count_models) {
 			std::cout << "ERROR::GRAPH_OBJECT::ADD_MATRYX\n" << "Too many instances created.\n";
 			assert(0);
@@ -435,7 +439,7 @@ public:
 		models.erase(model_id);
 	}
 
-	void change_matrix(Matrix trans, int model_id) {
+	void change_matrix(eng::Matrix trans, int model_id) {
 		if (!models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::CHANGE_MATRIX\n" << "Invalid model id.\n";
 			assert(0);
@@ -487,7 +491,7 @@ public:
 			glStencilMask(0x00);
 	}
 
-	void draw(Vect3 view_pos, Shader* shader_program, int object_id, int model_id = -1) {
+	void draw(eng::Vect3 view_pos, Shader* shader_program, int object_id, int model_id = -1) {
 		if (model_id != -1 && !models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::DRAW\n" << "Invalid model id.\n";
 			assert(0);
@@ -526,13 +530,13 @@ public:
 		draw_polygons(shader_program);
 	}
 
-	void central_scaling(Vect3 scale, int model_id) {
+	void central_scaling(eng::Vect3 scale, int model_id) {
 		if (!models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::CENTRAL_SCALING\n" << "Invalid model id.\n";
 			assert(0);
 		}
 
-		Matrix model_matrix = get_matrix(model_id);
+		eng::Matrix model_matrix = get_matrix(model_id);
 		change_matrix(model_matrix * scale_matrix(scale) * model_matrix.inverse(), model_id);
 	}
 
@@ -557,7 +561,7 @@ public:
 			}
 		}
 
-		process_node(scene->mRootNode, scene, directory, one_matrix(4));
+		process_node(scene->mRootNode, scene, directory, eng::one_matrix(4));
 	}
 
 	~GraphObject() {

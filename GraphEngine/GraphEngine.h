@@ -10,6 +10,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "CommonClasses/Vect2.h"
 #include "CommonClasses/Matrix.h"
 #include "CommonClasses/Random.h"
 #include "CommonClasses/Cut3.h"
@@ -27,7 +28,7 @@ struct TransparentObject {
 	double distance;
 	GraphObject* object;
 
-	TransparentObject(Vect3 cam_position, GraphObject* object, int object_id, std::pair < int, int > description) {
+	TransparentObject(eng::Vect3 cam_position, GraphObject* object, int object_id, std::pair < int, int > description) {
 		this->object = object;
 		this->object_id = object_id;
 		model_id = description.first;
@@ -309,7 +310,7 @@ public:
 	}
 
 	GraphEngine(sf::RenderWindow* window, double fov, double min_distance, double max_distance) {
-		if (fov < eps || fov > PI - eps) {
+		if (fov < eps || fov > eng::PI - eps) {
 			std::cout << "ERROR::GRAPH_ENGINE::BUILDER\n" << "Invalid viewing angle.\n";
 			assert(0);
 		}
@@ -363,7 +364,7 @@ public:
 		return objects[object_id];
 	}
 
-	void set_clear_color(Vect3 color) {
+	void set_clear_color(eng::Vect3 color) {
 		glClearColor(color.x, color.y, color.z, 1.0);
 	}
 
@@ -417,7 +418,7 @@ public:
 		glUniform1i(glGetUniformLocation(post_shader.program, "border_width"), border_width);
 	}
 
-	void set_border_color(Vect3 color) {
+	void set_border_color(eng::Vect3 color) {
 		glUniform3f(glGetUniformLocation(post_shader.program, "border_color"), color.x, color.y, color.z);
 	}
 
@@ -434,7 +435,7 @@ public:
 		return lights.size();
 	}
 
-	std::pair < int, int > get_center_object_id(Vect3& intersect_point) {
+	std::pair < int, int > get_center_object_id(eng::Vect3& intersect_point) {
 		int temp_int[2] = { -1, -1 };
 		float temp_float = 1, distance = 0;
 		std::pair < int, int > center_object_id(-1, -1);
@@ -460,7 +461,7 @@ public:
 		distance = 2.0 * distance - 1;
 		double min_dist = cam.get_min_distance(), max_dist = cam.get_max_distance();
 		double intersect_z = 2.0 * max_dist * min_dist / ((max_dist + min_dist) * (1.0 - distance * (max_dist - min_dist) / (max_dist + min_dist)));
-		intersect_point = Matrix(cam.get_horizont(), cam.get_vertical(), cam.get_direction()) * Vect3(0, 0, intersect_z) + cam.position;
+		intersect_point = eng::Matrix(cam.get_horizont(), cam.get_vertical(), cam.get_direction()) * eng::Vect3(0, 0, intersect_z) + cam.position;
 
 		return center_object_id;
 	}

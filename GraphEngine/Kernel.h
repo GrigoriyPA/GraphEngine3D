@@ -8,7 +8,7 @@
 
 
 class Kernel {
-	Matrix kernel = Matrix(3, 3, 0);
+	eng::Matrix kernel = eng::Matrix(3, 3, 0);
 
 public:
 	Kernel() {
@@ -21,7 +21,7 @@ public:
 			assert(0);
 		}
 
-		kernel = Matrix(init);
+		kernel = eng::Matrix(init);
 	}
 
 	Kernel(std::string kernel_path) {

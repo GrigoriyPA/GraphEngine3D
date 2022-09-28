@@ -11,13 +11,13 @@ protected:
     double eps = 0.00001;
 
 public:
-	Vect3 ambient = Vect3(0, 0, 0), diffuse = Vect3(0, 0, 0), specular = Vect3(0, 0, 0);
+    eng::Vect3 ambient = eng::Vect3(0, 0, 0), diffuse = eng::Vect3(0, 0, 0), specular = eng::Vect3(0, 0, 0);
     bool shadow = false;
 
     Light() {
     }
 
-    virtual Matrix get_light_space_matrix() = 0;
+    virtual eng::Matrix get_light_space_matrix() = 0;
 
     virtual void set_uniforms(int draw_id, Shader* shader_program) = 0;
 };

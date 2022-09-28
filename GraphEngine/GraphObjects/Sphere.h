@@ -13,27 +13,27 @@ GraphObject get_sphere(int count_points, bool real_normals = false, int max_coun
 	}
 
 	GraphObject sphere(max_count_models);
-	std::vector < Vect3 > last_position(2 * count_points, Vect3(0, 1, 0));
+	std::vector < eng::Vect3 > last_position(2 * count_points, eng::Vect3(0, 1, 0));
 	for (int i = 0; i < count_points; i++) {
-		std::vector < Vect3 > cur_positions(2 * count_points);
+		std::vector < eng::Vect3 > cur_positions(2 * count_points);
 
-		double b = (PI / count_points) * (i + 1);
+		double b = (eng::PI / count_points) * (i + 1);
 		for (int j = 0; j < 2 * count_points; j++) {
-			double a = (PI / count_points) * j;
-			cur_positions[j] = Vect3(cos(a) * sin(b), cos(b), sin(a) * sin(b));
+			double a = (eng::PI / count_points) * j;
+			cur_positions[j] = eng::Vect3(cos(a) * sin(b), cos(b), sin(a) * sin(b));
 		}
 
 		for (int j = 0; j < 2 * count_points; j++) {
 			int next = (j + 1) % (2 * count_points), polygon_id;
 
-			std::vector < Vect3 > positions;
+			std::vector < eng::Vect3 > positions;
 			if (i == 0) {
 				polygon_id = sphere.add_polygon(Polygon(3));
-				positions = { Vect3(0, 1, 0), cur_positions[j], cur_positions[next] };
+				positions = { eng::Vect3(0, 1, 0), cur_positions[j], cur_positions[next] };
 			}
 			else if (i == count_points - 1) {
 				polygon_id = sphere.add_polygon(Polygon(3));
-				positions = { last_position[j], Vect3(0, -1, 0), last_position[next] };
+				positions = { last_position[j], eng::Vect3(0, -1, 0), last_position[next] };
 			}
 			else {
 				polygon_id = sphere.add_polygon(Polygon(4));

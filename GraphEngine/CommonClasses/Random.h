@@ -1,51 +1,53 @@
 #pragma once
 
-#include <cassert>
-#include <iostream>
 #include <random>
 #include "Vect3.h"
 
 
-class Random {
-	std::mt19937_64 generator;
+namespace eng {
+	class Random {
+		std::mt19937_64 generator;
 
-public:
-	Random(int seed) {
-		generator.seed(seed);
-	}
-
-	void set_seed(int seed) {
-		generator.seed(seed);
-	}
-
-	double rand() {
-		return ((double)generator()) / ((double)generator.max());
-	}
-
-	long long rand_int(long long l, long long r) {
-		if (r < l) {
-			std::cout << "ERROR::RANDOM::RAND_INT\n" << "Invalid range.\n";
-			assert(0);
+	public:
+		explicit Random(unsigned long long seed) {
+			generator.seed(seed);
 		}
 
-		return ((long long)(generator() % (r - l + 1))) + l;
-	}
-
-	double rand_float(double l, double r) {
-		if (r < l) {
-			std::cout << "ERROR::RANDOM::RAND_FLOAT\n" << "Invalid range.\n";
-			assert(0);
+		void set_seed(unsigned long long seed) {
+			generator.seed(seed);
 		}
 
-		return (r - l) * rand() + l;
-	}
-
-	Vect3 rand_vect3(Vect3 l, Vect3 r) {
-		if (l.set_max(r) != r) {
-			std::cout << "ERROR::RANDOM::RAND_VECT3\n" << "Invalid range.\n";
-			assert(0);
+		double rand() {
+			return static_cast<double>(generator()) / static_cast<double>(generator.max());
 		}
 
-		return Vect3(rand_float(l.x, r.x), rand_float(l.y, r.y), rand_float(l.z, r.z));
-	}
-};
+		// In case of an error returns left
+		long long rand_int(long long left, long long right) {
+			if (right < left) {
+				std::cout << "ERROR::RANDOM::RAND_INT\n" << "Invalid range.\n\n";
+				return left;
+			}
+
+			return static_cast<long long>(generator()) % (right - left + 1) + left;
+		}
+
+		// In case of an error returns left
+		double rand_float(double left, double right) {
+			if (right < left) {
+				std::cout << "ERROR::RANDOM::RAND_FLOAT\n" << "Invalid range.\n\n";
+				return left;
+			}
+
+			return (right - left) * rand() + left;
+		}
+
+		// In case of an error returns left
+		Vect3 rand_vect3(Vect3 left, Vect3 right) {
+			if (Vect3::get_max(left, right) != right) {
+				std::cout << "ERROR::RANDOM::RAND_VECT3\n" << "Invalid range.\n\n";
+			}
+
+			return Vect3(rand_float(left.x, right.x), rand_float(left.y, right.y), rand_float(left.z, right.z));
+		}
+	};
+}

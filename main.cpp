@@ -53,26 +53,26 @@ signed main() {
     circle_tex.setSmooth(true);
 
     sf::Sprite cross(cross_tex);
-    cross.setScale(sf::Vector2f(INTERFACE_SIZE * FI / cross_tex.getSize().x, INTERFACE_SIZE * FI / cross_tex.getSize().y));
-    cross.setPosition(sf::Vector2f(window_width / 2 - INTERFACE_SIZE * FI / 2, window_height / 2 - INTERFACE_SIZE * FI / 2));
+    cross.setScale(sf::Vector2f(INTERFACE_SIZE * eng::FI / cross_tex.getSize().x, INTERFACE_SIZE * eng::FI / cross_tex.getSize().y));
+    cross.setPosition(sf::Vector2f(window_width / 2 - INTERFACE_SIZE * eng::FI / 2, window_height / 2 - INTERFACE_SIZE * eng::FI / 2));
     cross.setColor(INTERFACE_BORDER_COLOR);
 
     sf::Sprite circle(circle_tex);
-    circle.setScale(sf::Vector2f(INTERFACE_SIZE * FI / cross_tex.getSize().x, INTERFACE_SIZE * FI / cross_tex.getSize().y));
-    circle.setPosition(sf::Vector2f(window_width / 2 - INTERFACE_SIZE * FI / 2, window_height / 2 - INTERFACE_SIZE * FI / 2));
+    circle.setScale(sf::Vector2f(INTERFACE_SIZE * eng::FI / cross_tex.getSize().x, INTERFACE_SIZE * eng::FI / cross_tex.getSize().y));
+    circle.setPosition(sf::Vector2f(window_width / 2 - INTERFACE_SIZE * eng::FI / 2, window_height / 2 - INTERFACE_SIZE * eng::FI / 2));
     circle.setColor(INTERFACE_ADD_COLOR);
 
     Interface window_interface(&window);
 
     GraphEngine scene(&window, FOV, MIN_DIST, MAX_DIST);
-    scene.set_clear_color(Vect3(INTERFACE_MAIN_COLOR) / 255.0);
-    scene.set_border_color(Vect3(INTERFACE_ADD_COLOR) / 255.0);
+    scene.set_clear_color(eng::Vect3(INTERFACE_MAIN_COLOR) / 255.0);
+    scene.set_border_color(eng::Vect3(INTERFACE_ADD_COLOR) / 255.0);
 
     double ratio = scene.cam.get_screen_ratio();
     double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
-    SpotLight spot_light(Vect3(0, 0, 0), Vect3(0, 0, 1), angle, 1.1 * angle);
-    spot_light.diffuse = Vect3(0.6, 0.6, 0.6);
-    spot_light.specular = Vect3(0.8, 0.8, 0.8);
+    SpotLight spot_light(eng::Vect3(0, 0, 0), eng::Vect3(0, 0, 1), angle, 1.1 * angle);
+    spot_light.diffuse = eng::Vect3(0.6, 0.6, 0.6);
+    spot_light.specular = eng::Vect3(0.8, 0.8, 0.8);
     spot_light.quadratic = 0.1;
     scene.set_light(0, &spot_light);
 
@@ -80,7 +80,7 @@ signed main() {
 
     int obj_id = scene.add_object(GraphObject(1));
     scene[obj_id].import_from_file("Resources/Objects/test_car/thunder_master_hypercar_mark_i_by_alex.ka..glb");
-    scene[obj_id].add_model(scale_matrix(Vect3(-1, 1, 1)) * trans_matrix(Vect3(0, -0.5, 5)) * rotate_matrix(Vect3(0, 1, 0), PI));
+    scene[obj_id].add_model(scale_matrix(eng::Vect3(-1, 1, 1)) * trans_matrix(eng::Vect3(0, -0.5, 5)) * rotate_matrix(eng::Vect3(0, 1, 0), eng::PI));
     
     /*obj_id = scene.add_object(get_cube(3));
     Material material;
@@ -147,28 +147,28 @@ signed main() {
     obj_id = scene.add_object(GraphObject(1));
     int pol_id = scene[obj_id].add_polygon(Polygon(4));
     scene[obj_id][pol_id].set_positions({
-        Vect3(1, 0, 1),
-        Vect3(1, 0, -1),
-        Vect3(-1, 0, -1),
-        Vect3(-1, 0, 1)
+        eng::Vect3(1, 0, 1),
+        eng::Vect3(1, 0, -1),
+        eng::Vect3(-1, 0, -1),
+        eng::Vect3(-1, 0, 1)
     });
     scene[obj_id][pol_id].set_tex_coords({
-        Vect2(1, 1),
-        Vect2(1, 0),
-        Vect2(0, 0),
-        Vect2(0, 1)
+        eng::Vect2(1, 1),
+        eng::Vect2(1, 0),
+        eng::Vect2(0, 0),
+        eng::Vect2(0, 1)
     });
     scene[obj_id][pol_id].invert_points_order();
-    scene[obj_id][pol_id].material.diffuse = Vect3(1, 1, 1);
+    scene[obj_id][pol_id].material.diffuse = eng::Vect3(1, 1, 1);
     scene[obj_id][pol_id].material.alpha = 0.5;
     scene[obj_id].transparent = true;
-    scene[obj_id].add_model(trans_matrix(Vect3(0, -0.5, 5)) * scale_matrix(10));
+    scene[obj_id].add_model(trans_matrix(eng::Vect3(0, -0.5, 5)) * eng::scale_matrix(10));
 
-    DirLight light(Vect3(-1, -1, 1));
-    light.ambient = Vect3(0.1, 0.1, 0.1);
-    light.diffuse = Vect3(0.6, 0.6, 0.6);
-    light.specular = Vect3(0.8, 0.8, 0.8);
-    light.shadow_position = Vect3(2, 0, 2);
+    DirLight light(eng::Vect3(-1, -1, 1));
+    light.ambient = eng::Vect3(0.1, 0.1, 0.1);
+    light.diffuse = eng::Vect3(0.6, 0.6, 0.6);
+    light.specular = eng::Vect3(0.8, 0.8, 0.8);
+    light.shadow_position = eng::Vect3(2, 0, 2);
     light.shadow = true;
     scene.set_light(1, &light);
     

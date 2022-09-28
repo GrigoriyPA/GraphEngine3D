@@ -5,9 +5,9 @@ class PointLight : public Light {
 public:
     double constant = 1, linear = 0, quadratic = 0;
 
-    Vect3 position;
+    eng::Vect3 position;
 
-    PointLight(Vect3 position) {
+    PointLight(eng::Vect3 position) {
         this->position = position;
     }
 
@@ -35,19 +35,19 @@ public:
         }
     }
 
-    Matrix get_light_space_matrix() {
-        return one_matrix(4);
+    eng::Matrix get_light_space_matrix() {
+        return eng::one_matrix(4);
     }
 
     GraphObject get_light_object() {
         GraphObject light_object = get_cube();
 
         Material material;
-        material.emission = Vect3(1, 1, 1);
+        material.emission = eng::Vect3(1, 1, 1);
         material.light = true;
         light_object.set_material(material);
 
-        int model_id = light_object.add_model(scale_matrix(0.25));
+        int model_id = light_object.add_model(eng::scale_matrix(0.25));
         light_object.change_matrix(trans_matrix(position), model_id);
 
         return light_object;

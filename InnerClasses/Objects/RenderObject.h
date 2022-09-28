@@ -5,12 +5,12 @@ class RenderObject {
 protected:
 	bool visibility = true, hide = false;
 	double eps = 0.00005;
-	Matrix save_matrix = Matrix(4, 4, 0);
+	eng::Matrix save_matrix = eng::Matrix(4, 4, 0);
 
 	int type;
 	GraphEngine* scene;
 
-	void change_matrix(Matrix trans) {
+	void change_matrix(eng::Matrix trans) {
 		if (visibility)
 			(*scene)[scene_id.first].change_matrix(trans, scene_id.second);
 		else
@@ -47,9 +47,9 @@ public:
 	}
 
 	void switch_visibility() {
-		Matrix cur_matrix = (*scene)[scene_id.first].get_matrix(scene_id.second);
+		eng::Matrix cur_matrix = (*scene)[scene_id.first].get_matrix(scene_id.second);
 		if (visibility)
-			(*scene)[scene_id.first].set_matrix(Matrix(4, 4, 0), scene_id.second);
+			(*scene)[scene_id.first].set_matrix(eng::Matrix(4, 4, 0), scene_id.second);
 		else
 			(*scene)[scene_id.first].set_matrix(save_matrix, scene_id.second);
 		visibility ^= 1;
@@ -71,7 +71,7 @@ public:
 		return true;
 	}
 
-	void move(Matrix trans) {
+	void move(eng::Matrix trans) {
 		if (moved)
 			return;
 

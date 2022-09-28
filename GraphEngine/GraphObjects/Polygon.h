@@ -10,7 +10,7 @@ class Material {
 public:
 	bool light = false;
 	double shininess = 1, alpha = 1;
-	Vect3 ambient = Vect3(0, 0, 0), diffuse = Vect3(0, 0, 0), specular = Vect3(0, 0, 0), emission = Vect3(0, 0, 0);
+	eng::Vect3 ambient = eng::Vect3(0, 0, 0), diffuse = eng::Vect3(0, 0, 0), specular = eng::Vect3(0, 0, 0), emission = eng::Vect3(0, 0, 0);
 
 	Texture diffuse_map, specular_map, emission_map;
 
@@ -61,14 +61,14 @@ public:
 class Polygon {
 	double eps = 0.00001;
 	unsigned int matrix_buffer = 0;
-	Matrix polygon_trans = one_matrix(4);
+	eng::Matrix polygon_trans = eng::one_matrix(4);
 
 	int count_points;
 	unsigned int vertex_array = 0, vertex_buffer = 0, index_buffer = 0;
-	std::vector < Vect2 > tex_coords;
-	std::vector < Vect3 > positions, normals;
+	std::vector < eng::Vect2 > tex_coords;
+	std::vector < eng::Vect3 > positions, normals;
 	std::vector < unsigned int > indices;
-	Vect3 center;
+	eng::Vect3 center;
 
 	void set_uniforms(Shader* shader_program) {
 		if (shader_program == nullptr)
@@ -200,7 +200,7 @@ public:
 		return *this;
 	}
 
-	void set_positions(std::vector < Vect3 > positions, bool update_normals = true) {
+	void set_positions(std::vector < eng::Vect3 > positions, bool update_normals = true) {
 		if (positions.size() != count_points) {
 			std::cout << "ERROR::POLYGON::SET_POSITIONS\n" << "Wrong number of points.\n";
 			assert(0);
@@ -208,10 +208,10 @@ public:
 
 		this->positions = positions;
 
-		center = Vect3(0, 0, 0);
+		center = eng::Vect3(0, 0, 0);
 		std::vector < float > converted_positions(count_points * 3);
 		for (int i = 0; i < count_points; i++) {
-			Vect3 position = polygon_trans * positions[i];
+			eng::Vect3 position = polygon_trans * positions[i];
 			
 			center += positions[i];
 			for (int j = 0; j < 3; j++)
@@ -226,14 +226,14 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		if (update_normals) {
-			Vect3 normal = (positions[2] - positions[0]) ^ (positions[1] - positions[0]);
+			eng::Vect3 normal = (positions[2] - positions[0]) ^ (positions[1] - positions[0]);
 
-			std::vector < Vect3 > normals(count_points, normal);
+			std::vector < eng::Vect3 > normals(count_points, normal);
 			set_normals(normals);
 		}
 	}
 
-	void set_normals(std::vector < Vect3 > normals) {
+	void set_normals(std::vector < eng::Vect3 > normals) {
 		if (normals.size() != count_points) {
 			std::cout << "ERROR::POLYGON::SET_NORMALS\n" << "Wrong number of points.\n";
 			assert(0);
@@ -241,10 +241,10 @@ public:
 
 		this->normals = normals;
 
-		Matrix nomals_trans = polygon_trans.inverse().transpose();
+		eng::Matrix nomals_trans = polygon_trans.inverse().transpose();
 		std::vector < float > converted_normals(count_points * 3);
 		for (int i = 0; i < count_points; i++) {
-			Vect3 normal = nomals_trans * normals[i];
+			eng::Vect3 normal = nomals_trans * normals[i];
 
 			for (int j = 0; j < 3; j++)
 				converted_normals[3 * i + j] = normal[j];
@@ -257,7 +257,7 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void set_tex_coords(std::vector < Vect2 > tex_coords) {
+	void set_tex_coords(std::vector < eng::Vect2 > tex_coords) {
 		if (tex_coords.size() != count_points) {
 			std::cout << "ERROR::POLYGON::SET_TEX_COORDS\n" << "Wrong number of points.\n";
 			assert(0);
@@ -327,7 +327,7 @@ public:
 		return count_points;
 	}
 
-	Vect3 get_center() {
+	eng::Vect3 get_center() {
 		return polygon_trans * center;
 	}
 
@@ -335,15 +335,15 @@ public:
 		return vertex_array;
 	}
 
-	std::vector < Vect3 > get_positions() {
-		std::vector < Vect3 > converted_positions;
-		for (Vect3 position : positions)
+	std::vector < eng::Vect3 > get_positions() {
+		std::vector < eng::Vect3 > converted_positions;
+		for (eng::Vect3 position : positions)
 			converted_positions.push_back(polygon_trans * position);
 
 		return converted_positions;
 	}
 
-	void change_matrix(Matrix trans) {
+	void change_matrix(eng::Matrix trans) {
 		polygon_trans = trans * polygon_trans;
 		set_positions(positions, false);
 		set_normals(normals);

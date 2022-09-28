@@ -4,29 +4,29 @@
 class DirLight : public Light {
     double shadow_width = 10, shadow_height = 10, shadow_depth = 10;
 
-    Vect3 direction;
-    Matrix projection;
+    eng::Vect3 direction;
+    eng::Matrix projection;
 
     void set_projection_matrix() {
-        projection = scale_matrix(Vect3(2.0 / shadow_width, 2.0 / shadow_height, 2.0 / shadow_depth)) * trans_matrix(Vect3(0, 0, -shadow_depth / 2));
+        projection = scale_matrix(eng::Vect3(2.0 / shadow_width, 2.0 / shadow_height, 2.0 / shadow_depth)) * trans_matrix(eng::Vect3(0, 0, -shadow_depth / 2));
     }
 
-    Matrix get_view_matrix() {
-        Vect3 horizont = direction.horizont();
+    eng::Matrix get_view_matrix() {
+        eng::Vect3 horizont = direction.horizont();
 
-        return Matrix(horizont, direction ^ horizont, direction).transpose() * trans_matrix(-shadow_position);
+        return eng::Matrix(horizont, direction ^ horizont, direction).transpose() * trans_matrix(-shadow_position);
     }
 
 public:
-    Vect3 shadow_position = Vect3(0, 0, 0);
+    eng::Vect3 shadow_position = eng::Vect3(0, 0, 0);
 
-    DirLight(Vect3 direction) {
+    DirLight(eng::Vect3 direction) {
         if (direction.length() < eps) {
             std::cout << "ERROR::DIR_LIGHT::BUILDER\n" << "The direction vector has zero length.\n";
             assert(0);
         }
 
-        this->direction = direction.normalize();
+        this->direction = direction.normalized();
 
         set_projection_matrix();
     }
@@ -84,7 +84,7 @@ public:
         set_projection_matrix();
     }
 
-    Matrix get_light_space_matrix() {
+    eng::Matrix get_light_space_matrix() {
         return projection * get_view_matrix();
     }
 
@@ -93,12 +93,12 @@ public:
         shadow_box.transparent = true;
 
         Material material;
-        material.diffuse = Vect3(1, 1, 1);
+        material.diffuse = eng::Vect3(1, 1, 1);
         material.alpha = 0.3;
         shadow_box.set_material(material);
 
-        int model_id = shadow_box.add_model(scale_matrix(Vect3(shadow_width, shadow_height, shadow_depth)));
-        shadow_box.change_matrix(trans_matrix(Vect3(0, 0, (1 - eps) * shadow_depth / 2)), model_id);
+        int model_id = shadow_box.add_model(scale_matrix(eng::Vect3(shadow_width, shadow_height, shadow_depth)));
+        shadow_box.change_matrix(trans_matrix(eng::Vect3(0, 0, (1 - eps) * shadow_depth / 2)), model_id);
         shadow_box.change_matrix(get_view_matrix().inverse(), model_id);
 
         return shadow_box;

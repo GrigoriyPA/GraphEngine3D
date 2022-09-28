@@ -106,7 +106,9 @@ public:
 	}
 
 	int get_const_int_value(std::string name) {
-		std::vector < std::string > split_string = split(fragment_shader_code);
+		std::vector < std::string > split_string = eng::split(fragment_shader_code, [](const char c) {
+			return c == ' ' || c == '\n';
+		});
 
 		for (int i = 0; i < split_string.size(); i++) {
 			if (split_string[i] == "const" && split_string[i + 1] == "int" && split_string[i + 2] == name)
