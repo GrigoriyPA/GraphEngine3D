@@ -13,7 +13,7 @@ namespace eng {
 			generator.seed(seed);
 		}
 
-		void set_seed(unsigned long long seed) {
+		void set_seed(unsigned long long seed) & {
 			generator.seed(seed);
 		}
 

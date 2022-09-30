@@ -38,7 +38,7 @@ public:
         }
 
         this->position = position;
-        this->direction = direction.normalized();
+        this->direction = direction.normalize();
         this->cut_in = cut_in;
         this->cut_out = cut_out;
 
@@ -91,7 +91,7 @@ public:
             assert(0);
         }
 
-        this->direction = direction.normalized();
+        this->direction = direction.normalize();
     }
 
     eng::Matrix get_light_space_matrix() {

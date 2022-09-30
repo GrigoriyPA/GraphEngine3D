@@ -36,7 +36,7 @@ class Cut : public RenderObject {
     }
 
     void update_cut(eng::Vect3 point1, eng::Vect3 point2) {
-        eng::Vect3 direct = (point2 - point1).normalized();
+        eng::Vect3 direct = (point2 - point1).normalize();
         eng::Vect3 horizont = direct.horizont();
         eng::Vect3 vertical = direct ^ horizont;
         double length = (point2 - point1).length();

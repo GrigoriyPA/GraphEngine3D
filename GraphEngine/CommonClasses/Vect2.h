@@ -10,7 +10,8 @@ namespace eng {
         double eps_ = 1e-5;
 
     public:
-        double x = 0, y = 0;
+        double x = 0;
+        double y = 0;
 
         Vect2(double x, double y) {
             this->x = x;
@@ -56,6 +57,19 @@ namespace eng {
             return y;
         }
 
+        // In case of an error returns a y
+        double operator[](size_t index) const {
+            if (index == 0) {
+                return x;
+            }
+            if (index == 1) {
+                return y;
+            }
+
+            std::cout << "ERROR::VECT2::OPERATOR[](SIZE_T)\n" << "Invalid index.\n\n";
+            return y;
+        }
+
         bool operator ==(const Vect2& other) const {
             return equality(x, other.x, eps_) && equality(y, other.y, eps_);
         }
@@ -64,17 +78,17 @@ namespace eng {
             return !(*this == other);
         }
 
-        void operator +=(const Vect2& other) {
+        void operator +=(const Vect2& other) & {
             x += other.x;
             y += other.y;
         }
 
-        void operator -=(const Vect2& other) {
+        void operator -=(const Vect2& other) & {
             x -= other.x;
             y -= other.y;
         }
 
-        void operator *=(double other) {
+        void operator *=(double other) & {
             x *= other;
             y *= other;
         }
@@ -145,19 +159,6 @@ namespace eng {
             return Vect2(x / other, y / other);
         }
 
-        // In case of an error returns a y
-        double at(size_t index) const {
-            if (index == 0) {
-                return x;
-            }
-            if (index == 1) {
-                return y;
-            }
-
-            std::cout << "ERROR::VECT2::AT\n" << "Invalid index.\n\n";
-            return y;
-        }
-
         double length_sqr() const {
             return *this * *this;
         }
@@ -167,23 +168,11 @@ namespace eng {
         }
 
         // In case of an error normalize to (1, 0)
-        void normalize() & {
+        Vect2 normalize() const {
             double vect_length = length();
 
             if (equality(vect_length, 0.0, eps_)) {
                 std::cout << "ERROR::VECT2::NORMALIZE\n" << "Null vector normalization.\n\n";
-                *this = Vect2(1, 0);
-            } else {
-                *this /= vect_length;
-            }
-        }
-
-        // In case of an error normalize to (1, 0)
-        Vect2 normalized() const {
-            double vect_length = length();
-
-            if (equality(vect_length, 0.0, eps_)) {
-                std::cout << "ERROR::VECT2::NORMALIZED\n" << "Null vector normalization.\n\n";
                 return Vect2(1, 0);
             }
 
@@ -221,16 +210,8 @@ namespace eng {
                 return *this;
             }
 
-            Vect2 norm = n.normalized();
+            Vect2 norm = n.normalize();
             return norm * (norm * *this) * 2 - *this;
-        }
-
-        Vect2 get_max(const Vect2& v) const {
-            return Vect2(std::max(x, v.x), std::max(y, v.y));
-        }
-
-        Vect2 get_min(const Vect2& v) const {
-            return Vect2(std::min(x, v.x), std::min(y, v.y));
         }
 
         bool in_angle(const Vect2& v1, const Vect2& v2) const {

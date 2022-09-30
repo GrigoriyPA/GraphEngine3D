@@ -72,7 +72,7 @@ class Plane : public RenderObject {
 
     void update_plane(std::vector < eng::Vect3 > points) {
         eng::Vect3 center = (points[0] + points[1] + points[2]) / 3;
-        eng::Vect3 normal = ((points[0] - points[1]) ^ (points[0] - points[2])).normalized();
+        eng::Vect3 normal = ((points[0] - points[1]) ^ (points[0] - points[2])).normalize();
         eng::Vect3 horizont = normal.horizont();
         eng::Vect3 vertical = normal ^ horizont;
 
@@ -121,8 +121,8 @@ class Plane : public RenderObject {
         eng::Vect3 coord2 = (*scene)[line1.first].get_polygon_center(line1.second, 1);
         eng::Vect3 coord3 = (*scene)[line2.first].get_polygon_center(line2.second, 0);
         eng::Vect3 coord4 = (*scene)[line2.first].get_polygon_center(line2.second, 1);
-        eng::Vect3 direct1 = (coord2 - coord1).normalized();
-        eng::Vect3 direct2 = (coord4 - coord3).normalized();
+        eng::Vect3 direct1 = (coord2 - coord1).normalize();
+        eng::Vect3 direct2 = (coord4 - coord3).normalize();
 
         if ((direct1 ^ direct2).length() > eps)
             update_plane({ coord3, coord4, coord3 + direct1 });
@@ -177,7 +177,7 @@ class Plane : public RenderObject {
 
         eng::Vect3 direction2 = line_cur2.get_direction();
         if ((direction1 ^ direction2).length() < eps)
-            direction2 = (line_cur2.p0 - line_cur1.p0).normalized();
+            direction2 = (line_cur2.p0 - line_cur1.p0).normalize();
 
         update_plane({ coord, coord + direction1, coord + direction2 });
     }
@@ -185,7 +185,7 @@ class Plane : public RenderObject {
     void update_center_two_points(std::pair < int, int > point1, std::pair < int, int > point2) {
         eng::Vect3 coord1 = (*scene)[point1.first].get_center(point1.second);
         eng::Vect3 coord2 = (*scene)[point2.first].get_center(point2.second);
-        eng::Vect3 normal = (coord2 - coord1).normalized();
+        eng::Vect3 normal = (coord2 - coord1).normalize();
         eng::Vect3 horizont = normal.horizont();
         eng::Vect3 vertical = normal ^ horizont;
         eng::Vect3 p0 = (coord1 + coord2) / 2;
@@ -196,7 +196,7 @@ class Plane : public RenderObject {
     void update_center_cut(std::pair < int, int > cut) {
         eng::Vect3 coord1 = (*scene)[cut.first].get_polygon_center(cut.second, 0);
         eng::Vect3 coord2 = (*scene)[cut.first].get_polygon_center(cut.second, 1);
-        eng::Vect3 normal = (coord2 - coord1).normalized();
+        eng::Vect3 normal = (coord2 - coord1).normalize();
         eng::Vect3 horizont = normal.horizont();
         eng::Vect3 vertical = normal ^ horizont;
         eng::Vect3 p0 = (coord1 + coord2) / 2;

@@ -44,7 +44,7 @@ class Triangle : public RenderObject {
     }
 
     void update_triangle(std::vector < eng::Vect3 > points) {
-        eng::Vect3 normal = ((points[0] - points[1]) ^ (points[0] - points[2])).normalized();
+        eng::Vect3 normal = ((points[0] - points[1]) ^ (points[0] - points[2])).normalize();
         eng::Vect3 delt = normal * eps;
 
         (*scene)[scene_id.first][0].set_positions({

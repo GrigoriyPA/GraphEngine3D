@@ -26,7 +26,7 @@ public:
 			}
 		}
 
-		normal = normal.normalized();
+		normal = normal.normalize();
 		k = normal * point1;
 	}
 

@@ -281,7 +281,7 @@ namespace eng {
 			assert(0);
 		}
 
-		axis = axis.normalized();
+		axis = axis.normalize();
 		double c = cos(angle), s = sin(angle), x = axis.x, y = axis.y, z = axis.z;
 
 		return Matrix({

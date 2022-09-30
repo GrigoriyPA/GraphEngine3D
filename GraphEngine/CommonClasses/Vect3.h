@@ -10,7 +10,9 @@ namespace eng {
 		double eps_ = 1e-5;
 
 	public:
-		double x = 0, y = 0, z = 0;
+		double x = 0;
+		double y = 0;
+		double z = 0;
 
 		Vect3(double x, double y, double z) {
 			this->x = x;
@@ -57,6 +59,22 @@ namespace eng {
 			return z;
 		}
 
+		// In case of an error returns a z
+		double operator[](size_t index) const {
+			if (index == 0) {
+				return x;
+			}
+			if (index == 1) {
+				return y;
+			}
+			if (index == 2) {
+				return z;
+			}
+
+			std::cout << "ERROR::VECT3::OPERATOR[](SIZE_T)\n" << "Invalid index.\n\n";
+			return z;
+		}
+
 		bool operator ==(const Vect3& other) const {
 			return equality(x, other.x, eps_) && equality(y, other.y, eps_) && equality(z, other.z, eps_);
 		}
@@ -65,19 +83,19 @@ namespace eng {
 			return !(*this == other);
 		}
 
-		void operator +=(const Vect3& other) {
+		void operator +=(const Vect3& other) & {
 			x += other.x;
 			y += other.y;
 			z += other.z;
 		}
 
-		void operator -=(const Vect3& other) {
+		void operator -=(const Vect3& other) & {
 			x -= other.x;
 			y -= other.y;
 			z -= other.z;
 		}
 
-		void operator *=(double other) {
+		void operator *=(double other) & {
 			x *= other;
 			y *= other;
 			z *= other;
@@ -151,22 +169,6 @@ namespace eng {
 			return Vect3(x / other, y / other, z / other);
 		}
 
-		// In case of an error returns a z
-		double at(size_t index) const {
-			if (index == 0) {
-				return x;
-			}
-			if (index == 1) {
-				return y;
-			}
-			if (index == 2) {
-				return z;
-			}
-
-			std::cout << "ERROR::VECT3::AT\n" << "Invalid index.\n\n";
-			return z;
-		}
-
 		double length_sqr() const {
 			return *this * *this;
 		}
@@ -176,23 +178,11 @@ namespace eng {
 		}
 
 		// In case of an error normalize to (1, 0, 0)
-		void normalize() & {
+		Vect3 normalize() const {
 			double vect_length = length();
 
 			if (equality(vect_length, 0.0, eps_)) {
 				std::cout << "ERROR::VECT3::NORMALIZE\n" << "Null vector normalization.\n\n";
-				*this = Vect3(1, 0, 0);
-			} else {
-				*this /= vect_length;
-			}
-		}
-
-		// In case of an error normalize to (1, 0, 0)
-		Vect3 normalized() const {
-			double vect_length = length();
-
-			if (equality(vect_length, 0.0, eps_)) {
-				std::cout << "ERROR::VECT3::NORMALIZED\n" << "Null vector normalization.\n\n";
 				return Vect3(1, 0, 0);
 			}
 
@@ -202,8 +192,8 @@ namespace eng {
 		// In case of an vertical vector returns (1, 0, 0)
 		Vect3 horizont() const {
 			Vect3 horizont_vect(1, 0, 0);
-			if (equality(Vect3(z, 0, -x).length(), 0.0, eps_)) {
-				horizont_vect = Vect3(z, 0, -x).normalized();
+			if (!equality(Vect3(z, 0, -x).length(), 0.0, eps_)) {
+				horizont_vect = Vect3(z, 0, -x).normalize();
 			}
 
 			return horizont_vect;
@@ -240,7 +230,7 @@ namespace eng {
 				return *this;
 			}
 
-			Vect3 norm = n.normalized();
+			Vect3 norm = n.normalize();
 			return norm * (norm * *this) * 2 - *this;
 		}
 

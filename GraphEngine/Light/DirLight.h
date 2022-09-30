@@ -26,7 +26,7 @@ public:
             assert(0);
         }
 
-        this->direction = direction.normalized();
+        this->direction = direction.normalize();
 
         set_projection_matrix();
     }

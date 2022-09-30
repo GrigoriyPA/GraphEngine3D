@@ -84,7 +84,7 @@ class Line : public RenderObject {
         if ((point1 - point2).length() < eps)
             point2 += eng::Vect3(1, 0, 0);
 
-        eng::Vect3 direct = (point2 - point1).normalized();
+        eng::Vect3 direct = (point2 - point1).normalize();
         eng::Vect3 horizont = direct.horizont();
         eng::Vect3 vertical = direct ^ horizont;
         double length = (point2 - point1).length() * 100.0;
@@ -144,7 +144,7 @@ class Line : public RenderObject {
         std::vector < eng::Vect3 > coords2 = (*scene)[plane2.first].get_polygon_positions(plane2.second, 0);
         Flat plane_cur1(coords1);
         Flat plane_cur2(coords2);
-        eng::Vect3 direction = (plane_cur1.get_normal() ^ plane_cur2.get_normal()).normalized();
+        eng::Vect3 direction = (plane_cur1.get_normal() ^ plane_cur2.get_normal()).normalize();
 
         update_line(coord, coord + direction);
     }
@@ -190,7 +190,7 @@ class Line : public RenderObject {
         eng::Vect3 coord1 = (*scene)[point1.first].get_center(point1.second);
         eng::Vect3 coord2 = (*scene)[point2.first].get_center(point2.second);
         eng::Vect3 coord3 = (*scene)[point3.first].get_center(point3.second);
-        eng::Vect3 direction = ((coord1 - coord2).normalized() + (coord3 - coord2).normalized()) / 2;
+        eng::Vect3 direction = ((coord1 - coord2).normalize() + (coord3 - coord2).normalize()) / 2;
 
         update_line(coord2, coord2 + direction);
     }
@@ -236,7 +236,7 @@ class Line : public RenderObject {
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
         Line3 line_cur(coord1, coord2);
         Flat plane_cur(coords);
-        eng::Vect3 direction = (line_cur.get_direction() ^ plane_cur.get_normal()).normalized();
+        eng::Vect3 direction = (line_cur.get_direction() ^ plane_cur.get_normal()).normalize();
 
         update_line((coord1 + coord2) / 2, (coord1 + coord2) / 2 + direction);
     }
@@ -247,7 +247,7 @@ class Line : public RenderObject {
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
         Line3 line_cur(coord1, coord2);
         Flat plane_cur(coords);
-        eng::Vect3 direction = (line_cur.get_direction() ^ plane_cur.get_normal()).normalized();
+        eng::Vect3 direction = (line_cur.get_direction() ^ plane_cur.get_normal()).normalize();
 
         update_line((coord1 + coord2) / 2, (coord1 + coord2) / 2 + direction);
     }

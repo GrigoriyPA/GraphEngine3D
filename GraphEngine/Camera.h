@@ -46,7 +46,7 @@ public:
 		this->max_distance = max_distance;
 		this->screen_ratio = screen_ratio;
 		this->position = position;
-		this->direction = direction.normalized();
+		this->direction = direction.normalize();
 
 		last_position = position;
 
@@ -60,7 +60,7 @@ public:
 			assert(0);
 		}
 
-		this->direction = direction.normalized();
+		this->direction = direction.normalize();
 
 		horizont = direction.horizont();
 	}

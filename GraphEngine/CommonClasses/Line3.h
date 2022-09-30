@@ -20,7 +20,7 @@ public:
 		if ((point2 - point1).length() < eps)
 			direct = eng::Vect3(1, 0, 0);
 		else
-			direct = (point2 - point1).normalized();
+			direct = (point2 - point1).normalize();
 
 		p0 = point1;
 	}
@@ -52,7 +52,7 @@ public:
 		if (normal.length() < eps)
 			return line.p0;
 
-		normal = normal.normalized();
+		normal = normal.normalize();
 		double k = p0 * normal;
 
 		double alf = (k - normal * line.p0) / (line.get_direction() * normal);
