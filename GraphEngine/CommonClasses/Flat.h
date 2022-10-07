@@ -51,7 +51,7 @@ public:
 		return point * normal == k;
 	}
 
-	bool is_intersect(Line3 line) {
+	bool is_intersect(eng::Line line) {
 		return abs(line.get_direction() * normal) > eps;
 	}
 
@@ -68,35 +68,35 @@ public:
 		return (normal ^ plane.get_normal()).length() > eps;
 	}
 
-	eng::Vect3 intersect(Line3 line) {
+	eng::Vect3 intersect(eng::Line line) {
 		eng::Vect3 direct = line.get_direction();
 		double prod = direct * normal;
 
 		if (abs(prod) < eps)
 			return eng::Vect3(0, 0, 0);
 
-		double alf = (k - normal * line.p0) / prod;
+		double alf = (k - normal * line.start_point) / prod;
 
-		return line.p0 + direct * alf;
+		return line.start_point + direct * alf;
 	}
 
 	eng::Vect3 intersect(Cut3 cut) {
 		return intersect(cut.get_line());
 	}
 
-	Line3 intersect(Flat plane) {
+	eng::Line intersect(Flat plane) {
 		eng::Vect3 direct = normal ^ plane.get_normal();
 
 		if (direct.length() < eps)
-			return Line3(eng::Vect3(0, 0, 0), normal);
+			return eng::Line(eng::Vect3(0, 0, 0), normal);
 
 		direct.normalize();
 		eng::Vect3 p0 = normal * k;
-		Line3 ort_line(p0, p0 + (direct ^ normal));
+		eng::Line ort_line(p0, p0 + (direct ^ normal));
 
 		eng::Vect3 intersect = plane.intersect(ort_line);
 
-		return Line3(intersect, intersect + direct);
+		return eng::Line(intersect, intersect + direct);
 	}
 
 	eng::Vect3 symmetry(eng::Vect3 point) {

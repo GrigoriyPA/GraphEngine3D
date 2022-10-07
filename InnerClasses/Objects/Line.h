@@ -112,7 +112,7 @@ class Line : public RenderObject {
         eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point1 = (*scene)[line.first].get_polygon_center(line.second, 0);
         eng::Vect3 point2 = (*scene)[line.first].get_polygon_center(line.second, 1);
-        Line3 line_cur(point1, point2);
+        eng::Line line_cur(point1, point2);
 
         eng::Vect3 proj_point = line_cur.project_point(coord);
         if (proj_point == coord)
@@ -133,7 +133,7 @@ class Line : public RenderObject {
         eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point1 = (*scene)[line.first].get_polygon_center(line.second, 0);
         eng::Vect3 point2 = (*scene)[line.first].get_polygon_center(line.second, 1);
-        Line3 line_cur(point1, point2);
+        eng::Line line_cur(point1, point2);
 
         update_line(coord, coord + line_cur.get_direction());
     }
@@ -160,7 +160,7 @@ class Line : public RenderObject {
     void update_line_symmetry(std::pair < int, int > line, std::pair < int, int > center) {
         eng::Vect3 coord_center1 = (*scene)[center.first].get_polygon_center(center.second, 0);
         eng::Vect3 coord_center2 = (*scene)[center.first].get_polygon_center(center.second, 1);
-        Line3 center_line(coord_center1, coord_center2);
+        eng::Line center_line(coord_center1, coord_center2);
         eng::Vect3 coord1 = (*scene)[line.first].get_polygon_center(line.second, 0);
         eng::Vect3 coord2 = (*scene)[line.first].get_polygon_center(line.second, 1);
 
@@ -200,8 +200,8 @@ class Line : public RenderObject {
         eng::Vect3 coord2 = (*scene)[line1.first].get_polygon_center(line1.second, 1);
         eng::Vect3 coord3 = (*scene)[line2.first].get_polygon_center(line2.second, 0);
         eng::Vect3 coord4 = (*scene)[line2.first].get_polygon_center(line2.second, 1);
-        Line3 line_cur1(coord1, coord2);
-        Line3 line_cur2(coord3, coord4);
+        eng::Line line_cur1(coord1, coord2);
+        eng::Line line_cur2(coord3, coord4);
 
         eng::Vect3 direction1 = line_cur1.get_direction();
         eng::Vect3 direction2 = line_cur2.get_direction();
@@ -220,7 +220,7 @@ class Line : public RenderObject {
         eng::Vect3 point1 = (*scene)[line.first].get_polygon_center(line.second, 0);
         eng::Vect3 point2 = (*scene)[line.first].get_polygon_center(line.second, 1);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
-        Line3 line_cur(point1, point2);
+        eng::Line line_cur(point1, point2);
         Flat plane_cur(coords);
 
         eng::Vect3 proj_point = line_cur.project_point(coord);
@@ -234,7 +234,7 @@ class Line : public RenderObject {
         eng::Vect3 coord1 = (*scene)[point1.first].get_center(point1.second);
         eng::Vect3 coord2 = (*scene)[point2.first].get_center(point2.second);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
-        Line3 line_cur(coord1, coord2);
+        eng::Line line_cur(coord1, coord2);
         Flat plane_cur(coords);
         eng::Vect3 direction = (line_cur.get_direction() ^ plane_cur.get_normal()).normalize();
 
@@ -245,14 +245,14 @@ class Line : public RenderObject {
         eng::Vect3 coord1 = (*scene)[cut.first].get_polygon_center(cut.second, 0);
         eng::Vect3 coord2 = (*scene)[cut.first].get_polygon_center(cut.second, 1);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
-        Line3 line_cur(coord1, coord2);
+        eng::Line line_cur(coord1, coord2);
         Flat plane_cur(coords);
         eng::Vect3 direction = (line_cur.get_direction() ^ plane_cur.get_normal()).normalize();
 
         update_line((coord1 + coord2) / 2, (coord1 + coord2) / 2 + direction);
     }
 
-    RenderObject* intersect_cut(Line3 line_cur, RenderObject* cut, std::vector < int >& location) {
+    RenderObject* intersect_cut(eng::Line line_cur, RenderObject* cut, std::vector < int >& location) {
         eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 1);
         Cut3 cut_ot(coord1, coord2);
@@ -267,10 +267,10 @@ class Line : public RenderObject {
         return point;
     }
 
-    RenderObject* intersect_line(Line3 line_cur, RenderObject* line, std::vector < int >& location) {
+    RenderObject* intersect_line(eng::Line line_cur, RenderObject* line, std::vector < int >& location) {
         eng::Vect3 coord1 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 1);
-        Line3 line_ot(coord1, coord2);
+        eng::Line line_ot(coord1, coord2);
 
         if (!line_cur.is_intersect(line_ot))
             return nullptr;
@@ -376,7 +376,7 @@ public:
 
         eng::Vect3 coord1 = (*scene)[scene_id.first].get_polygon_center(scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[scene_id.first].get_polygon_center(scene_id.second, 1);
-        Line3 line_cur(coord1, coord2);
+        eng::Line line_cur(coord1, coord2);
 
         if (obj->get_type() == 1)
             return intersect_cut(line_cur, obj, location);

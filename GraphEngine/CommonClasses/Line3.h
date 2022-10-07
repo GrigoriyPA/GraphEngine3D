@@ -3,66 +3,79 @@
 #include "Vect3.h"
 
 
-class Line3 {
-	double eps = 0.00001;
+namespace eng {
+	class Line {
+		double eps_ = 1e-5;
 
-	eng::Vect3 direct;
+		Vect3 direction_ = Vect3(1, 0, 0);
 
-public:
-	eng::Vect3 p0;
+	public:
+		Vect3 start_point = Vect3(0, 0, 0);
 
-	Line3() {
-		p0 = eng::Vect3(0, 0, 0);
-		direct = eng::Vect3(1, 0, 0);
-	}
+		Line() {
+		}
 
-	Line3(eng::Vect3 point1, eng::Vect3 point2) {
-		if ((point2 - point1).length() < eps)
-			direct = eng::Vect3(1, 0, 0);
-		else
-			direct = (point2 - point1).normalize();
+		// In case of an error sets direction to (1, 0, 0)
+		Line(const Vect3& point1, const Vect3& point2) {
+			if (equality((point2 - point1).length(), 0.0, eps_)) {
+				std::cout << "ERROR::LINE::BULDER\n" << "Points for initialization are the same.\n\n";
+				direction_ = Vect3(1, 0, 0);
+			} else {
+				direction_ = (point2 - point1).normalize();
+			}
 
-		p0 = point1;
-	}
+			start_point = point1;
+		}
 
-	eng::Vect3 get_direction() {
-		return direct;
-	}
+		// In case of an error sets direction to (1, 0, 0)
+		void set_direction(const Vect3& direction)& {
+			if (equality(direction.length(), 0.0, eps_)) {
+				std::cout << "ERROR::LINE::SET_DIRECTION\n" << "The direction vector has zero length.\n\n";
+				direction_ = Vect3(1, 0, 0);
+			} else {
+				direction_ = direction.normalize();
+			}
+		}
 
-	eng::Vect3 project_point(eng::Vect3 point) {
-		return direct * (direct * (point - p0)) + p0;
-	}
+		Vect3 get_direction() const {
+			return direction_;
+		}
 
-	bool on_line(eng::Vect3 point) {
-		return ((point - p0) ^ direct).length() < eps;
-	}
+		Vect3 project_point(const Vect3& point) const {
+			return direction_ * (direction_ * (point - start_point)) + start_point;
+		}
 
-	bool is_intersect(Line3 line) {
-		eng::Vect3 normal = direct ^ line.get_direction();
+		bool on_line(const Vect3& point) const {
+			return equality((point - project_point(point)).length(), 0.0, eps_);
+		}
 
-		if (normal.length() < eps)
-			return false;
+		bool is_intersect(const Line& line) const {
+			Vect3 normal = direction_ ^ line.get_direction();
 
-		return abs(normal * (p0 - line.p0)) < eps;
-	}
+			if (equality(normal.length(), 0.0, eps_)) {
+				return false;
+			}
+			return equality(normal * (start_point - line.start_point), 0.0, eps_);
+		}
 
-	eng::Vect3 intersect(Line3 line) {
-		eng::Vect3 normal = (direct ^ line.get_direction()) ^ direct;
+		// Returns some point on one of the lines if there is no intersection
+		Vect3 intersect(const Line& line) const {
+			Vect3 normal = (direction_ ^ line.get_direction()) ^ direction_;
 
-		if (normal.length() < eps)
-			return line.p0;
+			if (equality(normal.length(), 0.0, eps_)) {
+				return line.start_point;
+			}
 
-		normal = normal.normalize();
-		double k = p0 * normal;
+			normal = normal.normalize();
+			double k = start_point * normal;
+			double alf = (k - normal * line.start_point) / (line.get_direction() * normal);
 
-		double alf = (k - normal * line.p0) / (line.get_direction() * normal);
+			return line.start_point + alf * line.get_direction();
+		}
 
-		return line.p0 + alf * line.get_direction();
-	}
-
-	eng::Vect3 symmetry(eng::Vect3 point) {
-		eng::Vect3 proj = project_point(point);
-
-		return point.symmetry(proj);
-	}
-};
+		Vect3 symmetry(const Vect3& point) const {
+			Vect3 proj = project_point(point);
+			return point.symmetry(proj);
+		}
+	};
+}

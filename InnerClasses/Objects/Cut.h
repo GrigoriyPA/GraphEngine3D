@@ -64,7 +64,7 @@ class Cut : public RenderObject {
     void update_line_symmetry(std::pair < int, int > cut, std::pair < int, int > center) {
         eng::Vect3 coord_center1 = (*scene)[center.first].get_polygon_center(center.second, 0);
         eng::Vect3 coord_center2 = (*scene)[center.first].get_polygon_center(center.second, 1);
-        Line3 center_line(coord_center1, coord_center2);
+        eng::Line center_line(coord_center1, coord_center2);
         eng::Vect3 coord1 = (*scene)[cut.first].get_polygon_center(cut.second, 0);
         eng::Vect3 coord2 = (*scene)[cut.first].get_polygon_center(cut.second, 1);
 

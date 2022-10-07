@@ -7,7 +7,7 @@
 class Cut3 {
 	double eps = 0.000001;
 
-	Line3 line;
+	eng::Line line;
 	eng::Vect3 p1, p2;
 
 public:
@@ -15,7 +15,7 @@ public:
 	Cut3(eng::Vect3 point1, eng::Vect3 point2) {
 		p1 = point1;
 		p2 = point2;
-		line = Line3(p1, p2);
+		line = eng::Line(p1, p2);
 	}
 
 	eng::Vect3 get_point1() {
@@ -26,7 +26,7 @@ public:
 		return p2;
 	}
 
-	Line3 get_line() {
+	eng::Line get_line() {
 		return line;
 	}
 
@@ -40,17 +40,17 @@ public:
 		return line.project_point(point);
 	}
 
-	bool is_intersect(Line3 line) {
+	bool is_intersect(eng::Line line) {
 		eng::Vect3 direction = line.get_direction();
 
-		return direction.in_angle(p1 - line.p0, p2 - line.p0) || (-direction).in_angle(p1 - line.p0, p2 - line.p0);
+		return direction.in_angle(p1 - line.start_point, p2 - line.start_point) || (-direction).in_angle(p1 - line.start_point, p2 - line.start_point);
 	}
 
 	bool is_intersect(Cut3 cut) {
 		return (p1 - p2).in_angle(cut.p1 - p2, cut.p2 - p2) && (p2 - p1).in_angle(cut.p1 - p1, cut.p2 - p1);
 	}
 
-	eng::Vect3 intersect(Line3 line) {
+	eng::Vect3 intersect(eng::Line line) {
 		return (this->line).intersect(line);
 	}
 

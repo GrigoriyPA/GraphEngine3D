@@ -134,7 +134,7 @@ class Plane : public RenderObject {
         eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point1 = (*scene)[line.first].get_polygon_center(line.second, 0);
         eng::Vect3 point2 = (*scene)[line.first].get_polygon_center(line.second, 1);
-        Line3 line_cur(point1, point2);
+        eng::Line line_cur(point1, point2);
         eng::Vect3 horizont = line_cur.get_direction().horizont();
         eng::Vect3 vertical = horizont ^ line_cur.get_direction();
 
@@ -145,7 +145,7 @@ class Plane : public RenderObject {
         eng::Vect3 point1 = (*scene)[line.first].get_polygon_center(line.second, 0);
         eng::Vect3 point2 = (*scene)[line.first].get_polygon_center(line.second, 1);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
-        Line3 line_cur(point1, point2);
+        eng::Line line_cur(point1, point2);
         Flat plane_cur(coords);
 
         eng::Vect3 horizont = plane_cur.get_normal();
@@ -171,13 +171,13 @@ class Plane : public RenderObject {
         eng::Vect3 coord2 = (*scene)[line1.first].get_polygon_center(line1.second, 1);
         eng::Vect3 coord3 = (*scene)[line2.first].get_polygon_center(line2.second, 0);
         eng::Vect3 coord4 = (*scene)[line2.first].get_polygon_center(line2.second, 1);
-        Line3 line_cur1(coord1, coord2);
-        Line3 line_cur2(coord3, coord4);
+        eng::Line line_cur1(coord1, coord2);
+        eng::Line line_cur2(coord3, coord4);
         eng::Vect3 direction1 = line_cur1.get_direction();
 
         eng::Vect3 direction2 = line_cur2.get_direction();
         if ((direction1 ^ direction2).length() < eps)
-            direction2 = (line_cur2.p0 - line_cur1.p0).normalize();
+            direction2 = (line_cur2.start_point - line_cur1.start_point).normalize();
 
         update_plane({ coord, coord + direction1, coord + direction2 });
     }
@@ -218,7 +218,7 @@ class Plane : public RenderObject {
     void update_line_symmetry(std::pair < int, int > plane, std::pair < int, int > center) {
         eng::Vect3 coord_center1 = (*scene)[center.first].get_polygon_center(center.second, 0);
         eng::Vect3 coord_center2 = (*scene)[center.first].get_polygon_center(center.second, 1);
-        Line3 center_line(coord_center1, coord_center2);
+        eng::Line center_line(coord_center1, coord_center2);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
 
         coords.pop_back();
@@ -268,15 +268,15 @@ class Plane : public RenderObject {
             return;
         }
 
-        Line3 intersection = plane_cur1.intersect(plane_cur2);
-        pos[0] = intersection.p0;
-        pos[1] = intersection.p0 + intersection.get_direction();
+        eng::Line intersection = plane_cur1.intersect(plane_cur2);
+        pos[0] = intersection.start_point;
+        pos[1] = intersection.start_point + intersection.get_direction();
 
         eng::Vect3 direction1 = plane_cur1.get_normal() ^ intersection.get_direction();
         eng::Vect3 direction2 = plane_cur2.get_normal() ^ intersection.get_direction();
         if (direction1 * direction2 * special_coefficient < 0)
             direction2 *= -1;
-        pos[2] = intersection.p0 + (direction1 + direction2) / 2;
+        pos[2] = intersection.start_point + (direction1 + direction2) / 2;
 
         update_plane(pos);
     }
@@ -299,7 +299,7 @@ class Plane : public RenderObject {
     RenderObject* intersect_line(Flat plane_cur, RenderObject* line, std::vector < int >& location) {
         eng::Vect3 coord1 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 1);
-        Line3 line_ot(coord1, coord2);
+        eng::Line line_ot(coord1, coord2);
 
         if (!plane_cur.is_intersect(line_ot))
             return nullptr;
@@ -318,9 +318,9 @@ class Plane : public RenderObject {
         if (!plane_cur.is_intersect(plane_ot))
             return nullptr;
 
-        Line3 intersection = plane_cur.intersect(plane_ot);
+        eng::Line intersection = plane_cur.intersect(plane_ot);
 
-        RenderObject* line = new Line(intersection.p0, intersection.p0 + intersection.get_direction(), location[2], scene);
+        RenderObject* line = new Line(intersection.start_point, intersection.start_point + intersection.get_direction(), location[2], scene);
         line->action = 1;
         line->init_obj = { this, plane };
 

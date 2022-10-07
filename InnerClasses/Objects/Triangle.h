@@ -96,7 +96,7 @@ class Triangle : public RenderObject {
     void update_line_symmetry(std::pair < int, int > triangle, std::pair < int, int > center) {
         eng::Vect3 coord_center1 = (*scene)[center.first].get_polygon_center(center.second, 0);
         eng::Vect3 coord_center2 = (*scene)[center.first].get_polygon_center(center.second, 1);
-        Line3 center_line(coord_center1, coord_center2);
+        eng::Line center_line(coord_center1, coord_center2);
         std::vector < eng::Vect3 > coords = (*scene)[triangle.first].get_polygon_positions(triangle.second, 0);
 
         for (eng::Vect3& el : coords)
@@ -152,7 +152,7 @@ class Triangle : public RenderObject {
     RenderObject* intersect_line(std::vector < eng::Vect3 > triangle, RenderObject* line, std::vector < int >& location) {
         eng::Vect3 coord1 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 1);
-        Line3 line_ot(coord1, coord2);
+        eng::Line line_ot(coord1, coord2);
         Flat plane(triangle);
 
         if (!plane.is_intersect(line_ot))
@@ -177,7 +177,7 @@ class Triangle : public RenderObject {
         if (!plane_cur.is_intersect(plane_ot))
             return nullptr;
 
-        Line3 intersection = plane_cur.intersect(plane_ot);
+        eng::Line intersection = plane_cur.intersect(plane_ot);
 
         std::vector < eng::Vect3 > intersect_coords;
         for (int i = 0; i < 3; i++) {

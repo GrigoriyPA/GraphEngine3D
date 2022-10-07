@@ -65,7 +65,7 @@ class Point : public RenderObject {
     void update_line_symmetry(std::pair < int, int > point, std::pair < int, int > center) {
         eng::Vect3 coord_center1 = (*scene)[center.first].get_polygon_center(center.second, 0);
         eng::Vect3 coord_center2 = (*scene)[center.first].get_polygon_center(center.second, 1);
-        Line3 center_line(coord_center1, coord_center2);
+        eng::Line center_line(coord_center1, coord_center2);
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
@@ -104,7 +104,7 @@ class Point : public RenderObject {
         eng::Vect3 coord2 = (*scene)[line.first].get_polygon_center(line.second, 1);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(Line3(coord1, coord2).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(eng::Line(coord1, coord2).project_point(point) - point), scene_id.second);
     }
 
     void update_plan_connect(std::pair < int, int > plane) {
