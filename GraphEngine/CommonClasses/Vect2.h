@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <initializer_list>
 #include <SFML/System/Vector2.hpp>
 #include "Functions.h"
 
@@ -18,9 +19,22 @@ namespace eng {
             this->y = y;
         }
 
-        explicit Vect2(const std::vector<double>& init) {
+        template <typename T>
+        Vect2(const std::initializer_list<T>& init) {
+            size_t comp_id = 0;
+            for (const T& element : init) {
+                (*this)[comp_id] = static_cast<double>(element);
+
+                if (++comp_id == 2) {
+                    break;
+                }
+            }
+        }
+
+        template <typename T>
+        explicit Vect2(const std::vector<T>& init) {
             for (size_t comp_id = 0; comp_id < std::min(static_cast<size_t>(2), init.size()); ++comp_id) {
-                (*this)[comp_id] = init[comp_id];
+                (*this)[comp_id] = static_cast<double>(init[comp_id]);
             }
         }
 
@@ -32,12 +46,13 @@ namespace eng {
         Vect2() {
         }
 
-        explicit operator std::vector<double>() const {
-            return { x, y };
+        template <typename T>
+        explicit operator std::vector<T>() const {
+            return { static_cast<T>(x), static_cast<T>(y) };
         }
 
         explicit operator sf::Vector2f() const {
-            return sf::Vector2f(x, y);
+            return sf::Vector2f(static_cast<float>(x), static_cast<float>(y));
         }
 
         explicit operator std::string() const {
@@ -78,41 +93,46 @@ namespace eng {
             return !(*this == other);
         }
 
-        void operator +=(const Vect2& other) & {
+        Vect2& operator +=(const Vect2& other)& {
             x += other.x;
             y += other.y;
+            return *this;
         }
 
-        void operator -=(const Vect2& other) & {
+        Vect2& operator -=(const Vect2& other)& {
             x -= other.x;
             y -= other.y;
+            return *this;
         }
 
-        void operator *=(double other) & {
+        Vect2& operator *=(double other)& {
             x *= other;
             y *= other;
+            return *this;
         }
 
         // In case of an error skips operation
-        void operator /=(double other) & {
+        Vect2& operator /=(double other) & {
             if (equality(other, 0.0, eps_)) {
                 std::cout << "ERROR::VECT2::OPERATOR/=(DOUBLE)\n" << "Division by zero.\n\n";
-                return;
+                return *this;
             }
 
             x /= other;
             y /= other;
+            return *this;
         }
 
         // In case of an error skips operation
-        void operator ^=(double other) & {
+        Vect2& operator ^=(double other)& {
             if (x < 0 || y < 0) {
                 std::cout << "ERROR::VECT2::OPERATOR^=(DOUBLE)\n" << "Raising a negative number to a power.\n\n";
-                return;
+                return *this;
             }
 
             x = pow(x, other);
             y = pow(y, other);
+            return *this;
         }
 
         Vect2 operator -() const {
@@ -226,14 +246,6 @@ namespace eng {
             return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
         }
 
-        float* data_f() const {
-            return new float[2]{ static_cast<float>(x), static_cast<float>(y) };
-        }
-
-        double* data_d() const {
-            return new double[2]{ x, y };
-        }
-
         static Vect2 get_max(const Vect2& v1, const Vect2& v2) {
             return Vect2(std::max(v1.x, v2.x), std::max(v1.y, v2.y));
         }
@@ -253,7 +265,7 @@ namespace eng {
         return fout;
     }
 
-    Vect2 operator *(double left, const Vect2& right) {
-        return Vect2(right.x * left, right.y * left);
+    Vect2 operator *(double value, const Vect2& vector) {
+        return Vect2(vector.x * value, vector.y * value);
     }
 }

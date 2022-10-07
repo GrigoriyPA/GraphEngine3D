@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <initializer_list>
 #include <SFML/Graphics/Color.hpp>
 #include "Functions.h"
 
@@ -20,9 +21,22 @@ namespace eng {
 			this->z = z;
 		}
 
-		explicit Vect3(const std::vector<double>& init) {
-			for (size_t comp_id = 0; comp_id < std::min(static_cast<size_t>(3), init.size()); comp_id++) {
-				(*this)[comp_id] = init[comp_id];
+		template <typename T>
+		Vect3(const std::initializer_list<T>& init) {
+			size_t comp_id = 0;
+			for (const T& element : init) {
+				(*this)[comp_id] = static_cast<double>(element);
+
+				if (++comp_id == 3) {
+					break;
+				}
+			}
+		}
+
+		template <typename T>
+		explicit Vect3(const std::vector<T>& init) {
+			for (size_t comp_id = 0; comp_id < std::min(static_cast<size_t>(3), init.size()); ++comp_id) {
+				(*this)[comp_id] = static_cast<double>(init[comp_id]);
 			}
 		}
 
@@ -35,8 +49,9 @@ namespace eng {
 		Vect3() {
 		}
 
-		explicit operator std::vector<double>() const {
-			return { x, y, z };
+		template <typename T>
+		explicit operator std::vector<T>() const {
+			return { static_cast<T>(x), static_cast<T>(y), static_cast<T>(z) };
 		}
 
 		explicit operator std::string() const {
@@ -83,46 +98,51 @@ namespace eng {
 			return !(*this == other);
 		}
 
-		void operator +=(const Vect3& other) & {
+		Vect3& operator +=(const Vect3& other)& {
 			x += other.x;
 			y += other.y;
 			z += other.z;
+			return *this;
 		}
 
-		void operator -=(const Vect3& other) & {
+		Vect3& operator -=(const Vect3& other)& {
 			x -= other.x;
 			y -= other.y;
 			z -= other.z;
+			return *this;
 		}
 
-		void operator *=(double other) & {
+		Vect3& operator *=(double other)& {
 			x *= other;
 			y *= other;
 			z *= other;
+			return *this;
 		}
 
 		// In case of an error skips operation
-		void operator /=(double other) & {
+		Vect3& operator /=(double other)& {
 			if (equality(other, 0.0, eps_)) {
 				std::cout << "ERROR::VECT3::OPERATOR/=(DOUBLE)\n" << "Division by zero.\n\n";
-				return;
+				return *this;
 			}
 
 			x /= other;
 			y /= other;
 			z /= other;
+			return *this;
 		}
 
 		// In case of an error skips operation
-		void operator ^=(double other) & {
+		Vect3& operator ^=(double other)& {
 			if (x < 0 || y < 0 || z < 0) {
 				std::cout << "ERROR::VECT3::OPERATOR^=(DOUBLE)\n" << "Raising a negative number to a power.\n\n";
-				return;
+				return *this;
 			}
 
 			x = pow(x, other);
 			y = pow(y, other);
 			z = pow(z, other);
+			return *this;
 		}
 
 		Vect3 operator -() const {
@@ -145,6 +165,16 @@ namespace eng {
 			return x * other.x + y * other.y + z * other.z;
 		}
 
+		// In case of an error skips operation
+		Vect3 operator /(double other) const {
+			if (equality(other, 0.0, eps_)) {
+				std::cout << "ERROR::VECT3::OPERATOR/(DOUBLE)\n" << "Division by zero.\n\n";
+				return *this;
+			}
+
+			return Vect3(x / other, y / other, z / other);
+		}
+
 		Vect3 operator ^(const Vect3& other) const {
 			return Vect3(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x);
 		}
@@ -157,16 +187,6 @@ namespace eng {
 			}
 
 			return Vect3(pow(x, other), pow(y, other), pow(z, other));
-		}
-
-		// In case of an error skips operation
-		Vect3 operator /(double other) const {
-			if (equality(other, 0.0, eps_)) {
-				std::cout << "ERROR::VECT3::OPERATOR/(DOUBLE)\n" << "Division by zero.\n\n";
-				return *this;
-			}
-
-			return Vect3(x / other, y / other, z / other);
 		}
 
 		double length_sqr() const {
@@ -256,14 +276,6 @@ namespace eng {
 			return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
 		}
 
-		float* data_f() const {
-			return new float[3]{ static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) };
-		}
-
-		double* data_d() const {
-			return new double[3]{ x, y, z };
-		}
-
 		static Vect3 get_max(const Vect3& v1, const Vect3& v2) {
 			return Vect3(std::max(v1.x, v2.x), std::max(v1.y, v2.y), std::max(v1.z, v2.z));
 		}
@@ -283,7 +295,7 @@ namespace eng {
 		return fout;
 	}
 
-	Vect3 operator *(double left, const Vect3& right) {
-		return Vect3(right.x * left, right.y * left, right.z * left);
+	Vect3 operator *(double value, const Vect3& vector) {
+		return Vect3(vector.x * value, vector.y * value, vector.z * value);
 	}
 }

@@ -40,7 +40,7 @@ public:
 
 	void use(Shader* shader) {
 		try {
-			glUniform1fv(glGetUniformLocation(shader->program, "kernel"), 9, kernel.value_ptr());
+			glUniform1fv(glGetUniformLocation(shader->program, "kernel"), 9, &std::vector<float>(kernel)[0]);
 		}
 		catch (const std::exception& error) {
 			std::cout << "ERROR::KERNEL::USE\n" << "Unknown error, description:\n" << error.what() << "\n";

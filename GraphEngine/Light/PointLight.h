@@ -36,7 +36,7 @@ public:
     }
 
     eng::Matrix get_light_space_matrix() {
-        return eng::one_matrix(4);
+        return eng::Matrix::one_matrix(4);
     }
 
     GraphObject get_light_object() {
@@ -47,8 +47,8 @@ public:
         material.light = true;
         light_object.set_material(material);
 
-        int model_id = light_object.add_model(eng::scale_matrix(0.25));
-        light_object.change_matrix(trans_matrix(position), model_id);
+        int model_id = light_object.add_model(eng::Matrix::scale_matrix(0.25));
+        light_object.change_matrix(eng::Matrix::translation_matrix(position), model_id);
 
         return light_object;
     }

@@ -23,7 +23,7 @@ GraphObject get_cylinder(int count_points, bool real_normals = false, int max_co
 	cylinder[polygon_id].invert_points_order();
 
 	polygon_id = cylinder.add_polygon(cylinder[polygon_id]);
-	cylinder[polygon_id].change_matrix(trans_matrix(eng::Vect3(0, 1, 0)));
+	cylinder[polygon_id].change_matrix(eng::Matrix::translation_matrix(eng::Vect3(0, 1, 0)));
 	cylinder[polygon_id].invert_points_order();
 
 	for (int i = 0; i < count_points; i++) {

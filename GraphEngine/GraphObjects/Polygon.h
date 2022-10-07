@@ -61,7 +61,7 @@ public:
 class Polygon {
 	double eps = 0.00001;
 	unsigned int matrix_buffer = 0;
-	eng::Matrix polygon_trans = eng::one_matrix(4);
+	eng::Matrix polygon_trans = eng::Matrix::one_matrix(4);
 
 	int count_points;
 	unsigned int vertex_array = 0, vertex_buffer = 0, index_buffer = 0;

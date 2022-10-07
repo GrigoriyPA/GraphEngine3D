@@ -384,12 +384,12 @@ public:
 		check_active_button(cur_active_button);
 		active_object = object_id[scene->get_center_object_id(intersect_point)];
 
-		eng::Matrix trans = trans_matrix(scene->cam.get_change_vector(stable_point));
+		eng::Matrix trans = eng::Matrix::translation_matrix(scene->cam.get_change_vector(stable_point));
 		stable_point = trans * stable_point;
 
 		double delt = pow(SCROLL_SENSITIVITY, scroll);
 		eng::Vect3 new_point = (stable_point - scene->cam.position) * delt + scene->cam.position;
-		trans = trans * trans_matrix(new_point - stable_point);
+		trans = trans * eng::Matrix::translation_matrix(new_point - stable_point);
 		stable_point = new_point;
 		scroll = 0;
 
@@ -403,7 +403,7 @@ public:
 		if (input_state == 1) {
 			eng::Vect3 new_temp_point = scene->cam.position + scene->cam.get_direction() * point_distance;
 			if ((new_temp_point - temp_point).length() > eps)
-				objects[0]->move(trans_matrix(new_temp_point - temp_point));
+				objects[0]->move(eng::Matrix::translation_matrix(new_temp_point - temp_point));
 			temp_point = new_temp_point;
 		}
 

@@ -24,19 +24,19 @@ GraphObject get_cube(int max_count_models = 1) {
         });
 
     polygon_id = cube.add_polygon(cube[polygon_id]);
-    cube[polygon_id].change_matrix(rotate_matrix(eng::Vect3(0, 1, 0), eng::PI / 2));
+    cube[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI / 2));
 
     polygon_id = cube.add_polygon(cube[polygon_id]);
-    cube[polygon_id].change_matrix(rotate_matrix(eng::Vect3(0, 1, 0), eng::PI / 2));
+    cube[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI / 2));
 
     polygon_id = cube.add_polygon(cube[polygon_id]);
-    cube[polygon_id].change_matrix(rotate_matrix(eng::Vect3(0, 1, 0), eng::PI / 2));
+    cube[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI / 2));
 
     polygon_id = cube.add_polygon(cube[polygon_id]);
-    cube[polygon_id].change_matrix(rotate_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
+    cube[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
 
     polygon_id = cube.add_polygon(cube[polygon_id]);
-    cube[polygon_id].change_matrix(rotate_matrix(eng::Vect3(0, 0, 1), eng::PI));
+    cube[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI));
 
     cube.set_center();
 

@@ -13,7 +13,7 @@ struct Model {
 	int used_memory;
 	eng::Matrix matrix;
 
-	Model(eng::Matrix matrix = eng::one_matrix(4), bool border = false, int used_memory = -1) {
+	Model(eng::Matrix matrix = eng::Matrix::one_matrix(4), bool border = false, int used_memory = -1) : matrix(matrix) {
 		this->matrix = matrix;
 		this->border = border;
 		this->used_memory = used_memory;
@@ -67,7 +67,7 @@ class GraphObject {
 
 		int cnt = models.size();
 		if (model_id != -1) {
-			glUniformMatrix4fv(glGetUniformLocation(shader_program->program, "not_instance_model"), 1, GL_FALSE, &models[model_id].matrix.value_vector()[0]);
+			glUniformMatrix4fv(glGetUniformLocation(shader_program->program, "not_instance_model"), 1, GL_FALSE, &std::vector<float>(models[model_id].matrix)[0]);
 			cnt = 1;
 		}
 
@@ -285,7 +285,7 @@ public:
 		models[model_id].matrix = trans;
 
 		glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[model_id].used_memory, sizeof(float) * 16, &models[model_id].matrix.value_vector()[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[model_id].used_memory, sizeof(float) * 16, &std::vector<float>(models[model_id].matrix)[0]);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
@@ -400,7 +400,7 @@ public:
 		return free_polygon_id;
 	}
 
-	int add_model(eng::Matrix matrix = eng::one_matrix(4)) {
+	int add_model(eng::Matrix matrix = eng::Matrix::one_matrix(4)) {
 		if (models.size() == max_count_models) {
 			std::cout << "ERROR::GRAPH_OBJECT::ADD_MATRYX\n" << "Too many instances created.\n";
 			assert(0);
@@ -413,7 +413,7 @@ public:
 		models[free_model_id] = Model(matrix, false, models.size());
 
 		glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[free_model_id].used_memory, sizeof(float) * 16, &models[free_model_id].matrix.value_vector()[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[free_model_id].used_memory, sizeof(float) * 16, &std::vector<float>(models[free_model_id].matrix)[0]);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		return free_model_id;
@@ -430,7 +430,7 @@ public:
 			used_memory[i - 1] = used_memory[i];
 			models[used_memory[i - 1]].used_memory = i - 1;
 
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * (i - 1), sizeof(float) * 16, &models[used_memory[i - 1]].matrix.value_vector()[0]);
+			glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * (i - 1), sizeof(float) * 16, &std::vector<float>(models[used_memory[i - 1]].matrix)[0]);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -448,7 +448,7 @@ public:
 		models[model_id].matrix = trans * models[model_id].matrix;
 
 		glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[model_id].used_memory, sizeof(float) * 16, &models[model_id].matrix.value_vector()[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[model_id].used_memory, sizeof(float) * 16, &std::vector<float>(models[model_id].matrix)[0]);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
@@ -477,7 +477,7 @@ public:
 		}
 
 		set_uniforms(shader_program, object_id);
-		glUniformMatrix4fv(glGetUniformLocation(shader_program->program, "not_instance_model"), 1, GL_FALSE, &models[model_id].matrix.value_vector()[0]);
+		glUniformMatrix4fv(glGetUniformLocation(shader_program->program, "not_instance_model"), 1, GL_FALSE, &std::vector<float>(models[model_id].matrix)[0]);
 		glUniform1i(glGetUniformLocation(shader_program->program, "model_id"), models[model_id].used_memory);
 
 		if (models[model_id].border) {
@@ -537,7 +537,7 @@ public:
 		}
 
 		eng::Matrix model_matrix = get_matrix(model_id);
-		change_matrix(model_matrix * scale_matrix(scale) * model_matrix.inverse(), model_id);
+		change_matrix(model_matrix * eng::Matrix::scale_matrix(scale) * model_matrix.inverse(), model_id);
 	}
 
 	void import_from_file(std::string path) {
@@ -561,7 +561,7 @@ public:
 			}
 		}
 
-		process_node(scene->mRootNode, scene, directory, eng::one_matrix(4));
+		process_node(scene->mRootNode, scene, directory, eng::Matrix::one_matrix(4));
 	}
 
 	~GraphObject() {

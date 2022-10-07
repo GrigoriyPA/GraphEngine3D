@@ -41,9 +41,9 @@ class Cut : public RenderObject {
         eng::Vect3 vertical = direct ^ horizont;
         double length = (point2 - point1).length();
 
-        (*scene)[scene_id.first].set_matrix(eng::scale_matrix(eng::Vect3(POINT_RADIUS * 0.2, length, POINT_RADIUS * 0.2)), scene_id.second);
+        (*scene)[scene_id.first].set_matrix(eng::Matrix::scale_matrix(eng::Vect3(POINT_RADIUS * 0.2, length, POINT_RADIUS * 0.2)), scene_id.second);
         (*scene)[scene_id.first].change_matrix(eng::Matrix(horizont, -direct, vertical), scene_id.second);
-        (*scene)[scene_id.first].change_matrix(eng::trans_matrix(point2), scene_id.second);
+        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(point2), scene_id.second);
     }
 
     void update_two_points(std::pair < int, int > point1, std::pair < int, int > point2) {

@@ -80,7 +80,7 @@ signed main() {
 
     int obj_id = scene.add_object(GraphObject(1));
     scene[obj_id].import_from_file("Resources/Objects/test_car/thunder_master_hypercar_mark_i_by_alex.ka..glb");
-    scene[obj_id].add_model(scale_matrix(eng::Vect3(-1, 1, 1)) * trans_matrix(eng::Vect3(0, -0.5, 5)) * rotate_matrix(eng::Vect3(0, 1, 0), eng::PI));
+    scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
     
     /*obj_id = scene.add_object(get_cube(3));
     Material material;
@@ -162,7 +162,7 @@ signed main() {
     scene[obj_id][pol_id].material.diffuse = eng::Vect3(1, 1, 1);
     scene[obj_id][pol_id].material.alpha = 0.5;
     scene[obj_id].transparent = true;
-    scene[obj_id].add_model(trans_matrix(eng::Vect3(0, -0.5, 5)) * eng::scale_matrix(10));
+    scene[obj_id].add_model(eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::scale_matrix(10));
 
     DirLight light(eng::Vect3(-1, -1, 1));
     light.ambient = eng::Vect3(0.1, 0.1, 0.1);

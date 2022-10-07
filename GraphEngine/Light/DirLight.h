@@ -8,19 +8,19 @@ class DirLight : public Light {
     eng::Matrix projection;
 
     void set_projection_matrix() {
-        projection = scale_matrix(eng::Vect3(2.0 / shadow_width, 2.0 / shadow_height, 2.0 / shadow_depth)) * trans_matrix(eng::Vect3(0, 0, -shadow_depth / 2));
+        projection = eng::Matrix::scale_matrix(eng::Vect3(2.0 / shadow_width, 2.0 / shadow_height, 2.0 / shadow_depth)) * eng::Matrix::translation_matrix(eng::Vect3(0, 0, -shadow_depth / 2));
     }
 
     eng::Matrix get_view_matrix() {
         eng::Vect3 horizont = direction.horizont();
 
-        return eng::Matrix(horizont, direction ^ horizont, direction).transpose() * trans_matrix(-shadow_position);
+        return eng::Matrix(horizont, direction ^ horizont, direction).transpose() * eng::Matrix::translation_matrix(-shadow_position);
     }
 
 public:
     eng::Vect3 shadow_position = eng::Vect3(0, 0, 0);
 
-    DirLight(eng::Vect3 direction) {
+    DirLight(eng::Vect3 direction) : projection(eng::Matrix::one_matrix(4)) {
         if (direction.length() < eps) {
             std::cout << "ERROR::DIR_LIGHT::BUILDER\n" << "The direction vector has zero length.\n";
             assert(0);
@@ -46,7 +46,7 @@ public:
             glUniform3f(glGetUniformLocation(shader_program->program, (name + "diffuse").c_str()), diffuse.x, diffuse.y, diffuse.z);
             glUniform3f(glGetUniformLocation(shader_program->program, (name + "specular").c_str()), specular.x, specular.y, specular.z);
             if (shadow)
-                glUniformMatrix4fv(glGetUniformLocation(shader_program->program, (name + "light_space").c_str()), 1, GL_FALSE, &this->get_light_space_matrix().value_vector()[0]);
+                glUniformMatrix4fv(glGetUniformLocation(shader_program->program, (name + "light_space").c_str()), 1, GL_FALSE, &std::vector<float>(this->get_light_space_matrix())[0]);
         }
         catch (const std::exception& error) {
             std::cout << "ERROR::DIR_LIGHT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
@@ -97,8 +97,8 @@ public:
         material.alpha = 0.3;
         shadow_box.set_material(material);
 
-        int model_id = shadow_box.add_model(scale_matrix(eng::Vect3(shadow_width, shadow_height, shadow_depth)));
-        shadow_box.change_matrix(trans_matrix(eng::Vect3(0, 0, (1 - eps) * shadow_depth / 2)), model_id);
+        int model_id = shadow_box.add_model(eng::Matrix::scale_matrix(eng::Vect3(shadow_width, shadow_height, shadow_depth)));
+        shadow_box.change_matrix(eng::Matrix::translation_matrix(eng::Vect3(0, 0, (1 - eps) * shadow_depth / 2)), model_id);
         shadow_box.change_matrix(get_view_matrix().inverse(), model_id);
 
         return shadow_box;

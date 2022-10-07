@@ -71,7 +71,7 @@ class GraphEngine {
 
 	void set_uniforms() {
 		main_shader.use();
-		glUniformMatrix4fv(glGetUniformLocation(main_shader.program, "projection"), 1, GL_FALSE, &cam.get_projection_matrix().value_vector()[0]);
+		glUniformMatrix4fv(glGetUniformLocation(main_shader.program, "projection"), 1, GL_FALSE, &std::vector<float>(cam.get_projection_matrix())[0]);
 		glUniform1i(glGetUniformLocation(main_shader.program, "diffuse_map"), 0);
 		glUniform1i(glGetUniformLocation(main_shader.program, "specular_map"), 1);
 		glUniform1i(glGetUniformLocation(main_shader.program, "emission_map"), 2);
@@ -248,7 +248,7 @@ class GraphEngine {
 				continue;
 
 			glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_map_tex, 0, i);
-			glUniformMatrix4fv(glGetUniformLocation(depth_shader.program, "light_space"), 1, GL_FALSE, &lights[i]->get_light_space_matrix().value_vector()[0]);
+			glUniformMatrix4fv(glGetUniformLocation(depth_shader.program, "light_space"), 1, GL_FALSE, &std::vector<float>(lights[i]->get_light_space_matrix())[0]);
 
 			for (std::unordered_map < int, GraphObject >::iterator object = objects.begin(); object != objects.end(); object++)
 				object->second.draw_depth_map();
@@ -266,7 +266,7 @@ class GraphEngine {
 		main_shader.use();
 
 		set_light_uniforms();
-		glUniformMatrix4fv(glGetUniformLocation(main_shader.program, "view"), 1, GL_FALSE, &cam.get_view_matrix().value_vector()[0]);
+		glUniformMatrix4fv(glGetUniformLocation(main_shader.program, "view"), 1, GL_FALSE, &std::vector<float>(cam.get_view_matrix())[0]);
 		glUniform3f(glGetUniformLocation(main_shader.program, "view_pos"), cam.position.x, cam.position.y, cam.position.z);
 
 		glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_tex);
