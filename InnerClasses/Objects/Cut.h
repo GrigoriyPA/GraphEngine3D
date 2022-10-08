@@ -73,7 +73,7 @@ class Cut : public RenderObject {
 
     void update_plane_symmetry(std::pair < int, int > cut, std::pair < int, int > center) {
         std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_polygon_positions(center.second, 0);
-        Flat center_plane(center_coords);
+        eng::Flat center_plane(center_coords);
         eng::Vect3 coord1 = (*scene)[cut.first].get_polygon_center(cut.second, 0);
         eng::Vect3 coord2 = (*scene)[cut.first].get_polygon_center(cut.second, 1);
 
@@ -107,7 +107,7 @@ class Cut : public RenderObject {
 
     void update_plan_connect(std::pair < int, int > plane) {
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
-        Flat plane_proj(coords);
+        eng::Flat plane_proj(coords);
         eng::Vect3 point1 = plane_proj.project_point((*scene)[scene_id.first].get_polygon_center(scene_id.second, 0));
         eng::Vect3 point2 = plane_proj.project_point((*scene)[scene_id.first].get_polygon_center(scene_id.second, 1));
 

@@ -146,7 +146,7 @@ class Plane : public RenderObject {
         eng::Vect3 point2 = (*scene)[line.first].get_polygon_center(line.second, 1);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
         eng::Line line_cur(point1, point2);
-        Flat plane_cur(coords);
+        eng::Flat plane_cur(coords);
 
         eng::Vect3 horizont = plane_cur.get_normal();
         if ((horizont ^ line_cur.get_direction()).length() < eps)
@@ -158,7 +158,7 @@ class Plane : public RenderObject {
     void update_parallel_to_plane(std::pair < int, int > point, std::pair < int, int > plane) {
         eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
         std::vector <eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
-        Flat plane_cur(coords);
+        eng::Flat plane_cur(coords);
         eng::Vect3 horizont = plane_cur.get_normal().horizont();
         eng::Vect3 vertical = horizont ^ plane_cur.get_normal();
 
@@ -230,7 +230,7 @@ class Plane : public RenderObject {
 
     void update_plane_symmetry(std::pair < int, int > plane, std::pair < int, int > center) {
         std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_polygon_positions(center.second, 0);
-        Flat center_plane(center_coords);
+        eng::Flat center_plane(center_coords);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
 
         coords.pop_back();
@@ -256,8 +256,8 @@ class Plane : public RenderObject {
     void update_bisector(std::pair < int, int > plane1, std::pair < int, int > plane2) {
         std::vector < eng::Vect3 > coords1 = (*scene)[plane1.first].get_polygon_positions(plane1.second, 0);
         std::vector < eng::Vect3 > coords2 = (*scene)[plane2.first].get_polygon_positions(plane2.second, 0);
-        Flat plane_cur1(coords1);
-        Flat plane_cur2(coords2);
+        eng::Flat plane_cur1(coords1);
+        eng::Flat plane_cur2(coords2);
 
         std::vector < eng::Vect3 > pos(3);
         for (int i = 0; i < 3; i++)
@@ -281,7 +281,7 @@ class Plane : public RenderObject {
         update_plane(pos);
     }
 
-    RenderObject* intersect_cut(Flat plane_cur, RenderObject* cut, std::vector < int >& location) {
+    RenderObject* intersect_cut(eng::Flat plane_cur, RenderObject* cut, std::vector < int >& location) {
         eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 1);
         eng::Cut cut_ot(coord1, coord2);
@@ -296,7 +296,7 @@ class Plane : public RenderObject {
         return point;
     }
 
-    RenderObject* intersect_line(Flat plane_cur, RenderObject* line, std::vector < int >& location) {
+    RenderObject* intersect_line(eng::Flat plane_cur, RenderObject* line, std::vector < int >& location) {
         eng::Vect3 coord1 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 1);
         eng::Line line_ot(coord1, coord2);
@@ -311,9 +311,9 @@ class Plane : public RenderObject {
         return point;
     }
 
-    RenderObject* intersect_plane(Flat plane_cur, RenderObject* plane, std::vector < int >& location) {
+    RenderObject* intersect_plane(eng::Flat plane_cur, RenderObject* plane, std::vector < int >& location) {
         std::vector < eng::Vect3 > coords = (*scene)[plane->scene_id.first].get_polygon_positions(plane->scene_id.second, 0);
-        Flat plane_ot(coords);
+        eng::Flat plane_ot(coords);
 
         if (!plane_cur.is_intersect(plane_ot))
             return nullptr;
@@ -384,7 +384,7 @@ public:
             return obj->intersect(this, location);
 
         std::vector < eng::Vect3 > coords = (*scene)[scene_id.first].get_polygon_positions(scene_id.second, 0);
-        Flat plane_cur(coords);
+        eng::Flat plane_cur(coords);
 
         if (obj->get_type() == 1)
             return intersect_cut(plane_cur, obj, location);

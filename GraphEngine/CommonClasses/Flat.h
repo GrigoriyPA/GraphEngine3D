@@ -1,107 +1,137 @@
 #pragma once
 
-#include "Vect3.h"
-#include "Line.h"
 #include "Cut.h"
 
 
-class Flat {
-	double eps = 0.000001;
+namespace eng {
+	class Flat {
+		double eps_ = 1e-5;
 
-	eng::Vect3 normal;
+		Vect3 normal_ = Vect3(0, 1, 0);
 
-public:
-	double k;
+	public:
+		double distance = 0;
 
-	Flat(eng::Vect3 point1, eng::Vect3 point2, eng::Vect3 point3) {
-		normal = (point1 - point2) ^ (point1 - point3);
-
-		if (normal.length() < eps) {
-			if ((point2 - point1).length() > eps) {
-				point3 = (point2 - point1).horizont() + point1;
-				normal = (point1 - point2) ^ (point1 - point3);
-			}
-			else {
-				normal = eng::Vect3(0, 1, 0);
-			}
+		Flat() {
 		}
 
-		normal = normal.normalize();
-		k = normal * point1;
-	}
-
-	Flat(std::vector < eng::Vect3 > points) {
-		if (points.size() < 3) {
-			std::cout << "ERROR::FLAT::BUILDER\n" << "The number of points is less than three.\n";
-			assert(0);
+		// In case of an error sets normal to (0, 1, 0)
+		Flat(const Vect3& point1, const Vect3& point2, const Vect3& point3) {
+			normal_ = (point1 - point2) ^ (point1 - point3);
+			if (equality(normal_.length(), 0.0, eps_)) {
+				if (!equality((point2 - point1).length(), 0.0, eps_)) {
+					std::cout << "ERROR::FLAT::BULDER\n" << "Points to initialize are collinear.\n\n";
+					normal_ = (point1 - point2) ^ (point2 - point1).horizont();
+				} else {
+					std::cout << "ERROR::FLAT::BULDER\n" << "Points for initialization are the same.\n\n";
+					normal_ = Vect3(0, 1, 0);
+				}
+			}
+			normal_ = normal_.normalize();
+			distance = normal_ * point1;
 		}
 
-		*this = Flat(points[0], points[1], points[2]);
-	}
+		// In case of an error sets default values
+		Flat(const std::initializer_list<Vect3>& points) {
+			if (points.size() < 3) {
+				std::cout << "ERROR::FLAT::BUILDER\n" << "The number of points is less than three.\n\n";
+				return;
+			}
 
-	eng::Vect3 get_normal() {
-		return normal;
-	}
+			std::vector<Vect3> init;
+			init.reserve(points.size());
+			for (const Vect3& point : points) {
+				init.push_back(point);
 
-	eng::Vect3 project_point(eng::Vect3 point) {
-		return normal * (normal * (normal * k - point)) + point;
-	}
+				if (init.size() == 3) {
+					break;
+				}
+			}
+			*this = Flat(init[0], init[1], init[2]);
+		}
 
-	bool on_plane(eng::Vect3 point) {
-		return point * normal == k;
-	}
+		// In case of an error sets default values
+		explicit Flat(const std::vector<Vect3>& points) {
+			if (points.size() < 3) {
+				std::cout << "ERROR::FLAT::BUILDER\n" << "The number of points is less than three.\n\n";
+				return;
+			}
 
-	bool is_intersect(eng::Line line) {
-		return abs(line.get_direction() * normal) > eps;
-	}
+			*this = Flat(points[0], points[1], points[2]);
+		}
 
-	bool is_intersect(eng::Cut cut) {
-		if (!is_intersect(cut.get_line()))
-			return false;
+		// In case of an error skips operation
+		void set_normal(const Vect3& normal)& {
+			if (equality(normal.length(), 0.0, eps_)) {
+				std::cout << "ERROR::FLAT::SET_NORMAL\n" << "The normal vector has zero length.\n\n";
+				return;
+			}
+			normal_ = normal.normalize();
+		}
 
-		double k1 = cut.get_point1() * normal - k, k2 = cut.get_point2() * normal - k;
+		Vect3 get_normal() const {
+			return normal_;
+		}
 
-		return k1 <= 0 && k2 >= 0 || k1 >= 0 && k2 <= 0;
-	}
+		Vect3 project_point(const Vect3& point) const {
+			return normal_ * (normal_ * (normal_ * distance - point)) + point;
+		}
 
-	bool is_intersect(Flat plane) {
-		return (normal ^ plane.get_normal()).length() > eps;
-	}
+		bool on_plane(const Vect3& point) const {
+			return equality(point * normal_, distance, eps_);
+		}
 
-	eng::Vect3 intersect(eng::Line line) {
-		eng::Vect3 direct = line.get_direction();
-		double prod = direct * normal;
+		bool is_intersect(const Line& line) const {
+			return !equality(line.get_direction() * normal_, 0.0, eps_);
+		}
 
-		if (abs(prod) < eps)
-			return eng::Vect3(0, 0, 0);
+		bool is_intersect(const Cut& cut) const {
+			if (!is_intersect(cut.get_line())) {
+				return false;
+			}
 
-		double alf = (k - normal * line.start_point) / prod;
+			int32_t diff1 = sign(cut.get_point1() * normal_ - distance);
+			int32_t diff2 = sign(cut.get_point2() * normal_ - distance);
+			return diff1 == 0 || diff2 == 0 || diff1 != diff2;
+		}
 
-		return line.start_point + direct * alf;
-	}
+		bool is_intersect(const Flat& plane) const {
+			return !equality((normal_ ^ plane.normal_).length(), 0.0, eps_);
+		}
 
-	eng::Vect3 intersect(eng::Cut cut) {
-		return intersect(cut.get_line());
-	}
+		// Returns some point on one of the objects if there is no intersection
+		Vect3 intersect(const Line& line) const {
+			double product = line.get_direction() * normal_;
+			if (equality(product, 0.0, eps_)) {
+				return line.start_point;
+			}
 
-	eng::Line intersect(Flat plane) {
-		eng::Vect3 direct = normal ^ plane.get_normal();
+			double alf = (distance - normal_ * line.start_point) / product;
+			return line.start_point + alf * line.get_direction();
+		}
 
-		if (direct.length() < eps)
-			return eng::Line(eng::Vect3(0, 0, 0), normal);
+		// Returns some point on one of the objects if there is no intersection
+		Vect3 intersect(const Cut& cut) const {
+			return intersect(cut.get_line());
+		}
 
-		direct.normalize();
-		eng::Vect3 p0 = normal * k;
-		eng::Line ort_line(p0, p0 + (direct ^ normal));
+		// Returns some line on one of the planes if there is no intersection
+		Line intersect(const Flat& plane) const {
+			Vect3 direction = normal_ ^ plane.normal_;
+			if (equality(direction.length(), 0.0, eps_)) {
+				return Line(distance * normal_, distance * normal_ + normal_.horizont());
+			}
+			direction = direction.normalize();
 
-		eng::Vect3 intersect = plane.intersect(ort_line);
+			Vect3 start_point = normal_ * distance;
+			Line ort_line(start_point, start_point + (direction ^ normal_));
+			Vect3 intersection = plane.intersect(ort_line);
+			return Line(intersection, intersection + direction);
+		}
 
-		return eng::Line(intersect, intersect + direct);
-	}
-
-	eng::Vect3 symmetry(eng::Vect3 point) {
-		eng::Vect3 proj = project_point(point);
-
-		return point.symmetry(proj);
-	}
-};
+		Vect3 symmetry(const Vect3& point) const {
+			Vect3 proj = project_point(point);
+			return point.symmetry(proj);
+		}
+	};
+}

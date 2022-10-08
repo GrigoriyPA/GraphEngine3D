@@ -124,7 +124,7 @@ class Line : public RenderObject {
     void update_perpendicular_to_plane(std::pair < int, int > point, std::pair < int, int > plane) {
         eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
-        Flat plane_cur(coords);
+        eng::Flat plane_cur(coords);
 
         update_line(coord, coord + plane_cur.get_normal());
     }
@@ -142,8 +142,8 @@ class Line : public RenderObject {
         eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
         std::vector < eng::Vect3 > coords1 = (*scene)[plane1.first].get_polygon_positions(plane1.second, 0);
         std::vector < eng::Vect3 > coords2 = (*scene)[plane2.first].get_polygon_positions(plane2.second, 0);
-        Flat plane_cur1(coords1);
-        Flat plane_cur2(coords2);
+        eng::Flat plane_cur1(coords1);
+        eng::Flat plane_cur2(coords2);
         eng::Vect3 direction = (plane_cur1.get_normal() ^ plane_cur2.get_normal()).normalize();
 
         update_line(coord, coord + direction);
@@ -169,7 +169,7 @@ class Line : public RenderObject {
 
     void update_plane_symmetry(std::pair < int, int > line, std::pair < int, int > center) {
         std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_polygon_positions(center.second, 0);
-        Flat center_plane(center_coords);
+        eng::Flat center_plane(center_coords);
         eng::Vect3 coord1 = (*scene)[line.first].get_polygon_center(line.second, 0);
         eng::Vect3 coord2 = (*scene)[line.first].get_polygon_center(line.second, 1);
 
@@ -221,7 +221,7 @@ class Line : public RenderObject {
         eng::Vect3 point2 = (*scene)[line.first].get_polygon_center(line.second, 1);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
         eng::Line line_cur(point1, point2);
-        Flat plane_cur(coords);
+        eng::Flat plane_cur(coords);
 
         eng::Vect3 proj_point = line_cur.project_point(coord);
         if (proj_point == coord)
@@ -235,7 +235,7 @@ class Line : public RenderObject {
         eng::Vect3 coord2 = (*scene)[point2.first].get_center(point2.second);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
         eng::Line line_cur(coord1, coord2);
-        Flat plane_cur(coords);
+        eng::Flat plane_cur(coords);
         eng::Vect3 direction = (line_cur.get_direction() ^ plane_cur.get_normal()).normalize();
 
         update_line((coord1 + coord2) / 2, (coord1 + coord2) / 2 + direction);
@@ -246,7 +246,7 @@ class Line : public RenderObject {
         eng::Vect3 coord2 = (*scene)[cut.first].get_polygon_center(cut.second, 1);
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
         eng::Line line_cur(coord1, coord2);
-        Flat plane_cur(coords);
+        eng::Flat plane_cur(coords);
         eng::Vect3 direction = (line_cur.get_direction() ^ plane_cur.get_normal()).normalize();
 
         update_line((coord1 + coord2) / 2, (coord1 + coord2) / 2 + direction);
@@ -284,7 +284,7 @@ class Line : public RenderObject {
 
     void update_plan_connect(std::pair < int, int > plane) {
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
-        Flat plane_proj(coords);
+        eng::Flat plane_proj(coords);
         eng::Vect3 point1 = plane_proj.project_point((*scene)[scene_id.first].get_polygon_center(scene_id.second, 0));
         eng::Vect3 point2 = plane_proj.project_point((*scene)[scene_id.first].get_polygon_center(scene_id.second, 1));
 

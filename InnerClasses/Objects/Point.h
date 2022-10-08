@@ -74,7 +74,7 @@ class Point : public RenderObject {
 
     void update_plane_symmetry(std::pair < int, int > point, std::pair < int, int > center) {
         std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_polygon_positions(center.second, 0);
-        Flat center_plane(center_coords);
+        eng::Flat center_plane(center_coords);
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
@@ -111,14 +111,14 @@ class Point : public RenderObject {
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(Flat(coords).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(eng::Flat(coords).project_point(point) - point), scene_id.second);
     }
 
     void update_triangle_connect(std::pair < int, int > triangle) {
         std::vector < eng::Vect3 > coords = (*scene)[triangle.first].get_polygon_positions(triangle.second, 0);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        eng::Vect3 new_point = Flat(coords).project_point(point);
+        eng::Vect3 new_point = eng::Flat(coords).project_point(point);
         if (!new_point.in_triangle(coords[0], coords[1], coords[2])) {
             int closest = 0;
             std::vector < eng::Vect3 > projection(3);

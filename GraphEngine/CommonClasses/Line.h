@@ -27,14 +27,13 @@ namespace eng {
 			start_point = point1;
 		}
 
-		// In case of an error sets direction to (1, 0, 0)
+		// In case of an error skips operation
 		void set_direction(const Vect3& direction)& {
 			if (equality(direction.length(), 0.0, eps_)) {
 				std::cout << "ERROR::LINE::SET_DIRECTION\n" << "The direction vector has zero length.\n\n";
-				direction_ = Vect3(1, 0, 0);
-			} else {
-				direction_ = direction.normalize();
+				return;
 			}
+			direction_ = direction.normalize();
 		}
 
 		Vect3 get_direction() const {
@@ -50,7 +49,7 @@ namespace eng {
 		}
 
 		bool is_intersect(const Line& line) const {
-			Vect3 normal = direction_ ^ line.get_direction();
+			Vect3 normal = direction_ ^ line.direction_;
 
 			if (equality(normal.length(), 0.0, eps_)) {
 				return false;
@@ -60,7 +59,7 @@ namespace eng {
 
 		// Returns some point on one of the objects if there is no intersection
 		Vect3 intersect(const Line& line) const {
-			Vect3 normal = (direction_ ^ line.get_direction()) ^ direction_;
+			Vect3 normal = (direction_ ^ line.direction_) ^ direction_;
 
 			if (equality(normal.length(), 0.0, eps_)) {
 				return line.start_point;
@@ -68,9 +67,9 @@ namespace eng {
 
 			normal = normal.normalize();
 			double k = start_point * normal;
-			double alf = (k - normal * line.start_point) / (line.get_direction() * normal);
+			double alf = (k - normal * line.start_point) / (line.direction_ * normal);
 
-			return line.start_point + alf * line.get_direction();
+			return line.start_point + alf * line.direction_;
 		}
 
 		Vect3 symmetry(const Vect3& point) const {

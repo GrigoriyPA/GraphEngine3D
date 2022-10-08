@@ -107,7 +107,7 @@ class Triangle : public RenderObject {
 
     void update_plane_symmetry(std::pair < int, int > triangle, std::pair < int, int > center) {
         std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_polygon_positions(center.second, 0);
-        Flat center_plane(center_coords);
+        eng::Flat center_plane(center_coords);
         std::vector < eng::Vect3 > coords = (*scene)[triangle.first].get_polygon_positions(triangle.second, 0);
 
         std::reverse(coords.begin(), coords.end());
@@ -133,7 +133,7 @@ class Triangle : public RenderObject {
         eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 1);
         eng::Cut cut_ot(coord1, coord2);
-        Flat plane(triangle);
+        eng::Flat plane(triangle);
 
         if (!plane.is_intersect(cut_ot))
             return nullptr;
@@ -153,7 +153,7 @@ class Triangle : public RenderObject {
         eng::Vect3 coord1 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[line->scene_id.first].get_polygon_center(line->scene_id.second, 1);
         eng::Line line_ot(coord1, coord2);
-        Flat plane(triangle);
+        eng::Flat plane(triangle);
 
         if (!plane.is_intersect(line_ot))
             return nullptr;
@@ -171,8 +171,8 @@ class Triangle : public RenderObject {
 
     RenderObject* intersect_plane(std::vector < eng::Vect3 > triangle, RenderObject* plane, std::vector < int >& location) {
         std::vector < eng::Vect3 > coords = (*scene)[plane->scene_id.first].get_polygon_positions(plane->scene_id.second, 0);
-        Flat plane_ot(coords);
-        Flat plane_cur(triangle);
+        eng::Flat plane_ot(coords);
+        eng::Flat plane_cur(triangle);
 
         if (!plane_cur.is_intersect(plane_ot))
             return nullptr;
