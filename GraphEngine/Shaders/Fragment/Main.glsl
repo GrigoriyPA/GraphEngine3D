@@ -13,7 +13,7 @@ struct Light {
 
 
 struct Material {
-    bool light;
+    bool light, use_vertex_color;
     float shininess, alpha;
     vec3 ambient, diffuse, specular, emission;
 };
@@ -22,6 +22,7 @@ struct Material {
 in vec2 tex_coord;
 in vec3 frag_pos;
 in vec3 norm;
+in vec3 vert_color;
 in float object_model_id;
 
 out vec4 color;
@@ -149,6 +150,9 @@ void main() {
     }
 
     Material material = object_material;
+    if (object_material.use_vertex_color) {
+        material.diffuse = vert_color;
+    }
 	if (use_diffuse_map) {
         vec4 diffuse_color = texture(diffuse_map, tex_coord);
 		material.ambient = vec3(diffuse_color);

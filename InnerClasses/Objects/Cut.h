@@ -90,10 +90,10 @@ class Cut : public RenderObject {
         update_cut(coord1 + translate, coord2 + translate);
     }
 
-    RenderObject* intersect_cut(Cut3 cut_cur, RenderObject* cut, std::vector < int >& location) {
+    RenderObject* intersect_cut(eng::Cut cut_cur, RenderObject* cut, std::vector < int >& location) {
         eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 1);
-        Cut3 cut_ot(coord1, coord2);
+        eng::Cut cut_ot(coord1, coord2);
 
         if (!cut_cur.is_intersect(cut_ot))
             return nullptr;
@@ -179,7 +179,7 @@ public:
 
         eng::Vect3 coord1 = (*scene)[scene_id.first].get_polygon_center(scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[scene_id.first].get_polygon_center(scene_id.second, 1);
-        Cut3 cut_cur(coord1, coord2);
+        eng::Cut cut_cur(coord1, coord2);
 
         return intersect_cut(cut_cur, obj, location);
     }

@@ -13,7 +13,7 @@
 #include "CommonClasses/Vect2.h"
 #include "CommonClasses/Matrix.h"
 #include "CommonClasses/Random.h"
-#include "CommonClasses/Cut3.h"
+#include "CommonClasses/Cut.h"
 #include "CommonClasses/Flat.h"
 #include "Texture.h"
 #include "Shader.h"

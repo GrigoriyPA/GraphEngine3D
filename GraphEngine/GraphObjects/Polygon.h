@@ -8,7 +8,7 @@
 
 class Material {
 public:
-	bool light = false;
+	bool light = false, use_vertex_color = false;
 	double shininess = 1, alpha = 1;
 	eng::Vect3 ambient = eng::Vect3(0, 0, 0), diffuse = eng::Vect3(0, 0, 0), specular = eng::Vect3(0, 0, 0), emission = eng::Vect3(0, 0, 0);
 
@@ -32,6 +32,7 @@ public:
 				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.emission"), emission.x, emission.y, emission.z);
 			glUniform1f(glGetUniformLocation(shader_program->program, "object_material.shininess"), shininess);
 			glUniform1i(glGetUniformLocation(shader_program->program, "object_material.light"), light);
+			glUniform1i(glGetUniformLocation(shader_program->program, "object_material.use_vertex_color"), use_vertex_color);
 
 			diffuse_map.active(0);
 			specular_map.active(1);
@@ -66,7 +67,7 @@ class Polygon {
 	int count_points;
 	unsigned int vertex_array = 0, vertex_buffer = 0, index_buffer = 0;
 	std::vector < eng::Vect2 > tex_coords;
-	std::vector < eng::Vect3 > positions, normals;
+	std::vector < eng::Vect3 > positions, normals, colors;
 	std::vector < unsigned int > indices;
 	eng::Vect3 center;
 
@@ -93,7 +94,7 @@ class Polygon {
 		glGenBuffers(1, &vertex_buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * count_points, NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 11 * count_points, NULL, GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 		glEnableVertexAttribArray(0);
@@ -103,6 +104,9 @@ class Polygon {
 
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(float) * 6 * count_points));
 		glEnableVertexAttribArray(2);
+
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(float) * 8 * count_points));
+		glEnableVertexAttribArray(3);
 
 		glGenBuffers(1, &index_buffer);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
@@ -177,6 +181,7 @@ public:
 		positions = other.positions;
 		normals = other.normals;
 		indices = other.indices;
+		colors = other.colors;
 		count_points = other.count_points;
 		center = other.center;
 		frame = other.frame;
@@ -191,7 +196,7 @@ public:
 		glBindBuffer(GL_COPY_READ_BUFFER, other.vertex_buffer);
 		glBindBuffer(GL_COPY_WRITE_BUFFER, vertex_buffer);
 
-		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(float) * 8 * count_points);
+		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(float) * 11 * count_points);
 
 		glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
 		glBindBuffer(GL_COPY_READ_BUFFER, 0);
@@ -278,6 +283,27 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
+	void set_colors(std::vector < eng::Vect3 > colors) {
+		if (colors.size() != count_points) {
+			std::cout << "ERROR::POLYGON::SET_COLORS\n" << "Wrong number of points.\n";
+			assert(0);
+		}
+
+		this->colors = colors;
+
+		std::vector < float > converted_colors(count_points * 3);
+		for (int i = 0; i < count_points; i++) {
+			for (int j = 0; j < 3; j++)
+				converted_colors[3 * i + j] = colors[i][j];
+		}
+
+		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 8 * count_points, sizeof(float) * 3 * count_points, &converted_colors[0]);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
 	void set_indices(std::vector < unsigned int > indices) {
 		this->indices = indices;
 
@@ -302,22 +328,22 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
 		glBindVertexArray(vertex_array);
 
-		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)0);
-		glEnableVertexAttribArray(3);
-
-		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 4));
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)0);
 		glEnableVertexAttribArray(4);
 
-		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 8));
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 4));
 		glEnableVertexAttribArray(5);
 
-		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 12));
+		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 8));
 		glEnableVertexAttribArray(6);
 
-		glVertexAttribDivisor(3, 1);
+		glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 12));
+		glEnableVertexAttribArray(7);
+
 		glVertexAttribDivisor(4, 1);
 		glVertexAttribDivisor(5, 1);
 		glVertexAttribDivisor(6, 1);
+		glVertexAttribDivisor(7, 1);
 
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);

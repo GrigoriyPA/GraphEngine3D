@@ -258,6 +258,16 @@ namespace eng {
 			return (center - *this) * 2 + *this;
 		}
 
+		bool in_two_side_angle(const Vect3& v1, const Vect3& v2) const {
+			Vect3 prod1 = v1 ^ *this, prod2 = v2 ^ *this;
+
+			if (equality(prod1.length() * prod2.length(), 0.0, eps_)) {
+				return true;
+			}
+
+			return equality(prod1.cos_angle(prod2), -1.0, eps_);
+		}
+
 		bool in_angle(const Vect3& v1, const Vect3& v2) const {
 			Vect3 prod1 = v1 ^ *this, prod2 = v2 ^ *this, prod3 = v1 ^ v2;
 

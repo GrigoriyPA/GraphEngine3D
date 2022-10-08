@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Vect3.h"
-#include "Line3.h"
-#include "Cut3.h"
+#include "Line.h"
+#include "Cut.h"
 
 
 class Flat {
@@ -55,7 +55,7 @@ public:
 		return abs(line.get_direction() * normal) > eps;
 	}
 
-	bool is_intersect(Cut3 cut) {
+	bool is_intersect(eng::Cut cut) {
 		if (!is_intersect(cut.get_line()))
 			return false;
 
@@ -80,7 +80,7 @@ public:
 		return line.start_point + direct * alf;
 	}
 
-	eng::Vect3 intersect(Cut3 cut) {
+	eng::Vect3 intersect(eng::Cut cut) {
 		return intersect(cut.get_line());
 	}
 

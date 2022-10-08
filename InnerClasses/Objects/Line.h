@@ -255,7 +255,7 @@ class Line : public RenderObject {
     RenderObject* intersect_cut(eng::Line line_cur, RenderObject* cut, std::vector < int >& location) {
         eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_polygon_center(cut->scene_id.second, 1);
-        Cut3 cut_ot(coord1, coord2);
+        eng::Cut cut_ot(coord1, coord2);
 
         if (!cut_ot.is_intersect(line_cur))
             return nullptr;

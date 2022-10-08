@@ -96,7 +96,7 @@ class Point : public RenderObject {
         eng::Vect3 coord2 = (*scene)[cut.first].get_polygon_center(cut.second, 1);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(Cut3(coord1, coord2).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(eng::Cut(coord1, coord2).project_point(point) - point), scene_id.second);
     }
 
     void update_line_connect(std::pair < int, int > line) {
@@ -124,7 +124,7 @@ class Point : public RenderObject {
             std::vector < eng::Vect3 > projection(3);
             for (int i = 0; i < 3; i++) {
                 int next = (i + 1) % 3;
-                projection[i] = Cut3(coords[i], coords[next]).project_point(new_point);
+                projection[i] = eng::Cut(coords[i], coords[next]).project_point(new_point);
                 if ((new_point - projection[i]).length() < (new_point - projection[closest]).length())
                     closest = i;
             }

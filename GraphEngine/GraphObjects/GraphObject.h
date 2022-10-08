@@ -101,22 +101,31 @@ class GraphObject {
 	Polygon process_mesh(aiMesh* mesh, const aiScene* scene, std::string& directory, eng::Matrix transform) {
 		std::vector < eng::Vect2 > tex_coords;
 		std::vector < eng::Vect3 > positions, normals;
+		std::vector < eng::Vect3 > colors;
 		std::vector<unsigned int> indices;
 
 		eng::Matrix norm_transform = transform.inverse().transpose();
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 			positions.push_back(transform * eng::Vect3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
-			normals.push_back(norm_transform * eng::Vect3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
+			if (mesh->mNormals)
+				normals.push_back(norm_transform * eng::Vect3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
 			if (mesh->mTextureCoords[0])
 				tex_coords.push_back(eng::Vect2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
 			else
 				tex_coords.push_back(eng::Vect2(0, 0));
+			if (mesh->mColors[0])
+				colors.push_back(eng::Vect3(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b));
+			else
+				colors.push_back(eng::Vect3(0, 0, 0));
 		}
 		Polygon polygon_mesh(positions.size());
-		polygon_mesh.set_positions(positions, false);
-		polygon_mesh.set_normals(normals);
+		polygon_mesh.set_positions(positions, normals.empty());
+		if (!normals.empty())
+			polygon_mesh.set_normals(normals);
 		polygon_mesh.set_tex_coords(tex_coords);
+		polygon_mesh.set_colors(colors);
 
+		polygon_mesh.material.diffuse = eng::Vect3(1, 1, 1);
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
 			aiFace face = mesh->mFaces[i];
 			for (unsigned int j = 0; j < face.mNumIndices; j++)
@@ -124,7 +133,6 @@ class GraphObject {
 		}
 		polygon_mesh.set_indices(indices);
 
-		polygon_mesh.material.diffuse = eng::Vect3(1, 1, 1);
 		if (mesh->mMaterialIndex >= 0) {
 			aiColor3D color(0, 0, 0);
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -170,8 +178,8 @@ class GraphObject {
 			polygon_mesh.material.shininess = shininess;
 			//std::cout << polygon_mesh.material.shininess << "\n";
 
-			if (polygon_mesh.material.shininess > 0)
-				polygon_mesh.material.specular = eng::Vect3(1, 1, 1);
+			//if (polygon_mesh.material.shininess > 0)
+			//	polygon_mesh.material.specular = eng::Vect3(1, 1, 1);
 		}
 
 		return polygon_mesh;

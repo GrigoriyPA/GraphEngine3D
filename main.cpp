@@ -79,9 +79,12 @@ signed main() {
     RenderingSequence render(&scene);
 
     int obj_id = scene.add_object(GraphObject(1));
-    scene[obj_id].import_from_file("Resources/Objects/test_car/thunder_master_hypercar_mark_i_by_alex.ka..glb");
+    scene[obj_id].import_from_file("Resources/Objects/ships/mjolnir.glb");
     scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
-    
+    /*for (size_t i = 0; i < scene[obj_id].get_count_polygons(); ++i) {
+        scene[obj_id][i].material.use_vertex_color = true;
+    }*/
+
     /*obj_id = scene.add_object(get_cube(3));
     Material material;
     material.shininess = 64;
@@ -162,14 +165,14 @@ signed main() {
     scene[obj_id][pol_id].material.diffuse = eng::Vect3(1, 1, 1);
     scene[obj_id][pol_id].material.alpha = 0.5;
     scene[obj_id].transparent = true;
-    scene[obj_id].add_model(eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::scale_matrix(10));
+    //scene[obj_id].add_model(eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::scale_matrix(10));
 
     DirLight light(eng::Vect3(-1, -1, 1));
     light.ambient = eng::Vect3(0.1, 0.1, 0.1);
     light.diffuse = eng::Vect3(0.6, 0.6, 0.6);
     light.specular = eng::Vect3(0.8, 0.8, 0.8);
     light.shadow_position = eng::Vect3(2, 0, 2);
-    light.shadow = true;
+    //light.shadow = true;
     scene.set_light(1, &light);
     
 
