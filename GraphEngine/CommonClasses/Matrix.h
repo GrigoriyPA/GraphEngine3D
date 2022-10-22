@@ -9,7 +9,7 @@ namespace eng {
 			std::vector<double> line_;
 
 		public:
-			template <typename T>
+			template <typename T>  // Casts required: double(T)
 			MatrixLine(const std::initializer_list<T>& init) {
 				line_.reserve(init.size());
 				for (const T& element : init) {
@@ -17,7 +17,7 @@ namespace eng {
 				}
 			}
 
-			template <typename T>
+			template <typename T>  // Casts required: double(T)
 			explicit MatrixLine(const std::vector<T>& init) {
 				line_.reserve(init.size());
 				for (const T& element : init) {
@@ -25,62 +25,52 @@ namespace eng {
 				}
 			}
 
-			explicit MatrixLine(size_t count_columns, double value = 0) {
+			explicit MatrixLine(size_t count_columns, double value = 0) noexcept {
 				line_.resize(count_columns, value);
 			}
 
-			// In case of an error returns last column
 			double& operator[](size_t index) {
 				if (line_.size() <= index) {
-					std::cout << "ERROR::MATRIX::MATRIX_LINE::OPERATOR[](SIZE_T)\n" << "Invalid index.\n\n";
-					return line_.back();
+					throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 				}
 
 				return line_[index];
 			}
 
-			// In case of an error returns last column
-			double operator[](size_t index) const {
+			const double& operator[](size_t index) const {
 				if (line_.size() <= index) {
-					std::cout << "ERROR::MATRIX::MATRIX_LINE::OPERATOR[](SIZE_T)\n" << "Invalid index.\n\n";
-					return line_.back();
+					throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 				}
 
 				return line_[index];
 			}
 
-			// In case of an error skips operation
-			MatrixLine& operator +=(const MatrixLine& other)& {
+			MatrixLine& operator+=(const MatrixLine& other)& {
 				if (line_.size() != other.size()) {
-					std::cout << "ERROR::MATRIX::MATRIX_LINE::OPERATOR+=(MATRIX_LINE)\n" << "Invalid line sizes.\n\n";
-					return *this;
+					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator+=, invalid line sizes.\n\n");
 				}
 
 				*this = *this + other;
 				return *this;
 			}
 
-			// In case of an error skips operation
-			MatrixLine& operator -=(const MatrixLine& other)& {
+			MatrixLine& operator-=(const MatrixLine& other)& {
 				if (line_.size() != other.size()) {
-					std::cout << "ERROR::MATRIX::MATRIX_LINE::OPERATOR-=(MATRIX_LINE)\n" << "Invalid line sizes.\n\n";
-					return *this;
+					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator-=, invalid line sizes.\n\n");
 				}
 
 				*this = *this - other;
 				return *this;
 			}
 
-			MatrixLine& operator *=(double other)& {
+			MatrixLine& operator*=(double other)& noexcept {
 				*this = *this * other;
 				return *this;
 			}
 
-			// In case of an error skips operation
-			MatrixLine operator +(const MatrixLine& other) const {
+			MatrixLine operator+(const MatrixLine& other) const {
 				if (line_.size() != other.size()) {
-					std::cout << "ERROR::MATRIX::MATRIX_LINE::OPERATOR+(MATRIX_LINE)\n" << "Invalid line sizes.\n\n";
-					return *this;
+					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator+, invalid line sizes.\n\n");
 				}
 
 				MatrixLine result = *this;
@@ -91,11 +81,9 @@ namespace eng {
 				return result;
 			}
 
-			// In case of an error skips operation
-			MatrixLine operator -(const MatrixLine& other) const {
+			MatrixLine operator-(const MatrixLine& other) const {
 				if (line_.size() != other.size()) {
-					std::cout << "ERROR::MATRIX::MATRIX_LINE::OPERATOR-(MATRIX_LINE)\n" << "Invalid line sizes.\n\n";
-					return *this;
+					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator-, invalid line sizes.\n\n");
 				}
 
 				MatrixLine result = *this;
@@ -106,20 +94,17 @@ namespace eng {
 				return result;
 			}
 
-			MatrixLine operator *(double other) const {
+			MatrixLine operator*(double other) const noexcept {
 				MatrixLine result = *this;
 				for (double& element : result.line_) {
 					element *= other;
 				}
-
 				return result;
 			}
 
-			// In case of an error returns 0
-			double operator *(const MatrixLine& other) const {
+			double operator*(const MatrixLine& other) const {
 				if (line_.size() != other.size()) {
-					std::cout << "ERROR::MATRIX::MATRIX_LINE::OPERATOR*(MATRIX_LINE)\n" << "Invalid line sizes.\n\n";
-					return 0;
+					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid line sizes.\n\n");
 				}
 
 				double result = 0;
@@ -131,28 +116,36 @@ namespace eng {
 			}
 
 			double& back() {
+				if (line_.empty()) {
+					throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
+				}
+
 				return line_.back();
 			}
 
-			double back() const {
+			const double& back() const {
+				if (line_.empty()) {
+					throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
+				}
+
 				return line_.back();
 			}
 
-			size_t size() const {
+			size_t size() const noexcept {
 				return line_.size();
 			}
 
-			void swap(MatrixLine& other) {
+			void swap(MatrixLine& other) noexcept {
 				std::swap(line_, other.line_);
 			}
 		};
 
-		double eps_ = 1e-5;
+		inline static double eps_ = 1e-5;
 
 		std::vector<MatrixLine> matrix_;
 
 	public:
-		template <typename T>
+		template <typename T>  // Casts required: double(T)
 		Matrix(const std::initializer_list<T>& init) {
 			matrix_.reserve(init.size());
 			for (const T& value : init) {
@@ -160,7 +153,7 @@ namespace eng {
 			}
 		}
 
-		template <typename T>
+		template <typename T>  // Casts required: double(T)
 		explicit Matrix(const std::vector<T>& init) {
 			matrix_.reserve(init.size());
 			for (const T& value : init) {
@@ -168,8 +161,7 @@ namespace eng {
 			}
 		}
 
-		// In case of an error skips all invalid columns
-		template <typename T>
+		template <typename T>  // Casts required: double(T)
 		Matrix(const std::initializer_list<std::initializer_list<T>>& init) {
 			size_t columns = 0;
 			if (init.size() > 0) {
@@ -179,16 +171,14 @@ namespace eng {
 			matrix_.reserve(init.size());
 			for (const auto& line : init) {
 				if (columns != line.size()) {
-					std::cout << "ERROR::MATRIX::BUILDER\n" << "Not all rows are the same size.\n\n";
-					break;
+					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
 				}
 
 				matrix_.push_back(MatrixLine(line));
 			}
 		}
 
-		// In case of an error skips all invalid columns
-		template <typename T>
+		template <typename T>  // Casts required: double(T)
 		explicit Matrix(const std::vector<std::vector<T>>& init) {
 			size_t columns = 0;
 			if (!init.empty()) {
@@ -198,15 +188,14 @@ namespace eng {
 			matrix_.reserve(init.size());
 			for (const auto& line : init) {
 				if (columns != line.size()) {
-					std::cout << "ERROR::MATRIX::BUILDER\n" << "Not all rows are the same size.\n\n";
-					break;
+					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
 				}
 
 				matrix_.push_back(MatrixLine(line));
 			}
 		}
 
-		Matrix(const Vect3& vector_x, const Vect3& vector_y, const Vect3& vector_z) {
+		Matrix(const Vect3& vector_x, const Vect3& vector_y, const Vect3& vector_z) noexcept {
 			*this = Matrix({
 				{ vector_x.x, vector_y.x, vector_z.x, 0.0 },
 				{ vector_x.y, vector_y.y, vector_z.y, 0.0 },
@@ -215,12 +204,12 @@ namespace eng {
 			});
 		}
 
-		Matrix(size_t count_lines, size_t count_columns, double value = 0) {
+		Matrix(size_t count_lines, size_t count_columns, double value = 0) noexcept {
 			matrix_.resize(count_lines, MatrixLine(count_columns, value));
 		}
 
 		// Identity matrix with init part replaced
-		Matrix(size_t count_lines, size_t count_columns, const Matrix& init) {
+		Matrix(size_t count_lines, size_t count_columns, const Matrix& init) noexcept {
 			matrix_.resize(count_lines, MatrixLine(count_columns, 0));
 			for (size_t i = 0; i < std::min(count_lines, count_columns); ++i) {
 				matrix_[i][i] = 1;
@@ -232,39 +221,35 @@ namespace eng {
 			}
 		}
 
-		template <typename T>
+		template <typename T>  // Constructors required: T(double)
 		explicit operator std::vector<T>() const {
-			std::vector<T> value(matrix_.size() * count_columns());
+			std::vector<T> result;
+			result.reserve(matrix_.size() * count_columns());
 			for (size_t j = 0; j < count_columns(); ++j) {
 				for (size_t i = 0; i < matrix_.size(); ++i) {
-					value[j * matrix_.size() + i] = static_cast<T>(matrix_[i][j]);
+					result.push_back(T(matrix_[i][j]));
 				}
 			}
-
-			return value;
+			return result;
 		}
 
-		// In case of an error returns last line
 		MatrixLine& operator[](size_t index) {
 			if (matrix_.size() <= index) {
-				std::cout << "ERROR::MATRIX::OPERATOR[](SIZE_T)\n" << "Invalid index.\n\n";
-				return matrix_.back();
+				throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return matrix_[index];
 		}
 
-		// In case of an error returns last line
 		const MatrixLine& operator[](size_t index) const {
 			if (matrix_.size() <= index) {
-				std::cout << "ERROR::MATRIX::OPERATOR[](SIZE_T)\n" << "Invalid index.\n\n";
-				return matrix_.back();
+				throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return matrix_[index];
 		}
 
-		bool operator ==(const Matrix& other) const {
+		bool operator==(const Matrix& other) const noexcept {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
 				return false;
 			}
@@ -276,133 +261,111 @@ namespace eng {
 					}
 				}
 			}
-
 			return true;
 		}
 
-		bool operator !=(const Matrix& other) const {
+		bool operator!=(const Matrix& other) const noexcept {
 			return !(*this == other);
 		}
 
-		// In case of an error skips operation
-		Matrix& operator +=(const Matrix& other)& {
+		Matrix& operator+=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				std::cout << "ERROR::MATRIX::OPERATOR+=(MATRIX)\n" << "Invalid matrix sizes.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator+=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this + other;
 			return *this;
 		}
 
-		// In case of an error skips operation
-		Matrix& operator -=(const Matrix& other)& {
+		Matrix& operator-=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				std::cout << "ERROR::MATRIX::OPERATOR-=(MATRIX)\n" << "Invalid matrix sizes.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator-=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this - other;
 			return *this;
 		}
 
-		Matrix& operator *=(double other)& {
+		Matrix& operator*=(double other)& noexcept {
 			*this = *this * other;
 			return *this;
 		}
 
-		// In case of an error skips operation
-		Matrix& operator *=(const Matrix& other)& {
+		Matrix& operator*=(const Matrix& other)& {
 			if (count_columns() != other.count_strings()) {
-				std::cout << "ERROR::MATRIX::OPERATOR*=(MATRIX)\n" << "Invalid matrix sizes.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator*=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this * other;
 			return *this;
 		}
 
-		// In case of an error skips operation
-		Matrix& operator /=(double other)& {
+		Matrix& operator/=(double other)& {
 			if (equality(other, 0.0, eps_)) {
-				std::cout << "ERROR::MATRIX::OPERATOR/=(DOUBLE)\n" << "Division by zero.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
 			*this = *this / other;
 			return *this;
 		}
 
-		// In case of an error skips operation
-		Matrix& operator ^=(uint64_t other)& {
+		Matrix& operator^=(uint32_t other)& {
 			if (matrix_.size() != count_columns()) {
-				std::cout << "ERROR::MATRIX::OPERATOR^=(UINT64_T)\n" << "Invalid matrix size.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator^=, invalid matrix size.\n\n");
 			}
 
 			*this = *this ^ other;
 			return *this;
 		}
 
-		// In case of an error skips operation
-		Matrix& operator |=(const Matrix& other)& {
+		Matrix& operator|=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings()) {
-				std::cout << "ERROR::MATRIX::OPERATOR|=(MATRIX)\n" << "Invalid matrix sizes.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator|=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this | other;
 			return *this;
 		}
 
-		Matrix operator -() const {
+		Matrix operator-() const noexcept {
 			Matrix result = *this;
 			for (size_t i = 0; i < matrix_.size(); i++) {
 				result[i] *= -1;
 			}
-
 			return result;
 		}
 
-		// In case of an error skips operation
-		Matrix operator +(const Matrix& other) const {
+		Matrix operator+(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				std::cout << "ERROR::MATRIX::OPERATOR+(MATRIX)\n" << "Invalid matrix sizes.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator+, invalid matrix sizes.\n\n");
 			}
 
 			Matrix result = *this;
 			for (size_t i = 0; i < matrix_.size(); i++) {
 				result[i] += other[i];
 			}
-
 			return result;
 		}
 
-		// In case of an error skips operation
-		Matrix operator -(const Matrix& other) const {
+		Matrix operator-(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				std::cout << "ERROR::MATRIX::OPERATOR-(MATRIX)\n" << "Invalid matrix sizes.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator-, invalid matrix sizes.\n\n");
 			}
 
 			return *this + (-other);
 		}
 
-		Matrix operator *(double other) const {
+		Matrix operator*(double other) const noexcept {
 			Matrix result = *this;
 			for (size_t i = 0; i < matrix_.size(); i++) {
 				result[i] *= other;
 			}
-
 			return result;
 		}
 
-		// In case of an error skips operation
-		Matrix operator *(const Matrix& other) const {
+		Matrix operator*(const Matrix& other) const {
 			if (count_columns() != other.count_strings()) {
-				std::cout << "ERROR::MATRIX::OPERATOR*(MATRIX)\n" << "Invalid matrix sizes.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix sizes.\n\n");
 			}
 
 			Matrix transposed = other.transpose();
@@ -412,15 +375,12 @@ namespace eng {
 					result[i][j] = matrix_[i] * transposed[j];
 				}
 			}
-
 			return result;
 		}
 
-		// In case of an error skips operation
-		Vect3 operator *(const Vect3& other) const {
+		Vect3 operator*(const Vect3& other) const {
 			if (matrix_.size() != 4 || matrix_[0].size() != 4) {
-				std::cout << "ERROR::MATRIX::OPERATOR*(VECT3)\n" << "Invalid matrix size.\n\n";
-				return other;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix size.\n\n");
 			}
 
 			Vect3 result;
@@ -433,31 +393,25 @@ namespace eng {
 			return result;
 		}
 
-		// In case of an error skips operation
-		Matrix operator /(double other) const {
+		Matrix operator/(double other) const {
 			if (equality(other, 0.0, eps_)) {
-				std::cout << "ERROR::MATRIX::OPERATOR/(DOUBLE)\n" << "Division by zero.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
 			return *this * (1.0 / other);
 		}
 
-		// In case of an error skips operation
-		Matrix operator ^(uint64_t other) const {
+		Matrix operator^(uint32_t other) const {
 			if (matrix_.size() != count_columns()) {
-				std::cout << "ERROR::MATRIX::OPERATOR^(UINT64_T)\n" << "Invalid matrix size.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator^, invalid matrix size.\n\n");
 			}
 
 			return binary_exponentiation(*this, other, one_matrix(matrix_.size()));
 		}
 
-		// In case of an error skips operation
-		Matrix operator |(const Matrix& other) const {
+		Matrix operator|(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings()) {
-				std::cout << "ERROR::MATRIX::OPERATOR|(MATRIX)\n" << "Invalid matrix sizes.\n\n";
-				return *this;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator|, invalid matrix sizes.\n\n");
 			}
 
 			Matrix result(matrix_.size(), count_columns() + other.count_columns(), *this);
@@ -469,11 +423,17 @@ namespace eng {
 			return result;
 		}
 
-		// In case of an error returns the original matrix
+		void set_epsilon(double eps)& {
+			if (eps <= 0) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
+		}
+
 		Matrix get_submatrix(size_t line, size_t column, size_t height, size_t width) const {
-			if (line + height > matrix_.size() || height + width > count_columns()) {
-				std::cout << "ERROR::MATRIX::GET_SUB_MATRIX\n" << "Invalid submatrix size.\n\n";
-				return *this;
+			if (line + height > matrix_.size() || column + width > count_columns()) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "get_submatrix, invalid submatrix size.\n\n");
 			}
 
 			Matrix result(height, width);
@@ -485,7 +445,7 @@ namespace eng {
 			return result;
 		}
 
-		Matrix get_improved_step_view() const {
+		Matrix get_improved_step_view() const noexcept {
 			Matrix result = *this;
 			for (size_t j = 0, i0 = 0; j < count_columns() && i0 < matrix_.size(); ++j) {
 				size_t k = matrix_.size();
@@ -514,7 +474,18 @@ namespace eng {
 			return result;
 		}
 
-		Matrix transpose() const {
+		size_t count_strings() const noexcept {
+			return matrix_.size();
+		}
+
+		size_t count_columns() const noexcept {
+			if (matrix_.empty()) {
+				return 0;
+			}
+			return matrix_[0].size();
+		}
+
+		Matrix transpose() const noexcept {
 			Matrix result(count_columns(), matrix_.size());
 			for (size_t i = 0; i < matrix_.size(); ++i) {
 				for (size_t j = 0; j < matrix_[i].size(); ++j) {
@@ -524,37 +495,21 @@ namespace eng {
 			return result;
 		}
 
-		// In case of an error skips operation
 		Matrix inverse() const {
 			if (matrix_.size() != count_columns()) {
-				std::cout << "ERROR::MATRIX::INVERSE\n" << "Not a square matrix.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "inverse, not a square matrix.\n\n");
 			}
 
 			Matrix result = (*this | one_matrix(matrix_.size())).get_improved_step_view();
 			if (result.get_submatrix(0, 0, matrix_.size(), matrix_.size()) != one_matrix(matrix_.size())) {
-				std::cout << "ERROR::MATRIX::INVERSE\n" << "The matrix is not invertible.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
 			}
 			return result.get_submatrix(0, matrix_.size(), matrix_.size(), matrix_.size());
 		}
 
-		size_t count_strings() const {
-			return matrix_.size();
-		}
-
-		size_t count_columns() const {
-			if (matrix_.empty()) {
-				return 0;
-			}
-			return matrix_[0].size();
-		}
-
-		// In case of an error returns null vector
 		Matrix solve_equation(const Matrix& value) const {
 			if (value.count_columns() != 1 || matrix_.size() != value.count_strings()) {
-				std::cout << "ERROR::MATRIX::SOLVE_EQUATION\n" << "Invalid matrix size.\n\n";
-				return Matrix(count_columns(), 1, 0);
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "solve_equation, invalid matrix size.\n\n");
 			}
 
 			Matrix isv_matrix = (*this | Matrix(value)).get_improved_step_view();
@@ -574,7 +529,17 @@ namespace eng {
 			return result;
 		}
 
-		static Matrix one_matrix(size_t size) {
+		static Matrix zip_map(const Matrix& matrix1, const Matrix& matrix2, std::function<double(double, double)> zip_func) {
+			Matrix result(std::min(matrix1.count_strings(), matrix2.count_strings()), std::min(matrix1.count_columns(), matrix2.count_columns()));
+			for (size_t i = 0; i < result.count_strings(); ++i) {
+				for (size_t j = 0; j < result.count_columns(); ++j) {
+					result[i][j] = zip_func(matrix1[i][j], matrix2[i][j]);
+				}
+			}
+			return result;
+		}
+
+		static Matrix one_matrix(size_t size) noexcept {
 			Matrix result(size, size, 0);
 			for (size_t i = 0; i < size; ++i) {
 				result[i][i] = 1;
@@ -582,7 +547,7 @@ namespace eng {
 			return result;
 		}
 
-		static Matrix scale_matrix(const Vect3& scale) {
+		static Matrix scale_matrix(const Vect3& scale) noexcept {
 			return Matrix({
 				{ scale.x,     0.0,     0.0, 0.0 },
 				{     0.0, scale.y,     0.0, 0.0 },
@@ -591,7 +556,7 @@ namespace eng {
 			});
 		}
 
-		static Matrix scale_matrix(double scale) {
+		static Matrix scale_matrix(double scale) noexcept {
 			return Matrix({
 				{ scale,   0.0,   0.0, 0.0 },
 				{   0.0, scale,   0.0, 0.0 },
@@ -600,7 +565,7 @@ namespace eng {
 			});
 		}
 		
-		static Matrix translation_matrix(const Vect3& translation) {
+		static Matrix translation_matrix(const Vect3& translation) noexcept {
 			return Matrix({
 				{ 1.0, 0.0, 0.0, translation.x },
 				{ 0.0, 1.0, 0.0, translation.y },
@@ -609,11 +574,9 @@ namespace eng {
 			});
 		}
 		
-		// In case of an error returns identity matrix
 		static Matrix rotation_matrix(const Vect3& axis, double angle) {
 			if (equality(axis.length(), 0.0)) {
-				std::cout << "ERROR::MATRIX::ROTATION_MATRIX\n" << "The axis vector has zero length.\n\n";
-				return one_matrix(4);
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "rotation_matrix, the axis vector has zero length.\n\n");
 			}
 
 			Vect3 norm_axis = axis.normalize();
@@ -632,7 +595,7 @@ namespace eng {
 		}
 	};
 
-	std::istream& operator>>(std::istream& fin, Matrix& matrix) {
+	std::istream& operator>>(std::istream& fin, Matrix& matrix) noexcept {
 		size_t count_strings, count_columns;
 		fin >> count_strings >> count_columns;
 
@@ -645,7 +608,7 @@ namespace eng {
 		return fin;
 	}
 
-	std::ostream& operator<<(std::ostream& fout, const Matrix& matrix) {
+	std::ostream& operator<<(std::ostream& fout, const Matrix& matrix) noexcept {
 		std::vector<std::string> output(matrix.count_strings());
 		for (std::string& line : output) {
 			line += char(179);
@@ -680,7 +643,7 @@ namespace eng {
 		return fout;
 	}
 
-	Matrix operator *(double value, const Matrix& matrix) {
+	Matrix operator*(double value, const Matrix& matrix) noexcept {
 		return matrix * value;
 	}
 }

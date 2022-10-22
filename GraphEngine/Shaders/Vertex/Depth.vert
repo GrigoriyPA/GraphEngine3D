@@ -2,7 +2,7 @@
 
 
 layout (location = 0) in vec3 position;
-layout (location = 3) in mat4 model;
+layout (location = 4) in mat4 model;
 
 uniform mat4 light_space;
 

@@ -1,27 +1,27 @@
 #pragma once
 
-#include <iostream>
 #include <initializer_list>
+#include <iostream>
 #include <SFML/Graphics/Color.hpp>
 #include "Functions.h"
 
 
 namespace eng {
 	class Vect3 {
-		double eps_ = 1e-5;
+		inline static double eps_ = 1e-5;
 
 	public:
 		double x = 0;
 		double y = 0;
 		double z = 0;
 
-		Vect3(double x, double y, double z) {
+		Vect3(double x, double y, double z) noexcept {
 			this->x = x;
 			this->y = y;
 			this->z = z;
 		}
 
-		template <typename T>
+		template <typename T>  // Casts required: double(T)
 		Vect3(const std::initializer_list<T>& init) {
 			size_t comp_id = 0;
 			for (const T& element : init) {
@@ -33,32 +33,31 @@ namespace eng {
 			}
 		}
 
-		template <typename T>
+		template <typename T>  // Casts required: double(T)
 		explicit Vect3(const std::vector<T>& init) {
 			for (size_t comp_id = 0; comp_id < std::min(static_cast<size_t>(3), init.size()); ++comp_id) {
 				(*this)[comp_id] = static_cast<double>(init[comp_id]);
 			}
 		}
 
-		explicit Vect3(const sf::Color& color) {
+		explicit Vect3(const sf::Color& color) noexcept {
 			x = color.r;
 			y = color.g;
 			z = color.b;
 		}
 
-		Vect3() {
+		Vect3() noexcept {
 		}
 
-		template <typename T>
+		template <typename T>  // Constructors required: T(T)
 		explicit operator std::vector<T>() const {
-			return { static_cast<T>(x), static_cast<T>(y), static_cast<T>(z) };
+			return { T(x), T(y), T(z) };
 		}
 
-		explicit operator std::string() const {
+		explicit operator std::string() const noexcept {
 			return std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z);
 		}
 
-		// In case of an error returns a z
 		double& operator[](size_t index) {
 			if (index == 0) {
 				return x;
@@ -69,13 +68,10 @@ namespace eng {
 			if (index == 2) {
 				return z;
 			}
-
-			std::cout << "ERROR::VECT3::OPERATOR[](SIZE_T)\n" << "Invalid index.\n\n";
-			return z;
+			throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 		}
 
-		// In case of an error returns a z
-		double operator[](size_t index) const {
+		const double& operator[](size_t index) const {
 			if (index == 0) {
 				return x;
 			}
@@ -85,45 +81,41 @@ namespace eng {
 			if (index == 2) {
 				return z;
 			}
-
-			std::cout << "ERROR::VECT3::OPERATOR[](SIZE_T)\n" << "Invalid index.\n\n";
-			return z;
+			throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 		}
 
-		bool operator ==(const Vect3& other) const {
+		bool operator==(const Vect3& other) const noexcept {
 			return equality(x, other.x, eps_) && equality(y, other.y, eps_) && equality(z, other.z, eps_);
 		}
 
-		bool operator !=(const Vect3& other) const {
+		bool operator!=(const Vect3& other) const noexcept {
 			return !(*this == other);
 		}
 
-		Vect3& operator +=(const Vect3& other)& {
+		Vect3& operator+=(const Vect3& other)& noexcept {
 			x += other.x;
 			y += other.y;
 			z += other.z;
 			return *this;
 		}
 
-		Vect3& operator -=(const Vect3& other)& {
+		Vect3& operator-=(const Vect3& other)& noexcept {
 			x -= other.x;
 			y -= other.y;
 			z -= other.z;
 			return *this;
 		}
 
-		Vect3& operator *=(double other)& {
+		Vect3& operator*=(double other)& noexcept {
 			x *= other;
 			y *= other;
 			z *= other;
 			return *this;
 		}
 
-		// In case of an error skips operation
-		Vect3& operator /=(double other)& {
+		Vect3& operator/=(double other)& {
 			if (equality(other, 0.0, eps_)) {
-				std::cout << "ERROR::VECT3::OPERATOR/=(DOUBLE)\n" << "Division by zero.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
 			x /= other;
@@ -132,11 +124,9 @@ namespace eng {
 			return *this;
 		}
 
-		// In case of an error skips operation
-		Vect3& operator ^=(double other)& {
+		Vect3& operator^=(double other)& {
 			if (x < 0 || y < 0 || z < 0) {
-				std::cout << "ERROR::VECT3::OPERATOR^=(DOUBLE)\n" << "Raising a negative number to a power.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator^=, raising a negative number to a power.\n\n");
 			}
 
 			x = pow(x, other);
@@ -145,72 +135,83 @@ namespace eng {
 			return *this;
 		}
 
-		Vect3 operator -() const {
+		Vect3& operator^=(uint32_t other)& noexcept {
+			x = binary_exponentiation(x, other);
+			y = binary_exponentiation(y, other);
+			z = binary_exponentiation(z, other);
+			return *this;
+		}
+
+		Vect3 operator-() const noexcept {
 			return Vect3(-x, -y, -z);
 		}
 
-		Vect3 operator +(const Vect3& other) const {
+		Vect3 operator+(const Vect3& other) const noexcept {
 			return Vect3(x + other.x, y + other.y, z + other.z);
 		}
 
-		Vect3 operator -(const Vect3& other) const {
+		Vect3 operator-(const Vect3& other) const noexcept {
 			return Vect3(x - other.x, y - other.y, z - other.z);
 		}
 
-		Vect3 operator *(double other) const {
+		Vect3 operator*(double other) const noexcept {
 			return Vect3(x * other, y * other, z * other);
 		}
 
-		double operator *(const Vect3& other) const {
+		double operator*(const Vect3& other) const noexcept {
 			return x * other.x + y * other.y + z * other.z;
 		}
 
-		// In case of an error skips operation
-		Vect3 operator /(double other) const {
+		Vect3 operator/(double other) const {
 			if (equality(other, 0.0, eps_)) {
-				std::cout << "ERROR::VECT3::OPERATOR/(DOUBLE)\n" << "Division by zero.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
 			return Vect3(x / other, y / other, z / other);
 		}
 
-		Vect3 operator ^(const Vect3& other) const {
+		Vect3 operator^(const Vect3& other) const noexcept {
 			return Vect3(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x);
 		}
 
-		// In case of an error skips operation
-		Vect3 operator ^(double other) const {
+		Vect3 operator^(double other) const {
 			if (x < 0 || y < 0 || z < 0) {
-				std::cout << "ERROR::VECT3::OPERATOR^(DOUBLE)\n" << "Raising a negative number to a power.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator^, raising a negative number to a power.\n\n");
 			}
 
 			return Vect3(pow(x, other), pow(y, other), pow(z, other));
 		}
 
-		double length_sqr() const {
+		Vect3 operator^(uint32_t other) const noexcept {
+			return Vect3(binary_exponentiation(x, other), binary_exponentiation(y, other), binary_exponentiation(z, other));
+		}
+
+		void set_epsilon(double eps)& {
+			if (eps <= 0) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
+		}
+
+		double length_sqr() const noexcept {
 			return *this * *this;
 		}
 
-		double length() const {
+		double length() const noexcept {
 			return sqrt(*this * *this);
 		}
 
-		// In case of an error normalize to (1, 0, 0)
 		Vect3 normalize() const {
 			double vect_length = length();
-
 			if (equality(vect_length, 0.0, eps_)) {
-				std::cout << "ERROR::VECT3::NORMALIZE\n" << "Null vector normalization.\n\n";
-				return Vect3(1, 0, 0);
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
 			}
 
 			return *this / vect_length;
 		}
 
-		// In case of an vertical vector returns (1, 0, 0)
-		Vect3 horizont() const {
+		Vect3 horizont() const noexcept {
 			Vect3 horizont_vect(1, 0, 0);
 			if (!equality(Vect3(z, 0, -x).length(), 0.0, eps_)) {
 				horizont_vect = Vect3(z, 0, -x).normalize();
@@ -219,93 +220,94 @@ namespace eng {
 			return horizont_vect;
 		}
 
-		// In case of an error returns cos(0)
-		double cos_angle(const Vect3& v) const {
-			double length_prod = length() * v.length();
-
-			if (equality(length_prod, 0.0, eps_)) {
-				std::cout << "ERROR::VECT3::COS_ANGLE\n" << "One of the vectors has zero length.\n\n";
-				return 1;
-			}
-
-			return (*this * v) / length_prod;
-		}
-
-		// In case of an error returns sin(0)
-		double sin_angle(const Vect3& v) const {
-			double length_prod = length() * v.length();
-
-			if (equality(length_prod, 0.0, eps_)) {
-				std::cout << "ERROR::VECT3::SIN_ANGLE\n" << "One of the vectors has zero length.\n\n";
-				return 0;
-			}
-
-			return (*this ^ v).length() / length_prod;
-		}
-
-		// In case of an error skips operation
 		Vect3 reflect_vect(const Vect3& n) const {
 			if (equality(n.length(), 0.0, eps_)) {
-				std::cout << "ERROR::VECT3::REFLECT_VECT\n" << "The normal vector has zero length.\n\n";
-				return *this;
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
 			}
 
 			Vect3 norm = n.normalize();
 			return norm * (norm * *this) * 2 - *this;
 		}
 
-		Vect3 symmetry(const Vect3& center) const {
+		Vect3 symmetry(const Vect3& center) const noexcept {
 			return (center - *this) * 2 + *this;
 		}
 
-		bool in_two_side_angle(const Vect3& v1, const Vect3& v2) const {
-			Vect3 prod1 = v1 ^ *this, prod2 = v2 ^ *this;
-
-			if (equality(prod1.length() * prod2.length(), 0.0, eps_)) {
-				return true;
+		bool in_two_side_angle(const Vect3& v1, const Vect3& v2) const noexcept {
+			try {
+				return equality(cos_angle(v1 ^ *this, v2 ^ *this), -1.0, eps_);
 			}
-
-			return equality(prod1.cos_angle(prod2), -1.0, eps_);
+			catch (eng_exceptions::EngDomainError) {
+				return false;
+			}
 		}
 
-		bool in_angle(const Vect3& v1, const Vect3& v2) const {
+		bool in_angle(const Vect3& v1, const Vect3& v2) const noexcept {
 			Vect3 prod1 = v1 ^ *this, prod2 = v2 ^ *this, prod3 = v1 ^ v2;
-
 			if (equality(prod1.length() * prod3.length(), 0.0, eps_)) {
 				return false;
 			}
 
-			if (equality(prod1.length() * prod2.length(), 0.0, eps_)) {
-				return equality(cos_angle(v1), 1.0, eps_) || equality(cos_angle(v2), 1.0, eps_);
+			try {
+				if (equality(prod1.length() * prod2.length(), 0.0, eps_)) {
+					return equality(cos_angle(*this, v1), 1.0, eps_) || equality(cos_angle(*this, v2), 1.0, eps_);
+				}
+				return equality(cos_angle(prod1, prod2), -1.0, eps_) && equality(cos_angle(prod1, prod3), 1.0, eps_);
 			}
-
-			return equality(prod1.cos_angle(prod2), -1.0, eps_) && equality(prod1.cos_angle(prod3), 1.0, eps_);
+			catch (eng_exceptions::EngDomainError) {
+				return false;
+			}
 		}
 
-		bool in_triangle(const Vect3& v1, const Vect3& v2, const Vect3& v3) const {
+		bool in_triangle(const Vect3& v1, const Vect3& v2, const Vect3& v3) const noexcept {
 			return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
 		}
 
-		static Vect3 get_max(const Vect3& v1, const Vect3& v2) {
-			return Vect3(std::max(v1.x, v2.x), std::max(v1.y, v2.y), std::max(v1.z, v2.z));
+		static double cos_angle(const Vect3& v1, const Vect3& v2) {
+			double length_prod = v1.length() * v2.length();
+			if (equality(length_prod, 0.0, eps_)) {
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
+			}
+
+			return (v1 * v2) / length_prod;
 		}
 
-		static Vect3 get_min(const Vect3& v1, const Vect3& v2) {
-			return Vect3(std::min(v1.x, v2.x), std::min(v1.y, v2.y), std::min(v1.z, v2.z));
+		static double sin_angle(const Vect3& v1, const Vect3& v2) {
+			double length_prod = v1.length() * v2.length();
+			if (equality(length_prod, 0.0, eps_)) {
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
+			}
+
+			return (v1 ^ v2).length() / length_prod;
+		}
+
+		static Vect3 zip_map(const Vect3& v1, const Vect3& v2, std::function<double(double, double)> zip_func) {
+			return Vect3(zip_func(v1.x, v2.x), zip_func(v1.y, v2.y), zip_func(v1.z, v2.z));
 		}
 	};
 
-	std::istream& operator>>(std::istream& fin, Vect3& vector) {
+	std::istream& operator>>(std::istream& fin, Vect3& vector) noexcept {
 		fin >> vector.x >> vector.y >> vector.z;
 		return fin;
 	}
 
-	std::ostream& operator<<(std::ostream& fout, const Vect3& vector) {
+	std::ostream& operator<<(std::ostream& fout, const Vect3& vector) noexcept {
 		fout << '(' << vector.x << ", " << vector.y << ", " << vector.z << ')';
 		return fout;
 	}
 
-	Vect3 operator *(double value, const Vect3& vector) {
+	Vect3 operator*(double value, const Vect3& vector) noexcept {
 		return Vect3(vector.x * value, vector.y * value, vector.z * value);
 	}
 }
+
+template <>
+struct std::hash<eng::Vect3> {
+	size_t operator()(const eng::Vect3& vector) const noexcept {
+		size_t result = 0;
+		eng::hash_combine(result, vector.x);
+		eng::hash_combine(result, vector.y);
+		eng::hash_combine(result, vector.z);
+		return result;
+	}
+};

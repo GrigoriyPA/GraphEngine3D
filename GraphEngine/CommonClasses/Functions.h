@@ -1,18 +1,19 @@
 #pragma once
 
-#include <math.h>
 #include <algorithm>
-#include <vector>
+#include <functional>
+#include <math.h>
 #include <string>
+#include <vector>
 
 
 namespace eng {
-    const double PI = acos(-1);
-    const double FI = (sqrt(5) - 1.0) / 2.0;
     const double EPS = 1e-7;
+    const double FI = (sqrt(5.0) - 1.0) / 2.0;
+    const double PI = acos(-1.0);
 
-    template<typename T>
-    int32_t sign(const T& x, T zero = T(0)) {
+    template <typename T>  // Operators required: <(T, T), ==(T, T)
+    int32_t sgn(const T& x, const T& zero = T(0)) {
         if (x < zero) {
             return -1;
         }
@@ -22,34 +23,59 @@ namespace eng {
         return 1;
     }
 
-    template<typename T>
-    bool equality(const T& left, const T& right, T eps = T(EPS)) {
+    template <typename T>  // T - numeric type
+    bool equality(const T& left, const T& right, const T& eps = T(EPS)) {
         return std::abs(left - right) < eps;
     }
 
-    std::vector<std::string> split(const std::string& str, bool (*pred)(char)) {
+    std::vector<std::string> split(const std::string& str, std::function<bool(char)> pred) {
         std::vector<std::string> split_str(1);
-        for (const char c : str) {
-            if (split_str.back().size() > 0 && pred(c)) {
+        for (char character : str) {
+            bool skip_character = pred(character);
+            if (split_str.back().size() > 0 && skip_character) {
                 split_str.push_back("");
-            } else if (!pred(c)) {
-                split_str.back().push_back(c);
+            } else if (!skip_character) {
+                split_str.back().push_back(character);
             }
         }
         return split_str;
     }
 
-    template<typename T>
-    T binary_exponentiation(const T& base, uint64_t degree, T one = T(1)) {
-        T result = one;
-        for (size_t i = 8 * sizeof(uint64_t); i > 0; --i) {
+    template <typename T>  // Constructors required: T(T); Operators required: *(T, T), =(T, T)
+    T binary_exponentiation(const T& base, uint32_t degree, const T& one = T(1)) {
+        T result(one);
+        for (size_t i = 8 * sizeof(uint32_t); i > 0; --i) {
             result = result * result;
 
-            if (degree & (static_cast<uint64_t>(1) << (i - 1))) {
+            if (degree & (static_cast<uint32_t>(1) << (i - 1))) {
                 result = result * base;
             }
         }
-
         return result;
     }
+
+    template <typename T>  // Structures required: std::hash<T>
+    void hash_combine(size_t& seed, const T& value) {
+        seed ^= std::hash<T>()(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+}
+
+namespace eng::eng_exceptions {
+    class EngDomainError : public std::domain_error {
+    public:
+        EngDomainError(const char* filename, uint32_t line, std::string message) : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) +  "\nDescription: " + message) {
+        }
+    };
+
+    class EngInvalidArgument : public std::invalid_argument {
+    public:
+        EngInvalidArgument(const char* filename, uint32_t line, std::string message) : invalid_argument("Invalid argument error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        }
+    };
+
+    class EngOutOfRange : public std::out_of_range {
+    public:
+        EngOutOfRange(const char* filename, uint32_t line, std::string message) : out_of_range("Out of range error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        }
+    };
 }

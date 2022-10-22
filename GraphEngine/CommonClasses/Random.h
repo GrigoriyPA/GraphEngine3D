@@ -9,42 +9,37 @@ namespace eng {
 		std::mt19937_64 generator;
 
 	public:
-		explicit Random(unsigned long long seed) {
+		explicit Random(uint64_t seed) noexcept {
 			generator.seed(seed);
 		}
 
-		void set_seed(unsigned long long seed) & {
+		void set_seed(uint64_t seed)& noexcept {
 			generator.seed(seed);
 		}
 
-		double rand() {
+		double rand() noexcept {
 			return static_cast<double>(generator()) / static_cast<double>(generator.max());
 		}
 
-		// In case of an error returns left
-		long long rand_int(long long left, long long right) {
+		int64_t rand_int(int64_t left, int64_t right) {
 			if (right < left) {
-				std::cout << "ERROR::RANDOM::RAND_INT\n" << "Invalid range.\n\n";
-				return left;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "rand_int, invalid range.\n\n");
 			}
 
-			return static_cast<long long>(generator()) % (right - left + 1) + left;
+			return static_cast<int64_t>(generator()) % (right - left + 1) + left;
 		}
 
-		// In case of an error returns left
 		double rand_float(double left, double right) {
 			if (right < left) {
-				std::cout << "ERROR::RANDOM::RAND_FLOAT\n" << "Invalid range.\n\n";
-				return left;
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "rand_float, invalid range.\n\n");
 			}
 
 			return (right - left) * rand() + left;
 		}
 
-		// In case of an error returns left
 		Vect3 rand_vect3(Vect3 left, Vect3 right) {
-			if (Vect3::get_max(left, right) != right) {
-				std::cout << "ERROR::RANDOM::RAND_VECT3\n" << "Invalid range.\n\n";
+			if (Vect3::zip_map(left, right, [](auto left, auto right) { return std::max(left, right); }) != right) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "rand_vect3, invalid range.\n\n");
 			}
 
 			return Vect3(rand_float(left.x, right.x), rand_float(left.y, right.y), rand_float(left.z, right.z));
