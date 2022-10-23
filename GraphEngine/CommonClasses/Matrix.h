@@ -431,9 +431,30 @@ namespace eng {
 			eps_ = eps;
 		}
 
-		Matrix get_submatrix(size_t line, size_t column, size_t height, size_t width) const {
+		size_t count_strings() const noexcept {
+			return matrix_.size();
+		}
+
+		size_t count_columns() const noexcept {
+			if (matrix_.empty()) {
+				return 0;
+			}
+			return matrix_[0].size();
+		}
+
+		Matrix transpose() const noexcept {
+			Matrix result(count_columns(), matrix_.size());
+			for (size_t i = 0; i < matrix_.size(); ++i) {
+				for (size_t j = 0; j < matrix_[i].size(); ++j) {
+					result[j][i] = matrix_[i][j];
+				}
+			}
+			return result;
+		}
+
+		Matrix submatrix(size_t line, size_t column, size_t height, size_t width) const {
 			if (line + height > matrix_.size() || column + width > count_columns()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "get_submatrix, invalid submatrix size.\n\n");
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "submatrix, invalid submatrix size.\n\n");
 			}
 
 			Matrix result(height, width);
@@ -445,7 +466,7 @@ namespace eng {
 			return result;
 		}
 
-		Matrix get_improved_step_view() const noexcept {
+		Matrix improved_step_view() const noexcept {
 			Matrix result = *this;
 			for (size_t j = 0, i0 = 0; j < count_columns() && i0 < matrix_.size(); ++j) {
 				size_t k = matrix_.size();
@@ -474,23 +495,36 @@ namespace eng {
 			return result;
 		}
 
-		size_t count_strings() const noexcept {
-			return matrix_.size();
-		}
-
-		size_t count_columns() const noexcept {
-			if (matrix_.empty()) {
-				return 0;
+		double determinant() const {
+			if (matrix_.size() != count_columns()) {
+				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "determinant, not a square matrix.\n\n");
 			}
-			return matrix_[0].size();
-		}
 
-		Matrix transpose() const noexcept {
-			Matrix result(count_columns(), matrix_.size());
-			for (size_t i = 0; i < matrix_.size(); ++i) {
-				for (size_t j = 0; j < matrix_[i].size(); ++j) {
-					result[j][i] = matrix_[i][j];
+			double result = 1.0;
+			Matrix cur_matrix = *this;
+			for (size_t j = 0, i0 = 0; j < count_columns(); ++j) {
+				size_t k = matrix_.size();
+				for (size_t i = i0; i < matrix_.size(); ++i) {
+					if (!equality(cur_matrix[i][j], 0.0, eps_)) {
+						k = i;
+						break;
+					}
 				}
+
+				if (k == matrix_.size()) {
+					return 0;
+				}
+
+				if (k != i0) {
+					result *= -1;
+					cur_matrix[i0].swap(cur_matrix[k]);
+				}
+				result *= cur_matrix[i0][j];
+				cur_matrix[i0] *= 1.0 / cur_matrix[i0][j];
+				for (size_t i = i0 + 1; i < matrix_.size(); ++i) {
+					cur_matrix[i] -= cur_matrix[i0] * cur_matrix[i][j];
+				}
+				++i0;
 			}
 			return result;
 		}
@@ -500,11 +534,11 @@ namespace eng {
 				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "inverse, not a square matrix.\n\n");
 			}
 
-			Matrix result = (*this | one_matrix(matrix_.size())).get_improved_step_view();
-			if (result.get_submatrix(0, 0, matrix_.size(), matrix_.size()) != one_matrix(matrix_.size())) {
+			Matrix result = (*this | one_matrix(matrix_.size())).improved_step_view();
+			if (result.submatrix(0, 0, matrix_.size(), matrix_.size()) != one_matrix(matrix_.size())) {
 				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
 			}
-			return result.get_submatrix(0, matrix_.size(), matrix_.size(), matrix_.size());
+			return result.submatrix(0, matrix_.size(), matrix_.size(), matrix_.size());
 		}
 
 		Matrix solve_equation(const Matrix& value) const {
@@ -512,7 +546,7 @@ namespace eng {
 				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "solve_equation, invalid matrix size.\n\n");
 			}
 
-			Matrix isv_matrix = (*this | Matrix(value)).get_improved_step_view();
+			Matrix isv_matrix = (*this | Matrix(value)).improved_step_view();
 			Matrix result(count_columns(), 1, 0);
 			for (size_t i = 0, j = 0; i < matrix_.size(); ++i) {
 				for (; j <= count_columns() && !equality(isv_matrix[i][j], 1.0, eps_); ++j) {}
