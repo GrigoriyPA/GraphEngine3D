@@ -5,9 +5,13 @@
 
 
 namespace eng {
-    bool glew_is_ok() noexcept;
+	bool GLEW_IS_OK = false;
+
+    bool glew_is_ok() noexcept {
+		return GLEW_IS_OK = GLEW_IS_OK ? true : glewInit() == GLEW_OK;
+	}
 	
-	inline void check_gl_errors(const char* filename, uint32_t line, const char* func_name) {
+	void check_gl_errors(const char* filename, uint32_t line, const char* func_name) {
 		GLenum error_code = glGetError();
 		if (error_code == GL_NO_ERROR) {
 			return;

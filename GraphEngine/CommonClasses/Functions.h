@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <functional>
 #include <math.h>
 #include <string>
@@ -28,7 +27,7 @@ namespace eng {
         return std::abs(left - right) < eps;
     }
 
-    inline std::vector<std::string> split(const std::string& str, std::function<bool(char)> pred) {
+    std::vector<std::string> split(const std::string& str, std::function<bool(char)> pred) {
         std::vector<std::string> split_str(1);
         for (char character : str) {
             bool skip_character = pred(character);
