@@ -33,7 +33,7 @@ namespace eng {
 	public:
 		Texture() {
 			if (!glew_is_ok()) {
-				throw eng_exceptions::EngRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
+				throw EngRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
 			}
 
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_image_units_);
@@ -41,16 +41,17 @@ namespace eng {
 
 		explicit Texture(const std::string& texture_path, bool gamma = true) {
 			if (!glew_is_ok()) {
-				throw eng_exceptions::EngRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
+				throw EngRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
 			}
 
 			sf::Image image;
 			if (!image.loadFromFile(texture_path)) {
-				throw eng_exceptions::EngRuntimeError(__FILE__, __LINE__, "Texture, texture file loading failed.\n\n");
+				throw EngRuntimeError(__FILE__, __LINE__, "Texture, texture file loading failed.\n\n");
 			}
 
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_image_units_);
 			texture_size_ =  static_cast<size_t>(image.getSize().x) * static_cast<size_t>(image.getSize().y) * 4;
+			count_links_ = new size_t(1);
 
 			glGenTextures(1, &texture_id_);
 			glBindTexture(GL_TEXTURE_2D, texture_id_);
@@ -67,7 +68,7 @@ namespace eng {
 
 			glBindTexture(GL_TEXTURE_2D, 0);
 
-			check_gl_errors(__FILE__, __LINE__, "Texture");
+			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
 		Texture(const Texture& other) noexcept {
@@ -97,7 +98,7 @@ namespace eng {
 
 		Texture& set_wrapping(GLint wrapping)& {
 			if (wrapping != GL_REPEAT && wrapping != GL_MIRRORED_REPEAT && wrapping != GL_CLAMP_TO_EDGE && wrapping != GL_CLAMP_TO_BORDER) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_wrapping, invalid wrapping type.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_wrapping, invalid wrapping type.\n\n");
 			}
 
 			glBindTexture(GL_TEXTURE_2D, texture_id_);
@@ -105,7 +106,7 @@ namespace eng {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapping);
 			glBindTexture(GL_TEXTURE_2D, 0);
 
-			check_gl_errors(__FILE__, __LINE__, "set_wrapping");
+			check_gl_errors(__FILE__, __LINE__, __func__);
 			return *this;
 		}
 
@@ -125,13 +126,13 @@ namespace eng {
 			}
 
 			delete[] buffer;
-			check_gl_errors(__FILE__, __LINE__, "get_value");
+			check_gl_errors(__FILE__, __LINE__, __func__);
 			return value;
 		}
 
-		void activate(size_t unit_id) const {
+		void activate(GLenum unit_id) const {
 			if (max_texture_image_units_ <= static_cast<GLint>(unit_id)) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "activate, invalid texture unit id.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "activate, invalid texture unit id.\n\n");
 			}
 
 			if (texture_id_ == 0) {
@@ -142,12 +143,12 @@ namespace eng {
 			glBindTexture(GL_TEXTURE_2D, texture_id_);
 			glActiveTexture(GL_TEXTURE0);
 
-			check_gl_errors(__FILE__, __LINE__, "activate");
+			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void deactive(size_t unit_id) const {
+		void deactive(GLenum unit_id) const {
 			if (max_texture_image_units_ <= static_cast<GLint>(unit_id)) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "deactive, invalid texture unit id.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "deactive, invalid texture unit id.\n\n");
 			}
 
 			if (texture_id_ == 0) {
@@ -158,7 +159,7 @@ namespace eng {
 			glBindTexture(GL_TEXTURE_2D, 0);
 			glActiveTexture(GL_TEXTURE0);
 
-			check_gl_errors(__FILE__, __LINE__, "deactive");
+			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
 		~Texture() noexcept {

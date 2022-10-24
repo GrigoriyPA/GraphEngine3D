@@ -11,7 +11,8 @@ public:
         this->position = position;
     }
 
-    void set_uniforms(int draw_id, Shader* shader_program) {
+    template <size_t T>
+    void set_uniforms(int draw_id, eng::Shader<T>* shader_program) {
         if (draw_id < 0) {
             std::cout << "ERROR::POINT_LIGHT::SET_UNIFORMS\n" << "Invalid draw id.\n";
             assert(0);

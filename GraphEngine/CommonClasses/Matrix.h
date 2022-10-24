@@ -32,7 +32,7 @@ namespace eng {
 
 			double& operator[](size_t index) {
 				if (line_.size() <= index) {
-					throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+					throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 				}
 
 				return line_[index];
@@ -40,7 +40,7 @@ namespace eng {
 
 			const double& operator[](size_t index) const {
 				if (line_.size() <= index) {
-					throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+					throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 				}
 
 				return line_[index];
@@ -48,7 +48,7 @@ namespace eng {
 
 			MatrixLine& operator+=(const MatrixLine& other)& {
 				if (line_.size() != other.size()) {
-					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator+=, invalid line sizes.\n\n");
+					throw EngInvalidArgument(__FILE__, __LINE__, "operator+=, invalid line sizes.\n\n");
 				}
 
 				*this = *this + other;
@@ -57,7 +57,7 @@ namespace eng {
 
 			MatrixLine& operator-=(const MatrixLine& other)& {
 				if (line_.size() != other.size()) {
-					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator-=, invalid line sizes.\n\n");
+					throw EngInvalidArgument(__FILE__, __LINE__, "operator-=, invalid line sizes.\n\n");
 				}
 
 				*this = *this - other;
@@ -71,7 +71,7 @@ namespace eng {
 
 			MatrixLine operator+(const MatrixLine& other) const {
 				if (line_.size() != other.size()) {
-					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator+, invalid line sizes.\n\n");
+					throw EngInvalidArgument(__FILE__, __LINE__, "operator+, invalid line sizes.\n\n");
 				}
 
 				MatrixLine result = *this;
@@ -84,7 +84,7 @@ namespace eng {
 
 			MatrixLine operator-(const MatrixLine& other) const {
 				if (line_.size() != other.size()) {
-					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator-, invalid line sizes.\n\n");
+					throw EngInvalidArgument(__FILE__, __LINE__, "operator-, invalid line sizes.\n\n");
 				}
 
 				MatrixLine result = *this;
@@ -105,7 +105,7 @@ namespace eng {
 
 			double operator*(const MatrixLine& other) const {
 				if (line_.size() != other.size()) {
-					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid line sizes.\n\n");
+					throw EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid line sizes.\n\n");
 				}
 
 				double result = 0;
@@ -118,7 +118,7 @@ namespace eng {
 
 			double& back() {
 				if (line_.empty()) {
-					throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
+					throw EngOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
 				}
 
 				return line_.back();
@@ -126,7 +126,7 @@ namespace eng {
 
 			const double& back() const {
 				if (line_.empty()) {
-					throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
+					throw EngOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
 				}
 
 				return line_.back();
@@ -172,7 +172,7 @@ namespace eng {
 			matrix_.reserve(init.size());
 			for (const auto& line : init) {
 				if (columns != line.size()) {
-					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
+					throw EngInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
 				}
 
 				matrix_.push_back(MatrixLine(line));
@@ -189,7 +189,7 @@ namespace eng {
 			matrix_.reserve(init.size());
 			for (const auto& line : init) {
 				if (columns != line.size()) {
-					throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
+					throw EngInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
 				}
 
 				matrix_.push_back(MatrixLine(line));
@@ -236,7 +236,7 @@ namespace eng {
 
 		MatrixLine& operator[](size_t index) {
 			if (matrix_.size() <= index) {
-				throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return matrix_[index];
@@ -244,7 +244,7 @@ namespace eng {
 
 		const MatrixLine& operator[](size_t index) const {
 			if (matrix_.size() <= index) {
-				throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return matrix_[index];
@@ -271,7 +271,7 @@ namespace eng {
 
 		Matrix& operator+=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator+=, invalid matrix sizes.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator+=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this + other;
@@ -280,7 +280,7 @@ namespace eng {
 
 		Matrix& operator-=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator-=, invalid matrix sizes.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator-=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this - other;
@@ -294,7 +294,7 @@ namespace eng {
 
 		Matrix& operator*=(const Matrix& other)& {
 			if (count_columns() != other.count_strings()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator*=, invalid matrix sizes.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator*=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this * other;
@@ -303,7 +303,7 @@ namespace eng {
 
 		Matrix& operator/=(double other)& {
 			if (equality(other, 0.0, eps_)) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
 			*this = *this / other;
@@ -312,7 +312,7 @@ namespace eng {
 
 		Matrix& operator^=(uint32_t other)& {
 			if (matrix_.size() != count_columns()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator^=, invalid matrix size.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator^=, invalid matrix size.\n\n");
 			}
 
 			*this = *this ^ other;
@@ -321,7 +321,7 @@ namespace eng {
 
 		Matrix& operator|=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator|=, invalid matrix sizes.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator|=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this | other;
@@ -338,7 +338,7 @@ namespace eng {
 
 		Matrix operator+(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator+, invalid matrix sizes.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator+, invalid matrix sizes.\n\n");
 			}
 
 			Matrix result = *this;
@@ -350,7 +350,7 @@ namespace eng {
 
 		Matrix operator-(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator-, invalid matrix sizes.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator-, invalid matrix sizes.\n\n");
 			}
 
 			return *this + (-other);
@@ -366,7 +366,7 @@ namespace eng {
 
 		Matrix operator*(const Matrix& other) const {
 			if (count_columns() != other.count_strings()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix sizes.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix sizes.\n\n");
 			}
 
 			Matrix transposed = other.transpose();
@@ -381,7 +381,7 @@ namespace eng {
 
 		Vect3 operator*(const Vect3& other) const {
 			if (matrix_.size() != 4 || matrix_[0].size() != 4) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix size.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix size.\n\n");
 			}
 
 			Vect3 result;
@@ -396,7 +396,7 @@ namespace eng {
 
 		Matrix operator/(double other) const {
 			if (equality(other, 0.0, eps_)) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
 			return *this * (1.0 / other);
@@ -404,7 +404,7 @@ namespace eng {
 
 		Matrix operator^(uint32_t other) const {
 			if (matrix_.size() != count_columns()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator^, invalid matrix size.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator^, invalid matrix size.\n\n");
 			}
 
 			return binary_exponentiation(*this, other, one_matrix(matrix_.size()));
@@ -412,7 +412,7 @@ namespace eng {
 
 		Matrix operator|(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "operator|, invalid matrix sizes.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "operator|, invalid matrix sizes.\n\n");
 			}
 
 			Matrix result(matrix_.size(), count_columns() + other.count_columns(), *this);
@@ -447,7 +447,7 @@ namespace eng {
 
 		Matrix submatrix(size_t line, size_t column, size_t height, size_t width) const {
 			if (line + height > matrix_.size() || column + width > count_columns()) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "submatrix, invalid submatrix size.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "submatrix, invalid submatrix size.\n\n");
 			}
 
 			Matrix result(height, width);
@@ -490,7 +490,7 @@ namespace eng {
 
 		double determinant() const {
 			if (matrix_.size() != count_columns()) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "determinant, not a square matrix.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "determinant, not a square matrix.\n\n");
 			}
 
 			double result = 1.0;
@@ -524,19 +524,19 @@ namespace eng {
 
 		Matrix inverse() const {
 			if (matrix_.size() != count_columns()) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "inverse, not a square matrix.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "inverse, not a square matrix.\n\n");
 			}
 
 			Matrix result = (*this | one_matrix(matrix_.size())).improved_step_view();
 			if (result.submatrix(0, 0, matrix_.size(), matrix_.size()) != one_matrix(matrix_.size())) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
 			}
 			return result.submatrix(0, matrix_.size(), matrix_.size(), matrix_.size());
 		}
 
 		Matrix solve_equation(const Matrix& value) const {
 			if (value.count_columns() != 1 || matrix_.size() != value.count_strings()) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "solve_equation, invalid matrix size.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "solve_equation, invalid matrix size.\n\n");
 			}
 
 			Matrix isv_matrix = (*this | Matrix(value)).improved_step_view();
@@ -558,7 +558,7 @@ namespace eng {
 
 		static void set_epsilon(double eps) {
 			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
 			}
 
 			eps_ = eps;
@@ -611,7 +611,7 @@ namespace eng {
 		
 		static Matrix rotation_matrix(const Vect3& axis, double angle) {
 			if (equality(axis.length(), 0.0)) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "rotation_matrix, the axis vector has zero length.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "rotation_matrix, the axis vector has zero length.\n\n");
 			}
 
 			Vect3 norm_axis = axis.normalize();

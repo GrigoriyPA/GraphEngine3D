@@ -7,6 +7,8 @@
 namespace eng {
 	bool GLEW_IS_OK = false;
 
+	enum ShaderType : size_t { NONE = 0, MAIN = 1, DEPTH = 2, POST = 3 };
+
     bool glew_is_ok() noexcept {
 		return GLEW_IS_OK = GLEW_IS_OK ? true : glewInit() == GLEW_OK;
 	}
@@ -29,6 +31,6 @@ namespace eng {
 			default:                               error = "UNKNOWN"; break;
 		}
 
-		throw eng_exceptions::EngRuntimeError(filename, line, std::string(func_name) + ", GL error with name \"" + error + "\".");
+		throw EngRuntimeError(filename, line, std::string(func_name) + ", GL error with name \"" + error + "\".\n\n");
 	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Graphic—lasses/Texture.h"
+#include "GraphicClasses/Shader.h"
+#include "GraphicClasses/Texture.h"
 #include "CommonClasses/Vect2.h"
 #include "CommonClasses/Matrix.h"
 #include "CommonClasses/Random.h"
@@ -16,8 +17,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "Graphic—lasses/Shader.h"
-#include "Graphic—lasses/Kernel.h"
+#include "GraphicClasses/Kernel.h"
 #include "Camera.h"
 #include "GraphObjects/GraphObject.h"
 #include "Light/Light.h"
@@ -51,7 +51,9 @@ class GraphEngine {
 	std::unordered_map < int, GraphObject > objects;
 	sf::Vector2i mouse_position;
 	sf::RenderWindow* window;
-	Shader main_shader, post_shader, depth_shader;
+	eng::Shader<eng::ShaderType::MAIN> main_shader;
+	eng::Shader<eng::ShaderType::DEPTH> depth_shader;
+	eng::Shader<eng::ShaderType::POST> post_shader;
 
 	void init_gl() {
 		glewExperimental = GL_TRUE;
@@ -71,21 +73,21 @@ class GraphEngine {
 
 	void set_uniforms() {
 		main_shader.use();
-		glUniformMatrix4fv(glGetUniformLocation(main_shader.program, "projection"), 1, GL_FALSE, &std::vector<float>(cam.get_projection_matrix())[0]);
-		glUniform1i(glGetUniformLocation(main_shader.program, "diffuse_map"), 0);
-		glUniform1i(glGetUniformLocation(main_shader.program, "specular_map"), 1);
-		glUniform1i(glGetUniformLocation(main_shader.program, "emission_map"), 2);
-		glUniform1f(glGetUniformLocation(main_shader.program, "gamma"), gamma);
-		glUniform2f(glGetUniformLocation(main_shader.program, "check_point"), window->getSize().x / 2, window->getSize().y / 2);
+		main_shader.set_uniform_matrix4fv("projection", 1, GL_FALSE, &std::vector<float>(cam.get_projection_matrix())[0]);
+		main_shader.set_uniform_1i("diffuse_map", 0);
+		main_shader.set_uniform_1i("specular_map", 1);
+		main_shader.set_uniform_1i("emission_map", 2);
+		main_shader.set_uniform_1f("gamma", gamma);
+		main_shader.set_uniform_2f("check_point", window->getSize().x / 2, window->getSize().y / 2);
 
 		post_shader.use();
 		Kernel().use(&post_shader);
-		glUniform1i(glGetUniformLocation(post_shader.program, "grayscale"), 0);
-		glUniform1i(glGetUniformLocation(post_shader.program, "offset"), 5);
-		glUniform1i(glGetUniformLocation(post_shader.program, "border_width"), 7);
-		glUniform3f(glGetUniformLocation(post_shader.program, "border_color"), 1, 0, 0);
-		glUniform1i(glGetUniformLocation(post_shader.program, "screen_texture"), 0);
-		glUniform1i(glGetUniformLocation(post_shader.program, "stencil_texture"), 1);
+		post_shader.set_uniform_1i("grayscale", 0);
+		post_shader.set_uniform_1i("offset", 5);
+		post_shader.set_uniform_1i("border_width", 7);
+		post_shader.set_uniform_3f("border_color", 1, 0, 0);
+		post_shader.set_uniform_1i("screen_texture", 0);
+		post_shader.set_uniform_1i("stencil_texture", 1);
 	}
 
 	void set_light_uniforms() {
@@ -248,7 +250,7 @@ class GraphEngine {
 				continue;
 
 			glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_map_tex, 0, i);
-			glUniformMatrix4fv(glGetUniformLocation(depth_shader.program, "light_space"), 1, GL_FALSE, &std::vector<float>(lights[i]->get_light_space_matrix())[0]);
+			depth_shader.set_uniform_matrix4fv("light_space", 1, GL_FALSE, &std::vector<float>(lights[i]->get_light_space_matrix())[0]);
 
 			for (std::unordered_map < int, GraphObject >::iterator object = objects.begin(); object != objects.end(); object++)
 				object->second.draw_depth_map();
@@ -266,8 +268,8 @@ class GraphEngine {
 		main_shader.use();
 
 		set_light_uniforms();
-		glUniformMatrix4fv(glGetUniformLocation(main_shader.program, "view"), 1, GL_FALSE, &std::vector<float>(cam.get_view_matrix())[0]);
-		glUniform3f(glGetUniformLocation(main_shader.program, "view_pos"), cam.position.x, cam.position.y, cam.position.z);
+		main_shader.set_uniform_matrix4fv("view", 1, GL_FALSE, &std::vector<float>(cam.get_view_matrix())[0]);
+		main_shader.set_uniform_3f("view_pos", cam.position.x, cam.position.y, cam.position.z);
 
 		glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_tex);
 		draw_objects();
@@ -326,10 +328,10 @@ public:
 		init_gl();
 
 		cam = Camera(fov, min_distance, max_distance, ((double)window->getSize().x) / ((double)window->getSize().y));
-		main_shader = Shader("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main");
-		post_shader = Shader("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post");
-		depth_shader = Shader("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth");
-		lights.resize(main_shader.get_const_int_value("NR_LIGHTS"), nullptr);
+		main_shader = eng::Shader<eng::ShaderType::MAIN>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main");
+		post_shader = eng::Shader<eng::ShaderType::POST>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post");
+		depth_shader = eng::Shader<eng::ShaderType::DEPTH>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth");
+		lights.resize(std::stoi(main_shader.get_value_frag("NR_LIGHTS")), nullptr);
 
 		create_buffers();
 		set_uniforms();
@@ -384,7 +386,7 @@ public:
 
 	void set_grayscale(bool grayscale) {
 		post_shader.use();
-		glUniform1i(glGetUniformLocation(post_shader.program, "grayscale"), grayscale);
+		post_shader.set_uniform_1i("grayscale", grayscale);
 	}
 
 	void set_kernel_offset(double kernel_offset) {
@@ -394,7 +396,7 @@ public:
 		}
 
 		post_shader.use();
-		glUniform1f(glGetUniformLocation(post_shader.program, "offset"), kernel_offset);
+		post_shader.set_uniform_1f("offset", kernel_offset);
 	}
 
 	void set_gamma(double gamma) {
@@ -406,7 +408,7 @@ public:
 		this->gamma = gamma;
 
 		post_shader.use();
-		glUniform1f(glGetUniformLocation(main_shader.program, "gamma"), gamma);
+		post_shader.set_uniform_1f("gamma", gamma);
 	}
 
 	void set_border_width(int border_width) {
@@ -415,11 +417,11 @@ public:
 			assert(0);
 		}
 
-		glUniform1i(glGetUniformLocation(post_shader.program, "border_width"), border_width);
+		post_shader.set_uniform_1i("border_width", border_width);
 	}
 
 	void set_border_color(eng::Vect3 color) {
-		glUniform3f(glGetUniformLocation(post_shader.program, "border_color"), color.x, color.y, color.z);
+		post_shader.set_uniform_3f("border_color", color.x, color.y, color.z);
 	}
 
 	Light* get_light(int light_id) {

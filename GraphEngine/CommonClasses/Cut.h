@@ -16,8 +16,8 @@ namespace eng {
 			try {
 				line_ = Line(point1_, point2_);
 			}
-			catch (eng_exceptions::EngInvalidArgument) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Cut, points for initialization are the same.\n\n");
+			catch (EngInvalidArgument) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "Cut, points for initialization are the same.\n\n");
 			}
 
 			point1_ = point1;
@@ -70,7 +70,7 @@ namespace eng {
 
 		static void set_epsilon(double eps) {
 			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
 			}
 
 			eps_ = eps;

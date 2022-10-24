@@ -67,7 +67,7 @@ namespace eng {
 			if (index == 2) {
 				return z;
 			}
-			throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+			throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 		}
 
 		const double& operator[](size_t index) const {
@@ -80,7 +80,7 @@ namespace eng {
 			if (index == 2) {
 				return z;
 			}
-			throw eng_exceptions::EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+			throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 		}
 
 		bool operator==(const Vect3& other) const noexcept {
@@ -114,7 +114,7 @@ namespace eng {
 
 		Vect3& operator/=(double other)& {
 			if (equality(other, 0.0, eps_)) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
 			x /= other;
@@ -125,7 +125,7 @@ namespace eng {
 
 		Vect3& operator^=(double other)& {
 			if (x < 0 || y < 0 || z < 0) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator^=, raising a negative number to a power.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "operator^=, raising a negative number to a power.\n\n");
 			}
 
 			x = pow(x, other);
@@ -163,7 +163,7 @@ namespace eng {
 
 		Vect3 operator/(double other) const {
 			if (equality(other, 0.0, eps_)) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
 			return Vect3(x / other, y / other, z / other);
@@ -175,7 +175,7 @@ namespace eng {
 
 		Vect3 operator^(double other) const {
 			if (x < 0 || y < 0 || z < 0) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "operator^, raising a negative number to a power.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "operator^, raising a negative number to a power.\n\n");
 			}
 
 			return Vect3(pow(x, other), pow(y, other), pow(z, other));
@@ -196,7 +196,7 @@ namespace eng {
 		Vect3 normalize() const {
 			double vect_length = length();
 			if (equality(vect_length, 0.0, eps_)) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
 			}
 
 			return *this / vect_length;
@@ -213,7 +213,7 @@ namespace eng {
 
 		Vect3 reflect_vect(const Vect3& n) const {
 			if (equality(n.length(), 0.0, eps_)) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
 			}
 
 			Vect3 norm = n.normalize();
@@ -228,7 +228,7 @@ namespace eng {
 			try {
 				return equality(cos_angle(v1 ^ *this, v2 ^ *this), -1.0, eps_);
 			}
-			catch (eng_exceptions::EngDomainError) {
+			catch (EngDomainError) {
 				return false;
 			}
 		}
@@ -245,7 +245,7 @@ namespace eng {
 				}
 				return equality(cos_angle(prod1, prod2), -1.0, eps_) && equality(cos_angle(prod1, prod3), 1.0, eps_);
 			}
-			catch (eng_exceptions::EngDomainError) {
+			catch (EngDomainError) {
 				return false;
 			}
 		}
@@ -256,7 +256,7 @@ namespace eng {
 
 		static void set_epsilon(double eps) {
 			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
 			}
 
 			eps_ = eps;
@@ -265,7 +265,7 @@ namespace eng {
 		static double cos_angle(const Vect3& v1, const Vect3& v2) {
 			double length_prod = v1.length() * v2.length();
 			if (equality(length_prod, 0.0, eps_)) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
 			}
 
 			return (v1 * v2) / length_prod;
@@ -274,7 +274,7 @@ namespace eng {
 		static double sin_angle(const Vect3& v1, const Vect3& v2) {
 			double length_prod = v1.length() * v2.length();
 			if (equality(length_prod, 0.0, eps_)) {
-				throw eng_exceptions::EngDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
+				throw EngDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
 			}
 
 			return (v1 ^ v2).length() / length_prod;

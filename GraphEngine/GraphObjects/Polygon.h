@@ -14,25 +14,26 @@ public:
 
 	eng::Texture diffuse_map, specular_map, emission_map;
 
-	void set_uniforms(Shader* shader_program) {
+	template <size_t T>
+	void set_uniforms(eng::Shader<T>* shader_program) {
 		try {
 			shader_program->use();
-			glUniform1i(glGetUniformLocation(shader_program->program, "use_diffuse_map"), diffuse_map.get_id());
-			glUniform1i(glGetUniformLocation(shader_program->program, "use_specular_map"), specular_map.get_id());
-			glUniform1i(glGetUniformLocation(shader_program->program, "use_emission_map"), emission_map.get_id());
+			shader_program->set_uniform_1i("use_diffuse_map", diffuse_map.get_id());
+			shader_program->set_uniform_1i("use_specular_map", specular_map.get_id());
+			shader_program->set_uniform_1i("use_emission_map", emission_map.get_id());
 
 			if (!diffuse_map.get_id()) {
-				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.ambient"), ambient.x, ambient.y, ambient.z);
-				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.diffuse"), diffuse.x, diffuse.y, diffuse.z);
-				glUniform1f(glGetUniformLocation(shader_program->program, "object_material.alpha"), alpha);
+				shader_program->set_uniform_3f("object_material.ambient", ambient.x, ambient.y, ambient.z);
+				shader_program->set_uniform_3f("object_material.diffuse", diffuse.x, diffuse.y, diffuse.z);
+				shader_program->set_uniform_1f("object_material.alpha", alpha);
 			}
 			if (!specular_map.get_id())
-				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.specular"), specular.x, specular.y, specular.z);
+				shader_program->set_uniform_3f("object_material.specular", specular.x, specular.y, specular.z);
 			if (!emission_map.get_id())
-				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.emission"), emission.x, emission.y, emission.z);
-			glUniform1f(glGetUniformLocation(shader_program->program, "object_material.shininess"), shininess);
-			glUniform1i(glGetUniformLocation(shader_program->program, "object_material.light"), light);
-			glUniform1i(glGetUniformLocation(shader_program->program, "object_material.use_vertex_color"), use_vertex_color);
+				shader_program->set_uniform_3f("object_material.emission", emission.x, emission.y, emission.z);
+			shader_program->set_uniform_1f("object_material.shininess", shininess);
+			shader_program->set_uniform_1i("object_material.light", light);
+			shader_program->set_uniform_1i("object_material.use_vertex_color", use_vertex_color);
 
 			diffuse_map.activate(0);
 			specular_map.activate(1);
@@ -44,7 +45,8 @@ public:
 		}
 	}
 
-	void delete_uniforms(Shader* shader_program) {
+	template <size_t T>
+	void delete_uniforms(eng::Shader<T>* shader_program) {
 		try {
 			shader_program->use();
 			emission_map.deactive(2);
@@ -71,7 +73,8 @@ class Polygon {
 	std::vector < unsigned int > indices;
 	eng::Vect3 center;
 
-	void set_uniforms(Shader* shader_program) {
+	template <size_t T>
+	void set_uniforms(eng::Shader<T>* shader_program) {
 		if (shader_program == nullptr)
 			return;
 
@@ -127,7 +130,8 @@ class Polygon {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	void delete_uniforms(Shader* shader_program) {
+	template <size_t T>
+	void delete_uniforms(eng::Shader<T>* shader_program) {
 		if (shader_program == nullptr)
 			return;
 
@@ -380,7 +384,8 @@ public:
 		set_positions(positions, update_normals);
 	}
 
-	void draw(int count, Shader* shader_program) {
+	template <size_t T>
+	void draw(int count, eng::Shader<T>* shader_program) {
 		if (count == 0)
 			return;
 

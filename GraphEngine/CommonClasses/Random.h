@@ -25,7 +25,7 @@ namespace eng {
 
 		int64_t rand_int(int64_t left, int64_t right) {
 			if (right < left) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "rand_int, invalid range.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "rand_int, invalid range.\n\n");
 			}
 
 			return static_cast<int64_t>(generator()) % (right - left + 1) + left;
@@ -33,7 +33,7 @@ namespace eng {
 
 		double rand_float(double left, double right) {
 			if (right < left) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "rand_float, invalid range.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "rand_float, invalid range.\n\n");
 			}
 
 			return (right - left) * rand() + left;
@@ -41,7 +41,7 @@ namespace eng {
 
 		Vect3 rand_vect3(Vect3 left, Vect3 right) {
 			if (Vect3::zip_map(left, right, [](auto left, auto right) { return std::max(left, right); }) != right) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "rand_vect3, invalid range.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "rand_vect3, invalid range.\n\n");
 			}
 
 			return Vect3(rand_float(left.x, right.x), rand_float(left.y, right.y), rand_float(left.z, right.z));

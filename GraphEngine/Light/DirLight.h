@@ -31,7 +31,7 @@ public:
         set_projection_matrix();
     }
 
-    void set_uniforms(int draw_id, Shader* shader_program) {
+    void set_uniforms(int draw_id, eng::Shader<eng::ShaderType::MAIN>* shader_program) {
         if (draw_id < 0) {
             std::cout << "ERROR::DIR_LIGHT::SET_UNIFORMS\n" << "Invalid draw id.\n";
             assert(0);
@@ -39,14 +39,14 @@ public:
 
         try {
             std::string name = "lights[" + std::to_string(draw_id) + "].";
-            glUniform1i(glGetUniformLocation(shader_program->program, (name + "shadow").c_str()), shadow);
-            glUniform1i(glGetUniformLocation(shader_program->program, (name + "type").c_str()), 0);
-            glUniform3f(glGetUniformLocation(shader_program->program, (name + "direction").c_str()), direction.x, direction.y, direction.z);
-            glUniform3f(glGetUniformLocation(shader_program->program, (name + "ambient").c_str()), ambient.x, ambient.y, ambient.z);
-            glUniform3f(glGetUniformLocation(shader_program->program, (name + "diffuse").c_str()), diffuse.x, diffuse.y, diffuse.z);
-            glUniform3f(glGetUniformLocation(shader_program->program, (name + "specular").c_str()), specular.x, specular.y, specular.z);
+            shader_program->set_uniform_1i((name + "shadow").c_str(), shadow);
+            shader_program->set_uniform_1i((name + "type").c_str(), 0);
+            shader_program->set_uniform_3f((name + "direction").c_str(), direction.x, direction.y, direction.z);
+            shader_program->set_uniform_3f((name + "ambient").c_str(), ambient.x, ambient.y, ambient.z);
+            shader_program->set_uniform_3f((name + "diffuse").c_str(), diffuse.x, diffuse.y, diffuse.z);
+            shader_program->set_uniform_3f((name + "specular").c_str(), specular.x, specular.y, specular.z);
             if (shadow)
-                glUniformMatrix4fv(glGetUniformLocation(shader_program->program, (name + "light_space").c_str()), 1, GL_FALSE, &std::vector<float>(this->get_light_space_matrix())[0]);
+                shader_program->set_uniform_matrix4fv((name + "light_space").c_str(), 1, GL_FALSE, &std::vector<float>(this->get_light_space_matrix())[0]);
         }
         catch (const std::exception& error) {
             std::cout << "ERROR::DIR_LIGHT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";

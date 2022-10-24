@@ -38,9 +38,9 @@ public:
 		}
 	}
 
-	void use(Shader* shader) {
+	void use(eng::Shader<eng::ShaderType::POST>* shader) {
 		try {
-			glUniform1fv(glGetUniformLocation(shader->program, "kernel"), 9, &std::vector<float>(kernel)[0]);
+			shader->set_uniform_1fv("kernel", 9, &std::vector<float>(kernel)[0]);
 		}
 		catch (const std::exception& error) {
 			std::cout << "ERROR::KERNEL::USE\n" << "Unknown error, description:\n" << error.what() << "\n";

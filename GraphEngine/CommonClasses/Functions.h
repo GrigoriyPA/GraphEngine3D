@@ -57,9 +57,8 @@ namespace eng {
     void hash_combine(size_t& seed, const T& value) {
         seed ^= std::hash<T>()(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
-}
 
-namespace eng::eng_exceptions {
+
     class EngDomainError : public std::domain_error {
     public:
         EngDomainError(const char* filename, uint32_t line, std::string message) : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) +  "\nDescription: " + message) {

@@ -19,8 +19,8 @@ namespace eng {
 			try {
 				normal_ = ((point1 - point2) ^ (point1 - point3)).normalize();
 			}
-			catch (eng_exceptions::EngDomainError) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Flat, points to initialize are collinear.\n\n");
+			catch (EngDomainError) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "Flat, points to initialize are collinear.\n\n");
 			}
 
 			distance = normal_ * point1;
@@ -28,7 +28,7 @@ namespace eng {
 
 		Flat(const std::initializer_list<Vect3>& points) {
 			if (points.size() < 3) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Flat, the number of points is less than three.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "Flat, the number of points is less than three.\n\n");
 			}
 
 			std::vector<Vect3> init;
@@ -44,7 +44,7 @@ namespace eng {
 
 		explicit Flat(const std::vector<Vect3>& points) {
 			if (points.size() < 3) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Flat, the number of points is less than three.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "Flat, the number of points is less than three.\n\n");
 			}
 
 			*this = Flat(points[0], points[1], points[2]);
@@ -54,8 +54,8 @@ namespace eng {
 			try {
 				normal_ = normal.normalize();
 			}
-			catch (eng_exceptions::EngDomainError) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_normal, the normal vector has zero length.\n\n");
+			catch (EngDomainError) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_normal, the normal vector has zero length.\n\n");
 			}
 			return *this;
 		}
@@ -116,7 +116,7 @@ namespace eng {
 				Vect3 intersection = plane.intersect(ort_line);
 				return Line(intersection, intersection + direction);
 			}
-			catch (eng_exceptions::EngDomainError) {
+			catch (EngDomainError) {
 				return Line(plane.distance * plane.get_normal(), plane.distance * plane.get_normal() + plane.get_normal().horizont());
 			}
 		}
@@ -127,7 +127,7 @@ namespace eng {
 
 		static void set_epsilon(double eps) {
 			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
 			}
 
 			eps_ = eps;

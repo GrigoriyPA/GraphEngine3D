@@ -19,8 +19,8 @@ namespace eng {
 			try {
 				direction_ = (point2 - point1).normalize();
 			}
-			catch (eng_exceptions::EngDomainError) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "Line, points for initialization are the same.\n\n");
+			catch (EngDomainError) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "Line, points for initialization are the same.\n\n");
 			}
 
 			start_point = point1;
@@ -30,8 +30,8 @@ namespace eng {
 			try {
 				direction_ = direction.normalize();
 			}
-			catch (eng_exceptions::EngDomainError) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
+			catch (EngDomainError) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
 			}
 			return *this;
 		}
@@ -52,7 +52,7 @@ namespace eng {
 			try {
 				return equality((direction_ ^ line.direction_).normalize() * (start_point - line.start_point), 0.0, eps_);
 			}
-			catch (eng_exceptions::EngDomainError) {
+			catch (EngDomainError) {
 				return false;
 			}
 		}
@@ -66,7 +66,7 @@ namespace eng {
 				double alf = (k - normal * line.start_point) / (line.direction_ * normal);
 				return line.start_point + alf * line.direction_;
 			}
-			catch (eng_exceptions::EngDomainError) {
+			catch (EngDomainError) {
 				return line.start_point;
 			}
 		}
@@ -77,7 +77,7 @@ namespace eng {
 
 		static void set_epsilon(double eps) {
 			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
 			}
 
 			eps_ = eps;

@@ -32,10 +32,11 @@ class GraphObject {
 	std::unordered_map < int, Model > models;
 	std::unordered_map < int, Polygon > polygons;
 
-	void set_uniforms(Shader* shader_program, int object_id) {
+	template <size_t T>
+	void set_uniforms(eng::Shader<T>* shader_program, int object_id) {
 		try {
 			shader_program->use();
-			glUniform1i(glGetUniformLocation(shader_program->program, "object_id"), object_id);
+			shader_program->set_uniform_1i("object_id", object_id);
 		}
 		catch (const std::exception& error) {
 			std::cout << "ERROR::GRAPH_OBJECT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
@@ -59,7 +60,8 @@ class GraphObject {
 		glDeleteBuffers(1, &matrix_buffer);
 	}
 
-	void draw_polygons(Shader* shader_program, int model_id = -1) {
+	template <size_t T>
+	void draw_polygons(eng::Shader<T>* shader_program, int model_id = -1) {
 		if (model_id != -1 && !models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::DRAW_POLYGONS\n" << "Invalid model id.\n";
 			assert(0);
@@ -67,14 +69,14 @@ class GraphObject {
 
 		int cnt = models.size();
 		if (model_id != -1) {
-			glUniformMatrix4fv(glGetUniformLocation(shader_program->program, "not_instance_model"), 1, GL_FALSE, &std::vector<float>(models[model_id].matrix)[0]);
+			shader_program->set_uniform_matrix4fv("not_instance_model", 1, GL_FALSE, &std::vector<float>(models[model_id].matrix)[0]);
 			cnt = 1;
 		}
 
 		int cur_id = -1;
 		if (model_id != -1)
 			cur_id = models[model_id].used_memory;
-		glUniform1i(glGetUniformLocation(shader_program->program, "model_id"), cur_id);
+		shader_program->set_uniform_1i("model_id", cur_id);
 
 		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
 			polygon->second.draw(cnt, shader_program);
@@ -469,11 +471,12 @@ public:
 			if (polygon->second.material.light)
 				continue;
 
-			polygon->second.draw(models.size(), nullptr);
+			polygon->second.draw<eng::ShaderType::NONE>(models.size(), nullptr);
 		}
 	}
 
-	void draw_polygon(Shader* shader_program, int object_id, int model_id, int polygon_id) {
+	template <size_t T>
+	void draw_polygon(eng::Shader<T>* shader_program, int object_id, int model_id, int polygon_id) {
 		if (!models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::DRAW_POLYGON\n" << "Invalid model id.\n";
 			assert(0);
@@ -485,8 +488,8 @@ public:
 		}
 
 		set_uniforms(shader_program, object_id);
-		glUniformMatrix4fv(glGetUniformLocation(shader_program->program, "not_instance_model"), 1, GL_FALSE, &std::vector<float>(models[model_id].matrix)[0]);
-		glUniform1i(glGetUniformLocation(shader_program->program, "model_id"), models[model_id].used_memory);
+		shader_program->set_uniform_matrix4fv("not_instance_model", 1, GL_FALSE, &std::vector<float>(models[model_id].matrix)[0]);
+		shader_program->set_uniform_1i("model_id", models[model_id].used_memory);
 
 		if (models[model_id].border) {
 			glStencilFunc(GL_ALWAYS, border_bit, 0xFF);
@@ -499,7 +502,8 @@ public:
 			glStencilMask(0x00);
 	}
 
-	void draw(eng::Vect3 view_pos, Shader* shader_program, int object_id, int model_id = -1) {
+	template <size_t T>
+	void draw(eng::Vect3 view_pos, eng::Shader<T>* shader_program, int object_id, int model_id = -1) {
 		if (model_id != -1 && !models.count(model_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::DRAW\n" << "Invalid model id.\n";
 			assert(0);
