@@ -50,21 +50,14 @@ namespace eng {
 			*this = Flat(points[0], points[1], points[2]);
 		}
 
-		void set_epsilon(double eps)& {
-			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
-		}
-
-		void set_normal(const Vect3& normal)& {
+		Flat& set_normal(const Vect3& normal)& {
 			try {
 				normal_ = normal.normalize();
 			}
 			catch (eng_exceptions::EngDomainError) {
 				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_normal, the normal vector has zero length.\n\n");
 			}
+			return *this;
 		}
 
 		Vect3 get_normal() const noexcept {
@@ -130,6 +123,14 @@ namespace eng {
 
 		Vect3 symmetry(const Vect3& point) const noexcept {
 			return point.symmetry(project_point(point));
+		}
+
+		static void set_epsilon(double eps) {
+			if (eps <= 0) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
 		}
 	};
 }

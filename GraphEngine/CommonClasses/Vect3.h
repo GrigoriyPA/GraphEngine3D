@@ -1,7 +1,6 @@
 #pragma once
 
 #include <initializer_list>
-#include <iostream>
 #include <SFML/Graphics/Color.hpp>
 #include "Functions.h"
 
@@ -186,14 +185,6 @@ namespace eng {
 			return Vect3(binary_exponentiation(x, other), binary_exponentiation(y, other), binary_exponentiation(z, other));
 		}
 
-		void set_epsilon(double eps)& {
-			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
-		}
-
 		double length_sqr() const noexcept {
 			return *this * *this;
 		}
@@ -261,6 +252,14 @@ namespace eng {
 
 		bool in_triangle(const Vect3& v1, const Vect3& v2, const Vect3& v3) const noexcept {
 			return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
+		}
+
+		static void set_epsilon(double eps) {
+			if (eps <= 0) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
 		}
 
 		static double cos_angle(const Vect3& v1, const Vect3& v2) {

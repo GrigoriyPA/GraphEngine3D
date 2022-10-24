@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <initializer_list>
 #include <SFML/System/Vector2.hpp>
 #include "Functions.h"
@@ -175,14 +174,6 @@ namespace eng {
             return Vect2(x / other, y / other);
         }
 
-        void set_epsilon(double eps)& {
-            if (eps <= 0) {
-                throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-            }
-
-            eps_ = eps;
-        }
-
         double length_sqr() const noexcept {
             return *this * *this;
         }
@@ -218,6 +209,14 @@ namespace eng {
 
         bool in_triangle(const Vect2& v1, const Vect2& v2, const Vect2& v3) const noexcept {
             return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
+        }
+
+        static void set_epsilon(double eps) {
+            if (eps <= 0) {
+                throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+            }
+
+            eps_ = eps;
         }
 
         static double cos_angle(const Vect2& v1, const Vect2& v2) {

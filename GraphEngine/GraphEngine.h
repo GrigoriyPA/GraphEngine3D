@@ -1,5 +1,11 @@
 #pragma once
 
+#include "Graphic—lasses/Texture.h"
+#include "CommonClasses/Vect2.h"
+#include "CommonClasses/Matrix.h"
+#include "CommonClasses/Random.h"
+#include "CommonClasses/Cut.h"
+#include "CommonClasses/Flat.h"
 #include <math.h>
 #include <cassert>
 #include <algorithm>
@@ -10,14 +16,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "CommonClasses/Vect2.h"
-#include "CommonClasses/Matrix.h"
-#include "CommonClasses/Random.h"
-#include "CommonClasses/Cut.h"
-#include "CommonClasses/Flat.h"
-#include "Texture.h"
-#include "Shader.h"
-#include "Kernel.h"
+#include "Graphic—lasses/Shader.h"
+#include "Graphic—lasses/Kernel.h"
 #include "Camera.h"
 #include "GraphObjects/GraphObject.h"
 #include "Light/Light.h"

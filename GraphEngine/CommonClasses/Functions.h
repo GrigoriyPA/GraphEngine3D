@@ -28,7 +28,7 @@ namespace eng {
         return std::abs(left - right) < eps;
     }
 
-    std::vector<std::string> split(const std::string& str, std::function<bool(char)> pred) {
+    inline std::vector<std::string> split(const std::string& str, std::function<bool(char)> pred) {
         std::vector<std::string> split_str(1);
         for (char character : str) {
             bool skip_character = pred(character);
@@ -76,6 +76,12 @@ namespace eng::eng_exceptions {
     class EngOutOfRange : public std::out_of_range {
     public:
         EngOutOfRange(const char* filename, uint32_t line, std::string message) : out_of_range("Out of range error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        }
+    };
+
+    class EngRuntimeError : public std::runtime_error {
+    public:
+        EngRuntimeError(const char* filename, uint32_t line, std::string message) : runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 }

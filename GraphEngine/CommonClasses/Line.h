@@ -26,21 +26,14 @@ namespace eng {
 			start_point = point1;
 		}
 
-		void set_epsilon(double eps)& {
-			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
-		}
-
-		void set_direction(const Vect3& direction)& {
+		Line& set_direction(const Vect3& direction)& {
 			try {
 				direction_ = direction.normalize();
 			}
 			catch (eng_exceptions::EngDomainError) {
 				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
 			}
+			return *this;
 		}
 
 		Vect3 get_direction() const noexcept {
@@ -80,6 +73,14 @@ namespace eng {
 
 		Vect3 symmetry(const Vect3& point) const noexcept {
 			return point.symmetry(project_point(point));
+		}
+
+		static void set_epsilon(double eps) {
+			if (eps <= 0) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
 		}
 	};
 }

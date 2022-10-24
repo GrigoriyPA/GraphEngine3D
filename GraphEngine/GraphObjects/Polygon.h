@@ -12,31 +12,31 @@ public:
 	double shininess = 1, alpha = 1;
 	eng::Vect3 ambient = eng::Vect3(0, 0, 0), diffuse = eng::Vect3(0, 0, 0), specular = eng::Vect3(0, 0, 0), emission = eng::Vect3(0, 0, 0);
 
-	Texture diffuse_map, specular_map, emission_map;
+	eng::Texture diffuse_map, specular_map, emission_map;
 
 	void set_uniforms(Shader* shader_program) {
 		try {
 			shader_program->use();
-			glUniform1i(glGetUniformLocation(shader_program->program, "use_diffuse_map"), diffuse_map.texture_id);
-			glUniform1i(glGetUniformLocation(shader_program->program, "use_specular_map"), specular_map.texture_id);
-			glUniform1i(glGetUniformLocation(shader_program->program, "use_emission_map"), emission_map.texture_id);
+			glUniform1i(glGetUniformLocation(shader_program->program, "use_diffuse_map"), diffuse_map.get_id());
+			glUniform1i(glGetUniformLocation(shader_program->program, "use_specular_map"), specular_map.get_id());
+			glUniform1i(glGetUniformLocation(shader_program->program, "use_emission_map"), emission_map.get_id());
 
-			if (!diffuse_map.texture_id) {
+			if (!diffuse_map.get_id()) {
 				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.ambient"), ambient.x, ambient.y, ambient.z);
 				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.diffuse"), diffuse.x, diffuse.y, diffuse.z);
 				glUniform1f(glGetUniformLocation(shader_program->program, "object_material.alpha"), alpha);
 			}
-			if (!specular_map.texture_id)
+			if (!specular_map.get_id())
 				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.specular"), specular.x, specular.y, specular.z);
-			if (!emission_map.texture_id)
+			if (!emission_map.get_id())
 				glUniform3f(glGetUniformLocation(shader_program->program, "object_material.emission"), emission.x, emission.y, emission.z);
 			glUniform1f(glGetUniformLocation(shader_program->program, "object_material.shininess"), shininess);
 			glUniform1i(glGetUniformLocation(shader_program->program, "object_material.light"), light);
 			glUniform1i(glGetUniformLocation(shader_program->program, "object_material.use_vertex_color"), use_vertex_color);
 
-			diffuse_map.active(0);
-			specular_map.active(1);
-			emission_map.active(2);
+			diffuse_map.activate(0);
+			specular_map.activate(1);
+			emission_map.activate(2);
 		}
 		catch (const std::exception& error) {
 			std::cout << "ERROR::TEX_MATERIAL::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";

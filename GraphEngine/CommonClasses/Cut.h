@@ -24,14 +24,6 @@ namespace eng {
 			point2_ = point2;
 		}
 
-		void set_epsilon(double eps)& {
-			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
-		}
-
 		Vect3 get_point1() const noexcept {
 			return point1_;
 		}
@@ -74,6 +66,14 @@ namespace eng {
 		// Returns some point on other object if there is no intersection
 		Vect3 intersect(const Cut& cut) const noexcept {
 			return cut.project_point(line_.intersect(cut.line_));
+		}
+
+		static void set_epsilon(double eps) {
+			if (eps <= 0) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
 		}
 	};
 }

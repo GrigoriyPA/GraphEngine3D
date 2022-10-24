@@ -80,8 +80,8 @@ class GraphObject {
 			polygon->second.draw(cnt, shader_program);
 	}
 
-	std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
-		std::vector<Texture> textures;
+	std::vector<eng::Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
+		std::vector<eng::Texture> textures;
 		for (unsigned int i = 0; i < material->GetTextureCount(type); i++) {
 			aiString str;
 			material->GetTexture(type, i, &str);
@@ -92,7 +92,7 @@ class GraphObject {
 				path = "inline_texture" + path + "." + std::string(scene->mTextures[std::stoi(path)]->achFormatHint);
 			}
 
-			Texture texture(directory + "/" + path, true);
+			eng::Texture texture(directory + "/" + path, true);
 			textures.push_back(texture);
 		}
 		return textures;
@@ -137,17 +137,17 @@ class GraphObject {
 			aiColor3D color(0, 0, 0);
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-			std::vector<Texture> diffuse_textures = loadMaterialTextures(material, aiTextureType_DIFFUSE, scene, directory);
+			std::vector<eng::Texture> diffuse_textures = loadMaterialTextures(material, aiTextureType_DIFFUSE, scene, directory);
 			if (!diffuse_textures.empty())
 				polygon_mesh.material.diffuse_map = diffuse_textures[0];
 			//std::cout << material->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
 
-			std::vector<Texture> specular_textures = loadMaterialTextures(material, aiTextureType_SPECULAR, scene, directory);
+			std::vector<eng::Texture> specular_textures = loadMaterialTextures(material, aiTextureType_SPECULAR, scene, directory);
 			if (!specular_textures.empty())
 				polygon_mesh.material.specular_map = specular_textures[0];
 			//std::cout << material->GetTextureCount(aiTextureType_SPECULAR) << "\n";
 
-			std::vector<Texture> emissive_textures = loadMaterialTextures(material, aiTextureType_EMISSIVE, scene, directory);
+			std::vector<eng::Texture> emissive_textures = loadMaterialTextures(material, aiTextureType_EMISSIVE, scene, directory);
 			if (!emissive_textures.empty())
 				polygon_mesh.material.emission_map = emissive_textures[0];
 			//std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";

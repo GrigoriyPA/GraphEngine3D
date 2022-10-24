@@ -423,14 +423,6 @@ namespace eng {
 			return result;
 		}
 
-		void set_epsilon(double eps)& {
-			if (eps <= 0) {
-				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
-		}
-
 		size_t count_strings() const noexcept {
 			return matrix_.size();
 		}
@@ -561,6 +553,14 @@ namespace eng {
 				result[j][0] = isv_matrix[i].back();
 			}
 			return result;
+		}
+
+		static void set_epsilon(double eps) {
+			if (eps <= 0) {
+				throw eng_exceptions::EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
 		}
 
 		static Matrix zip_map(const Matrix& matrix1, const Matrix& matrix2, std::function<double(double, double)> zip_func) {

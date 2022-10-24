@@ -1,8 +1,8 @@
+#include "GraphEngine/GraphEngine.h"
 #include <chrono>
 #include <iostream>
 #include <stdio.h>
 #include <string>
-#include "GraphEngine/GraphEngine.h"
 #include "config.h"
 #include "Interface/Interface.h"
 #include "InnerClasses/RenderingSequence.h"
@@ -82,6 +82,8 @@ signed main() {
         int obj_id = scene.add_object(GraphObject(1));
         scene[obj_id].import_from_file("Resources/Objects/ships/mjolnir.glb");
         scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
+        //scene[obj_id].import_from_file("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
+        //scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1) * 0.01));
         /*for (size_t i = 0; i < scene[obj_id].get_count_polygons(); ++i) {
             scene[obj_id][i].material.use_vertex_color = true;
         }*/
@@ -107,7 +109,7 @@ signed main() {
         scene[obj_id].add_model(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
 
         DirLight light(eng::Vect3(-1, -1, 1));
-        light.ambient = eng::Vect3(0.1, 0.1, 0.1);
+        light.ambient = eng::Vect3(0.3, 0.3, 0.3);
         light.diffuse = eng::Vect3(0.6, 0.6, 0.6);
         light.specular = eng::Vect3(0.8, 0.8, 0.8);
         light.shadow_position = eng::Vect3(3, 1, 1);
