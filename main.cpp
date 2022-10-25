@@ -41,7 +41,7 @@ signed main() {
             std::cout << "ERROR\n" << "Invalid OpenGL version.";
             assert(false);
         }
-        window.setVerticalSyncEnabled(true);
+        //window.setVerticalSyncEnabled(true);
 
         int window_width = window.getSize().x, window_height = window.getSize().y;
 

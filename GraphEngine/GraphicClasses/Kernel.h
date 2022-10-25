@@ -41,7 +41,7 @@ namespace eng {
 
 		template <size_t N>
 		void use(const std::string& uniform_name, const Shader<N>& shader) const {
-			shader.set_uniform_fv<1>(uniform_name, 9, &std::vector<float>(kernel_)[0]);
+			shader.set_uniform_fv<1>(uniform_name.c_str(), 9, &std::vector<float>(kernel_)[0]);
 		}
 	};
 

@@ -180,68 +180,68 @@ namespace eng {
 			return *this;
 		}
 
-		void set_uniform_f(const std::string& uniform_name, GLfloat v0) const {
+		void set_uniform_f(const GLchar* uniform_name, GLfloat v0) const {
 			glUniform1f(get_uniform_location(uniform_name), v0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_f(const std::string& uniform_name, GLfloat v0, GLfloat v1) const {
+		void set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1) const {
 			glUniform2f(get_uniform_location(uniform_name), v0, v1);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_f(const std::string& uniform_name, GLfloat v0, GLfloat v1, GLfloat v2) const {
+		void set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2) const {
 			glUniform3f(get_uniform_location(uniform_name), v0, v1, v2);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_f(const std::string& uniform_name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) const {
+		void set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) const {
 			glUniform4f(get_uniform_location(uniform_name), v0, v1, v2, v3);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_i(const std::string& uniform_name, GLint v0) const {
+		void set_uniform_i(const GLchar* uniform_name, GLint v0) const {
 			glUniform1i(get_uniform_location(uniform_name), v0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_i(const std::string& uniform_name, GLint v0, GLint v1) const {
+		void set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1) const {
 			glUniform2i(get_uniform_location(uniform_name), v0, v1);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_i(const std::string& uniform_name, GLint v0, GLint v1, GLint v2) const {
+		void set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1, GLint v2) const {
 			glUniform3i(get_uniform_location(uniform_name), v0, v1, v2);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_i(const std::string& uniform_name, GLint v0, GLint v1, GLint v2, GLint v3) const {
+		void set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1, GLint v2, GLint v3) const {
 			glUniform4i(get_uniform_location(uniform_name), v0, v1, v2, v3);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_ui(const std::string& uniform_name, GLuint v0) const {
+		void set_uniform_ui(const GLchar* uniform_name, GLuint v0) const {
 			glUniform1ui(get_uniform_location(uniform_name), v0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_ui(const std::string& uniform_name, GLuint v0, GLuint v1) const {
+		void set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1) const {
 			glUniform2ui(get_uniform_location(uniform_name), v0, v1);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_ui(const std::string& uniform_name, GLuint v0, GLuint v1, GLuint v2) const {
+		void set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1, GLuint v2) const {
 			glUniform3ui(get_uniform_location(uniform_name), v0, v1, v2);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_ui(const std::string& uniform_name, GLuint v0, GLuint v1, GLuint v2, GLuint v3) const {
+		void set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1, GLuint v2, GLuint v3) const {
 			glUniform4ui(get_uniform_location(uniform_name), v0, v1, v2, v3);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
 		template <size_t N>
-		void set_uniform_fv(const std::string& uniform_name, GLsizei count, const GLfloat* value) const {
+		void set_uniform_fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
 			switch (N) {
 			case 1:
 				glUniform1fv(get_uniform_location(uniform_name), count, value);
@@ -263,7 +263,7 @@ namespace eng {
 		}
 
 		template <size_t N>
-		void set_uniform_iv(const std::string& uniform_name, GLsizei count, const GLint* value) const {
+		void set_uniform_iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
 			switch (N) {
 			case 1:
 				glUniform1iv(get_uniform_location(uniform_name), count, value);
@@ -285,7 +285,7 @@ namespace eng {
 		}
 
 		template <size_t N>
-		void set_uniform_uiv(const std::string& uniform_name, GLsizei count, const GLuint* value) const {
+		void set_uniform_uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
 			switch (N) {
 			case 1:
 				glUniform1uiv(get_uniform_location(uniform_name), count, value);
@@ -306,11 +306,11 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_matrix(const std::string& uniform_name, const Matrix& matrix, GLboolean transpose = GL_FALSE) const {
+		void set_uniform_matrix(const GLchar* uniform_name, const Matrix& matrix, GLboolean transpose = GL_FALSE) const {
 			set_uniform_matrix(uniform_name, 1, &std::vector<GLfloat>(matrix)[0], matrix.count_strings(), matrix.count_columns(), transpose);
 		}
 
-		void set_uniform_matrix(const std::string& uniform_name, GLsizei count, const GLfloat* value, size_t height, size_t width, GLboolean transpose = GL_FALSE) const {
+		void set_uniform_matrix(const GLchar* uniform_name, GLsizei count, const GLfloat* value, size_t height, size_t width, GLboolean transpose = GL_FALSE) const {
 			switch (height) {
 			case 2:
 				switch (height) {
@@ -375,8 +375,8 @@ namespace eng {
 			return find_value(*fragment_shader_code_, variable_name);
 		}
 
-		GLint get_uniform_location(const std::string& uniform_name) const noexcept {
-			return glGetUniformLocation(program_id_, reinterpret_cast<const GLchar*>(uniform_name.c_str()));
+		GLint get_uniform_location(const GLchar* uniform_name) const noexcept {
+			return glGetUniformLocation(program_id_, uniform_name);
 		}
 
 		GLuint get_program_id() const noexcept {
