@@ -18,22 +18,22 @@ public:
 	void set_uniforms(eng::Shader<T>* shader_program) {
 		try {
 			shader_program->use();
-			shader_program->set_uniform_1i("use_diffuse_map", diffuse_map.get_id());
-			shader_program->set_uniform_1i("use_specular_map", specular_map.get_id());
-			shader_program->set_uniform_1i("use_emission_map", emission_map.get_id());
+			shader_program->set_uniform_i("use_diffuse_map", diffuse_map.get_id());
+			shader_program->set_uniform_i("use_specular_map", specular_map.get_id());
+			shader_program->set_uniform_i("use_emission_map", emission_map.get_id());
 
 			if (!diffuse_map.get_id()) {
-				shader_program->set_uniform_3f("object_material.ambient", ambient.x, ambient.y, ambient.z);
-				shader_program->set_uniform_3f("object_material.diffuse", diffuse.x, diffuse.y, diffuse.z);
-				shader_program->set_uniform_1f("object_material.alpha", alpha);
+				shader_program->set_uniform_f("object_material.ambient", ambient.x, ambient.y, ambient.z);
+				shader_program->set_uniform_f("object_material.diffuse", diffuse.x, diffuse.y, diffuse.z);
+				shader_program->set_uniform_f("object_material.alpha", alpha);
 			}
 			if (!specular_map.get_id())
-				shader_program->set_uniform_3f("object_material.specular", specular.x, specular.y, specular.z);
+				shader_program->set_uniform_f("object_material.specular", specular.x, specular.y, specular.z);
 			if (!emission_map.get_id())
-				shader_program->set_uniform_3f("object_material.emission", emission.x, emission.y, emission.z);
-			shader_program->set_uniform_1f("object_material.shininess", shininess);
-			shader_program->set_uniform_1i("object_material.light", light);
-			shader_program->set_uniform_1i("object_material.use_vertex_color", use_vertex_color);
+				shader_program->set_uniform_f("object_material.emission", emission.x, emission.y, emission.z);
+			shader_program->set_uniform_f("object_material.shininess", shininess);
+			shader_program->set_uniform_i("object_material.light", light);
+			shader_program->set_uniform_i("object_material.use_vertex_color", use_vertex_color);
 
 			diffuse_map.activate(0);
 			specular_map.activate(1);

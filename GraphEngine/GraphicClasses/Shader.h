@@ -2,24 +2,25 @@
 
 #include <fstream>
 #include "GraphicFunctions.h"
+#include "../CommonClasses/Matrix.h"
 
 
 namespace eng {
 	template <size_t T = 0>
 	class Shader {
 		static const GLsizei MAX_SHADER_INFO_LOG_SIZE = 1024;
-		inline static const std::string VERTEX_SHADER_EXTENSION = ".vert";
-		inline static const std::string FRAGMENT_SHADER_EXTENSION = ".frag";
+		inline static const char* VERTEX_SHADER_EXTENSION = ".vert";
+		inline static const char* FRAGMENT_SHADER_EXTENSION = ".frag";
 
 		size_t* count_links_ = nullptr;
 		std::string* vertex_shader_code_ = nullptr;
 		std::string* fragment_shader_code_ = nullptr;
-		GLuint program_ = 0;
+		GLuint program_id_ = 0;
 
 		GLuint load_vertex_shader(const std::string& vertex_shader_path) {
 			std::ifstream vertex_shader_file(vertex_shader_path + VERTEX_SHADER_EXTENSION);
 			if (vertex_shader_file.fail()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "load_vertex_shader, the vertex shader file does not exist.");
+				throw EngRuntimeError(__FILE__, __LINE__, "load_vertex_shader, the vertex shader file does not exist.\n\n");
 			}
 
 			vertex_shader_code_ = new std::string();
@@ -37,7 +38,7 @@ namespace eng {
 			if (success == GL_FALSE) {
 				GLchar info_log[MAX_SHADER_INFO_LOG_SIZE];
 				glGetShaderInfoLog(vertex_shader, MAX_SHADER_INFO_LOG_SIZE, NULL, info_log);
-				throw EngRuntimeError(__FILE__, __LINE__, "load_vertex_shader, compilation failed, description \\/\n" + std::string(info_log));
+				throw EngRuntimeError(__FILE__, __LINE__, "load_vertex_shader, compilation failed, description \\/\n" + std::string(info_log) + "\n\n");
 			}
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -47,7 +48,7 @@ namespace eng {
 		GLuint load_fragment_shader(const std::string& fragment_shader_path) {
 			std::ifstream fragment_shader_file(fragment_shader_path + FRAGMENT_SHADER_EXTENSION);
 			if (fragment_shader_file.fail()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "load_fragment_shader, the fragment shader file does not exist.");
+				throw EngRuntimeError(__FILE__, __LINE__, "load_fragment_shader, the fragment shader file does not exist.\n\n");
 			}
 
 			fragment_shader_code_ = new std::string();
@@ -65,7 +66,7 @@ namespace eng {
 			if (success == GL_FALSE) {
 				GLchar info_log[MAX_SHADER_INFO_LOG_SIZE];
 				glGetShaderInfoLog(fragment_shader, MAX_SHADER_INFO_LOG_SIZE, NULL, info_log);
-				throw EngRuntimeError(__FILE__, __LINE__, "load_fragment_shader, compilation failed, description \\/\n" + std::string(info_log));
+				throw EngRuntimeError(__FILE__, __LINE__, "load_fragment_shader, compilation failed, description \\/\n" + std::string(info_log) + "\n\n");
 			}
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -79,18 +80,18 @@ namespace eng {
 					delete count_links_;
 					delete vertex_shader_code_;
 					delete fragment_shader_code_;
-					glDeleteProgram(program_);
+					glDeleteProgram(program_id_);
 				}
 			}
 			count_links_ = nullptr;
 			vertex_shader_code_ = nullptr;
 			fragment_shader_code_ = nullptr;
-			program_ = 0;
+			program_id_ = 0;
 		}
 
 		void Swap(Shader<T>& other) noexcept {
 			std::swap(count_links_, other.count_links_);
-			std::swap(program_, other.program_);
+			std::swap(program_id_, other.program_id_);
 			std::swap(vertex_shader_code_, other.vertex_shader_code_);
 			std::swap(fragment_shader_code_, other.fragment_shader_code_);
 		}
@@ -106,7 +107,7 @@ namespace eng {
 			if (success == GL_FALSE) {
 				GLchar info_log[MAX_SHADER_INFO_LOG_SIZE];
 				glGetProgramInfoLog(program, MAX_SHADER_INFO_LOG_SIZE, NULL, info_log);
-				throw EngRuntimeError(__FILE__, __LINE__, "link_shaders, linking failed, description \\/\n" + std::string(info_log));
+				throw EngRuntimeError(__FILE__, __LINE__, "link_shaders, linking failed, description \\/\n" + std::string(info_log) + "\n\n");
 			}
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -145,7 +146,7 @@ namespace eng {
 			GLuint vertex_shader = load_vertex_shader(vertex_shader_path);
 			GLuint fragment_shader = load_fragment_shader(fragment_shader_path);
 
-			program_ = link_shaders(vertex_shader, fragment_shader);
+			program_id_ = link_shaders(vertex_shader, fragment_shader);
 
 			glDeleteShader(vertex_shader);
 			glDeleteShader(fragment_shader);
@@ -156,7 +157,7 @@ namespace eng {
 		Shader(const Shader<T>& other) noexcept {
 			vertex_shader_code_ = other.vertex_shader_code_;
 			fragment_shader_code_ = other.fragment_shader_code_;
-			program_ = other.program_;
+			program_id_ = other.program_id_;
 			count_links_ = other.count_links_;
 			if (count_links_ != nullptr) {
 				++(*count_links_);
@@ -179,168 +180,190 @@ namespace eng {
 			return *this;
 		}
 
-		void set_uniform_1f(const GLchar* uniform_name, GLfloat v0) const {
-			glUniform1f(glGetUniformLocation(program_, uniform_name), v0);
+		void set_uniform_f(const std::string& uniform_name, GLfloat v0) const {
+			glUniform1f(get_uniform_location(uniform_name), v0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_2f(const GLchar* uniform_name, GLfloat v0, GLfloat v1) const {
-			glUniform2f(glGetUniformLocation(program_, uniform_name), v0, v1);
+		void set_uniform_f(const std::string& uniform_name, GLfloat v0, GLfloat v1) const {
+			glUniform2f(get_uniform_location(uniform_name), v0, v1);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_3f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2) const {
-			glUniform3f(glGetUniformLocation(program_, uniform_name), v0, v1, v2);
+		void set_uniform_f(const std::string& uniform_name, GLfloat v0, GLfloat v1, GLfloat v2) const {
+			glUniform3f(get_uniform_location(uniform_name), v0, v1, v2);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_4f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) const {
-			glUniform4f(glGetUniformLocation(program_, uniform_name), v0, v1, v2, v3);
+		void set_uniform_f(const std::string& uniform_name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) const {
+			glUniform4f(get_uniform_location(uniform_name), v0, v1, v2, v3);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_1i(const GLchar* uniform_name, GLint v0) const {
-			glUniform1i(glGetUniformLocation(program_, uniform_name), v0);
+		void set_uniform_i(const std::string& uniform_name, GLint v0) const {
+			glUniform1i(get_uniform_location(uniform_name), v0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_2i(const GLchar* uniform_name, GLint v0, GLint v1) const {
-			glUniform2i(glGetUniformLocation(program_, uniform_name), v0, v1);
+		void set_uniform_i(const std::string& uniform_name, GLint v0, GLint v1) const {
+			glUniform2i(get_uniform_location(uniform_name), v0, v1);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_3i(const GLchar* uniform_name, GLint v0, GLint v1, GLint v2) const {
-			glUniform3i(glGetUniformLocation(program_, uniform_name), v0, v1, v2);
+		void set_uniform_i(const std::string& uniform_name, GLint v0, GLint v1, GLint v2) const {
+			glUniform3i(get_uniform_location(uniform_name), v0, v1, v2);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_4i(const GLchar* uniform_name, GLint v0, GLint v1, GLint v2, GLint v3) const {
-			glUniform4i(glGetUniformLocation(program_, uniform_name), v0, v1, v2, v3);
+		void set_uniform_i(const std::string& uniform_name, GLint v0, GLint v1, GLint v2, GLint v3) const {
+			glUniform4i(get_uniform_location(uniform_name), v0, v1, v2, v3);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_1ui(const GLchar* uniform_name, GLuint v0) const {
-			glUniform1ui(glGetUniformLocation(program_, uniform_name), v0);
+		void set_uniform_ui(const std::string& uniform_name, GLuint v0) const {
+			glUniform1ui(get_uniform_location(uniform_name), v0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_2ui(const GLchar* uniform_name, GLuint v0, GLuint v1) const {
-			glUniform2ui(glGetUniformLocation(program_, uniform_name), v0, v1);
+		void set_uniform_ui(const std::string& uniform_name, GLuint v0, GLuint v1) const {
+			glUniform2ui(get_uniform_location(uniform_name), v0, v1);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_3ui(const GLchar* uniform_name, GLuint v0, GLuint v1, GLuint v2) const {
-			glUniform3ui(glGetUniformLocation(program_, uniform_name), v0, v1, v2);
+		void set_uniform_ui(const std::string& uniform_name, GLuint v0, GLuint v1, GLuint v2) const {
+			glUniform3ui(get_uniform_location(uniform_name), v0, v1, v2);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_4ui(const GLchar* uniform_name, GLuint v0, GLuint v1, GLuint v2, GLuint v3) const {
-			glUniform4ui(glGetUniformLocation(program_, uniform_name), v0, v1, v2, v3);
+		void set_uniform_ui(const std::string& uniform_name, GLuint v0, GLuint v1, GLuint v2, GLuint v3) const {
+			glUniform4ui(get_uniform_location(uniform_name), v0, v1, v2, v3);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_1fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
-			glUniform1fv(glGetUniformLocation(program_, uniform_name), count, value);
+		template <size_t N>
+		void set_uniform_fv(const std::string& uniform_name, GLsizei count, const GLfloat* value) const {
+			switch (N) {
+			case 1:
+				glUniform1fv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 2:
+				glUniform2fv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 3:
+				glUniform3fv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 4:
+				glUniform4fv(get_uniform_location(uniform_name), count, value);
+				break;
+			default:
+				throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_fv, invalid vector size.\n\n");
+				break;
+			}
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_2fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
-			glUniform2fv(glGetUniformLocation(program_, uniform_name), count, value);
+		template <size_t N>
+		void set_uniform_iv(const std::string& uniform_name, GLsizei count, const GLint* value) const {
+			switch (N) {
+			case 1:
+				glUniform1iv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 2:
+				glUniform2iv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 3:
+				glUniform3iv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 4:
+				glUniform4iv(get_uniform_location(uniform_name), count, value);
+				break;
+			default:
+				throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_iv, invalid vector size.\n\n");
+				break;
+			}
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_3fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
-			glUniform3fv(glGetUniformLocation(program_, uniform_name), count, value);
+		template <size_t N>
+		void set_uniform_uiv(const std::string& uniform_name, GLsizei count, const GLuint* value) const {
+			switch (N) {
+			case 1:
+				glUniform1uiv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 2:
+				glUniform2uiv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 3:
+				glUniform3uiv(get_uniform_location(uniform_name), count, value);
+				break;
+			case 4:
+				glUniform4uiv(get_uniform_location(uniform_name), count, value);
+				break;
+			default:
+				throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_uiv, invalid vector size.\n\n");
+				break;
+			}
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_4fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
-			glUniform4fv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
+		void set_uniform_matrix(const std::string& uniform_name, const Matrix& matrix, GLboolean transpose = GL_FALSE) const {
+			set_uniform_matrix(uniform_name, 1, &std::vector<GLfloat>(matrix)[0], matrix.count_strings(), matrix.count_columns(), transpose);
 		}
 
-		void set_uniform_1iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
-			glUniform1iv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_2iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
-			glUniform2iv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_3iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
-			glUniform3iv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_4iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
-			glUniform4iv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_1uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
-			glUniform1uiv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_2uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
-			glUniform1uiv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_3uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
-			glUniform1uiv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_4uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
-			glUniform1uiv(glGetUniformLocation(program_, uniform_name), count, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix2fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix2fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix3fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix3fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix4fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix4fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix2x3fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix2x3fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix3x2fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix3x2fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix2x4fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix2x4fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix4x2fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix4x2fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix3x4fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix3x4fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void set_uniform_matrix4x3fv(const GLchar* uniform_name, GLsizei count, GLboolean transpose, const GLfloat* value) const {
-			glUniformMatrix4x3fv(glGetUniformLocation(program_, uniform_name), count, transpose, value);
+		void set_uniform_matrix(const std::string& uniform_name, GLsizei count, const GLfloat* value, size_t height, size_t width, GLboolean transpose = GL_FALSE) const {
+			switch (height) {
+			case 2:
+				switch (height) {
+				case 2:
+					glUniformMatrix2fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				case 3:
+					glUniformMatrix2x3fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				case 4:
+					glUniformMatrix2x4fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				default:
+					throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					break;
+				}
+				break;
+			case 3:
+				switch (height) {
+				case 2:
+					glUniformMatrix3x2fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				case 3:
+					glUniformMatrix3fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				case 4:
+					glUniformMatrix3x4fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				default:
+					throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					break;
+				}
+				break;
+			case 4:
+				switch (height) {
+				case 2:
+					glUniformMatrix4x2fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				case 3:
+					glUniformMatrix4x3fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				case 4:
+					glUniformMatrix4fv(get_uniform_location(uniform_name), count, transpose, value);
+					break;
+				default:
+					throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					break;
+				}
+				break;
+			default:
+				throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+				break;
+			}
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
@@ -352,8 +375,16 @@ namespace eng {
 			return find_value(*fragment_shader_code_, variable_name);
 		}
 
+		GLint get_uniform_location(const std::string& uniform_name) const noexcept {
+			return glGetUniformLocation(program_id_, reinterpret_cast<const GLchar*>(uniform_name.c_str()));
+		}
+
+		GLuint get_program_id() const noexcept {
+			return program_id_;
+		}
+
 		void use() const {
-			glUseProgram(program_);
+			glUseProgram(program_id_);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 

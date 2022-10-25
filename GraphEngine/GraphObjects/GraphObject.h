@@ -36,7 +36,7 @@ class GraphObject {
 	void set_uniforms(eng::Shader<T>* shader_program, int object_id) {
 		try {
 			shader_program->use();
-			shader_program->set_uniform_1i("object_id", object_id);
+			shader_program->set_uniform_i("object_id", object_id);
 		}
 		catch (const std::exception& error) {
 			std::cout << "ERROR::GRAPH_OBJECT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
@@ -69,14 +69,14 @@ class GraphObject {
 
 		int cnt = models.size();
 		if (model_id != -1) {
-			shader_program->set_uniform_matrix4fv("not_instance_model", 1, GL_FALSE, &std::vector<float>(models[model_id].matrix)[0]);
+			shader_program->set_uniform_matrix("not_instance_model", models[model_id].matrix);
 			cnt = 1;
 		}
 
 		int cur_id = -1;
 		if (model_id != -1)
 			cur_id = models[model_id].used_memory;
-		shader_program->set_uniform_1i("model_id", cur_id);
+		shader_program->set_uniform_i("model_id", cur_id);
 
 		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
 			polygon->second.draw(cnt, shader_program);
@@ -488,8 +488,8 @@ public:
 		}
 
 		set_uniforms(shader_program, object_id);
-		shader_program->set_uniform_matrix4fv("not_instance_model", 1, GL_FALSE, &std::vector<float>(models[model_id].matrix)[0]);
-		shader_program->set_uniform_1i("model_id", models[model_id].used_memory);
+		shader_program->set_uniform_matrix("not_instance_model", models[model_id].matrix);
+		shader_program->set_uniform_i("model_id", models[model_id].used_memory);
 
 		if (models[model_id].border) {
 			glStencilFunc(GL_ALWAYS, border_bit, 0xFF);

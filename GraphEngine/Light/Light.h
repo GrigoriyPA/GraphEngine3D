@@ -30,12 +30,12 @@ void set_default_light_uniforms(int draw_id, eng::Shader<eng::ShaderType::MAIN>*
 
     try {
         std::string name = "lights[" + std::to_string(draw_id) + "].";
-        shader_program->set_uniform_1i((name + "shadow").c_str(), 0);
-        shader_program->set_uniform_1i((name + "type").c_str(), 0);
-        shader_program->set_uniform_3f((name + "direction").c_str(), 1, 0, 0);
-        shader_program->set_uniform_3f((name + "ambient").c_str(), 0, 0, 0);
-        shader_program->set_uniform_3f((name + "diffuse").c_str(), 0, 0, 0);
-        shader_program->set_uniform_3f((name + "specular").c_str(), 0, 0, 0);
+        shader_program->set_uniform_i((name + "shadow").c_str(), 0);
+        shader_program->set_uniform_i((name + "type").c_str(), 0);
+        shader_program->set_uniform_f((name + "direction").c_str(), 1, 0, 0);
+        shader_program->set_uniform_f((name + "ambient").c_str(), 0, 0, 0);
+        shader_program->set_uniform_f((name + "diffuse").c_str(), 0, 0, 0);
+        shader_program->set_uniform_f((name + "specular").c_str(), 0, 0, 0);
     }
     catch (const std::exception& error) {
         std::cout << "ERROR::SET_DEFAULT_LIGHT_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";

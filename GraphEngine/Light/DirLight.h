@@ -39,14 +39,14 @@ public:
 
         try {
             std::string name = "lights[" + std::to_string(draw_id) + "].";
-            shader_program->set_uniform_1i((name + "shadow").c_str(), shadow);
-            shader_program->set_uniform_1i((name + "type").c_str(), 0);
-            shader_program->set_uniform_3f((name + "direction").c_str(), direction.x, direction.y, direction.z);
-            shader_program->set_uniform_3f((name + "ambient").c_str(), ambient.x, ambient.y, ambient.z);
-            shader_program->set_uniform_3f((name + "diffuse").c_str(), diffuse.x, diffuse.y, diffuse.z);
-            shader_program->set_uniform_3f((name + "specular").c_str(), specular.x, specular.y, specular.z);
+            shader_program->set_uniform_i((name + "shadow").c_str(), shadow);
+            shader_program->set_uniform_i((name + "type").c_str(), 0);
+            shader_program->set_uniform_f((name + "direction").c_str(), direction.x, direction.y, direction.z);
+            shader_program->set_uniform_f((name + "ambient").c_str(), ambient.x, ambient.y, ambient.z);
+            shader_program->set_uniform_f((name + "diffuse").c_str(), diffuse.x, diffuse.y, diffuse.z);
+            shader_program->set_uniform_f((name + "specular").c_str(), specular.x, specular.y, specular.z);
             if (shadow)
-                shader_program->set_uniform_matrix4fv((name + "light_space").c_str(), 1, GL_FALSE, &std::vector<float>(this->get_light_space_matrix())[0]);
+                shader_program->set_uniform_matrix((name + "light_space").c_str(), this->get_light_space_matrix());
         }
         catch (const std::exception& error) {
             std::cout << "ERROR::DIR_LIGHT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";

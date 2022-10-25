@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GraphicClasses/Kernel.h"
 #include "GraphicClasses/Shader.h"
 #include "GraphicClasses/Texture.h"
 #include "CommonClasses/Vect2.h"
@@ -17,7 +18,6 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "GraphicClasses/Kernel.h"
 #include "Camera.h"
 #include "GraphObjects/GraphObject.h"
 #include "Light/Light.h"
@@ -73,21 +73,21 @@ class GraphEngine {
 
 	void set_uniforms() {
 		main_shader.use();
-		main_shader.set_uniform_matrix4fv("projection", 1, GL_FALSE, &std::vector<float>(cam.get_projection_matrix())[0]);
-		main_shader.set_uniform_1i("diffuse_map", 0);
-		main_shader.set_uniform_1i("specular_map", 1);
-		main_shader.set_uniform_1i("emission_map", 2);
-		main_shader.set_uniform_1f("gamma", gamma);
-		main_shader.set_uniform_2f("check_point", window->getSize().x / 2, window->getSize().y / 2);
+		main_shader.set_uniform_matrix("projection", cam.get_projection_matrix());
+		main_shader.set_uniform_i("diffuse_map", 0);
+		main_shader.set_uniform_i("specular_map", 1);
+		main_shader.set_uniform_i("emission_map", 2);
+		main_shader.set_uniform_f("gamma", gamma);
+		main_shader.set_uniform_f("check_point", window->getSize().x / 2, window->getSize().y / 2);
 
 		post_shader.use();
-		Kernel().use(&post_shader);
-		post_shader.set_uniform_1i("grayscale", 0);
-		post_shader.set_uniform_1i("offset", 5);
-		post_shader.set_uniform_1i("border_width", 7);
-		post_shader.set_uniform_3f("border_color", 1, 0, 0);
-		post_shader.set_uniform_1i("screen_texture", 0);
-		post_shader.set_uniform_1i("stencil_texture", 1);
+		eng::Kernel().use("kernel", post_shader);
+		post_shader.set_uniform_i("grayscale", 0);
+		post_shader.set_uniform_i("offset", 5);
+		post_shader.set_uniform_i("border_width", 7);
+		post_shader.set_uniform_f("border_color", 1, 0, 0);
+		post_shader.set_uniform_i("screen_texture", 0);
+		post_shader.set_uniform_i("stencil_texture", 1);
 	}
 
 	void set_light_uniforms() {
@@ -250,7 +250,7 @@ class GraphEngine {
 				continue;
 
 			glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_map_tex, 0, i);
-			depth_shader.set_uniform_matrix4fv("light_space", 1, GL_FALSE, &std::vector<float>(lights[i]->get_light_space_matrix())[0]);
+			depth_shader.set_uniform_matrix("light_space", lights[i]->get_light_space_matrix());
 
 			for (std::unordered_map < int, GraphObject >::iterator object = objects.begin(); object != objects.end(); object++)
 				object->second.draw_depth_map();
@@ -268,8 +268,8 @@ class GraphEngine {
 		main_shader.use();
 
 		set_light_uniforms();
-		main_shader.set_uniform_matrix4fv("view", 1, GL_FALSE, &std::vector<float>(cam.get_view_matrix())[0]);
-		main_shader.set_uniform_3f("view_pos", cam.position.x, cam.position.y, cam.position.z);
+		main_shader.set_uniform_matrix("view", cam.get_view_matrix());
+		main_shader.set_uniform_f("view_pos", cam.position.x, cam.position.y, cam.position.z);
 
 		glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_tex);
 		draw_objects();
@@ -379,14 +379,14 @@ public:
 		lights[light_id] = new_light;
 	}
 
-	void set_kernel(Kernel new_kernel) {
+	void set_kernel(eng::Kernel new_kernel) {
 		post_shader.use();
-		new_kernel.use(&post_shader);
+		new_kernel.use("kernel", post_shader);
 	}
 
 	void set_grayscale(bool grayscale) {
 		post_shader.use();
-		post_shader.set_uniform_1i("grayscale", grayscale);
+		post_shader.set_uniform_i("grayscale", grayscale);
 	}
 
 	void set_kernel_offset(double kernel_offset) {
@@ -396,7 +396,7 @@ public:
 		}
 
 		post_shader.use();
-		post_shader.set_uniform_1f("offset", kernel_offset);
+		post_shader.set_uniform_f("offset", kernel_offset);
 	}
 
 	void set_gamma(double gamma) {
@@ -408,7 +408,7 @@ public:
 		this->gamma = gamma;
 
 		post_shader.use();
-		post_shader.set_uniform_1f("gamma", gamma);
+		post_shader.set_uniform_f("gamma", gamma);
 	}
 
 	void set_border_width(int border_width) {
@@ -417,11 +417,11 @@ public:
 			assert(0);
 		}
 
-		post_shader.set_uniform_1i("border_width", border_width);
+		post_shader.set_uniform_i("border_width", border_width);
 	}
 
 	void set_border_color(eng::Vect3 color) {
-		post_shader.set_uniform_3f("border_color", color.x, color.y, color.z);
+		post_shader.set_uniform_f("border_color", color.x, color.y, color.z);
 	}
 
 	Light* get_light(int light_id) {
