@@ -185,6 +185,14 @@ namespace eng {
 			return Vect3(binary_exponentiation(x, other), binary_exponentiation(y, other), binary_exponentiation(z, other));
 		}
 
+		template <typename T>
+		T get_value(T value, std::function<void(double, T*)> func) const {
+			func(x, &value);
+			func(y, &value);
+			func(z, &value);
+			return value;
+		}
+
 		double length_sqr() const noexcept {
 			return *this * *this;
 		}
@@ -282,6 +290,17 @@ namespace eng {
 
 		static Vect3 zip_map(const Vect3& v1, const Vect3& v2, std::function<double(double, double)> zip_func) {
 			return Vect3(zip_func(v1.x, v2.x), zip_func(v1.y, v2.y), zip_func(v1.z, v2.z));
+		}
+
+		template <typename T>  // Casts required: double(T)
+		static std::vector<Vect3> move_in(size_t size, T* data) {
+			std::vector<Vect3> result(size);
+			for (size_t i = 0; i < size; ++i) {
+				result[i] = Vect3(static_cast<double>(data[3 * i]), static_cast<double>(data[3 * i + 1]), static_cast<double>(data[3 * i + 2]));
+			}
+
+			delete[] data;
+			return result;
 		}
 	};
 

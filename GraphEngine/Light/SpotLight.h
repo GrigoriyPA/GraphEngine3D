@@ -104,38 +104,38 @@ public:
         GraphObject shadow_box(1);
         shadow_box.transparent = true;
 
-        int polygon_id = shadow_box.add_polygon(4);
+        int polygon_id = shadow_box.add_polygon(eng::Mesh(4));
         shadow_box[polygon_id].set_positions({
         eng::Vect3(1, 1, 1),
         eng::Vect3(1, -1, 1),
         eng::Vect3(-1, -1, 1),
         eng::Vect3(-1, 1, 1)
         });
-        shadow_box[polygon_id].material.diffuse = eng::Vect3(1, 1, 1);
-        shadow_box[polygon_id].material.alpha = 0.3;
+        shadow_box[polygon_id].material.set_diffuse(eng::Vect3(1, 1, 1));
+        shadow_box[polygon_id].material.set_alpha(0.3);
 
         polygon_id = shadow_box.add_polygon(shadow_box[polygon_id]);
-        shadow_box[polygon_id].change_matrix(eng::Matrix::scale_matrix(delt));
+        shadow_box[polygon_id].apply_matrix(eng::Matrix::scale_matrix(delt));
         shadow_box[polygon_id].invert_points_order();
 
-        polygon_id = shadow_box.add_polygon(4);
+        polygon_id = shadow_box.add_polygon(eng::Mesh(4));
         shadow_box[polygon_id].set_positions({
         eng::Vect3(1, -1, 1),
         eng::Vect3(1, 1, 1),
         eng::Vect3(delt, delt, delt),
         eng::Vect3(delt, -delt, delt)
         });
-        shadow_box[polygon_id].material.diffuse = eng::Vect3(1, 1, 1);
-        shadow_box[polygon_id].material.alpha = 0.3;
+        shadow_box[polygon_id].material.set_diffuse(eng::Vect3(1, 1, 1));
+        shadow_box[polygon_id].material.set_alpha(0.3);
 
         polygon_id = shadow_box.add_polygon(shadow_box[polygon_id]);
-        shadow_box[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
+        shadow_box[polygon_id].apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
 
         polygon_id = shadow_box.add_polygon(shadow_box[polygon_id]);
-        shadow_box[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
+        shadow_box[polygon_id].apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
 
         polygon_id = shadow_box.add_polygon(shadow_box[polygon_id]);
-        shadow_box[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
+        shadow_box[polygon_id].apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
 
         int model_id = shadow_box.add_model(eng::Matrix::scale_matrix((1 - eps) * shadow_max_distance * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
         shadow_box.change_matrix(get_view_matrix().inverse(), model_id);
@@ -148,33 +148,33 @@ public:
     GraphObject get_light_object() {
         GraphObject light_object(1);
 
-        int polygon_id = light_object.add_polygon(4);
+        int polygon_id = light_object.add_polygon(eng::Mesh(4));
         light_object[polygon_id].set_positions({
         eng::Vect3(1, 1, 1),
         eng::Vect3(1, -1, 1),
         eng::Vect3(-1, -1, 1),
         eng::Vect3(-1, 1, 1)
         });
-        light_object[polygon_id].material.emission = eng::Vect3(1, 1, 1);
-        light_object[polygon_id].material.light = true;
+        light_object[polygon_id].material.set_emission(eng::Vect3(1, 1, 1));
+        light_object[polygon_id].material.shadow = true;
 
-        polygon_id = light_object.add_polygon(3);
+        polygon_id = light_object.add_polygon(eng::Mesh(3));
         light_object[polygon_id].set_positions({
         eng::Vect3(1, -1, 1),
         eng::Vect3(1, 1, 1),
         eng::Vect3(0, 0, 0)
         });
-        light_object[polygon_id].material.emission = eng::Vect3(1, 1, 1);
-        light_object[polygon_id].material.light = true;
+        light_object[polygon_id].material.set_emission(eng::Vect3(1, 1, 1));
+        light_object[polygon_id].material.shadow = true;
 
         polygon_id = light_object.add_polygon(light_object[polygon_id]);
-        light_object[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
+        light_object[polygon_id].apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
 
         polygon_id = light_object.add_polygon(light_object[polygon_id]);
-        light_object[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
+        light_object[polygon_id].apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
 
         polygon_id = light_object.add_polygon(light_object[polygon_id]);
-        light_object[polygon_id].change_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
+        light_object[polygon_id].apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
 
         int model_id = light_object.add_model(eng::Matrix::scale_matrix(0.25 * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
         light_object.change_matrix(get_view_matrix().inverse(), model_id);

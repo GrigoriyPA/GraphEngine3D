@@ -6,10 +6,10 @@ class Line : public RenderObject {
         if (lines_location == -1) {
             GraphObject line = get_cylinder(12, true, MAX_COUNT_MODELS);
 
-            Material material;
-            material.ambient = eng::Vect3(INTERFACE_BORDER_COLOR) / 255;
-            material.diffuse = eng::Vect3(INTERFACE_BORDER_COLOR) / 255;
-            material.specular = eng::Vect3(INTERFACE_BORDER_COLOR) / 255;
+            eng::Mesh::Material material;
+            material.set_ambient(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
+            material.set_diffuse(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
+            material.set_specular(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
             line.set_material(material);
 
             scene_id.second = line.add_model();

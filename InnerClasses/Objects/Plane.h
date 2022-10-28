@@ -7,12 +7,12 @@ class Plane : public RenderObject {
         plane.set_border_bit(1);
         plane.transparent = true;
 
-        int polygon_id = plane.add_polygon(4);
-        plane[polygon_id].material.ambient = eng::Vect3(INTERFACE_TEXT_COLOR) / 255;
-        plane[polygon_id].material.diffuse = eng::Vect3(INTERFACE_TEXT_COLOR) / 255;
-        plane[polygon_id].material.specular = eng::Vect3(INTERFACE_TEXT_COLOR) / 255;
-        plane[polygon_id].material.shininess = 64;
-        plane[polygon_id].material.alpha = 0.25;
+        int polygon_id = plane.add_polygon(eng::Mesh(4));
+        plane[polygon_id].material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        plane[polygon_id].material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        plane[polygon_id].material.set_specular(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        plane[polygon_id].material.set_shininess(64);
+        plane[polygon_id].material.set_alpha(0.25);
 
         polygon_id = plane.add_polygon(plane[polygon_id]);
 
@@ -90,14 +90,14 @@ class Plane : public RenderObject {
         center + horizont - vertical,
         center - horizont - vertical,
         center - horizont + vertical
-            });
+            }, true);
 
         (*scene)[scene_id.first][1].set_positions({
         center - horizont + vertical,
         center - horizont - vertical,
         center + horizont - vertical,
         center + horizont + vertical
-            });
+            }, true);
 
         (*scene)[scene_id.first].set_center();
     }
@@ -339,11 +339,11 @@ public:
     }
 
     void switch_hide() {
-        Material material = (*scene)[scene_id.first][0].material;
+        eng::Mesh::Material material = (*scene)[scene_id.first][0].material;
         if (!hide)
-            material.alpha = 0.1;
+            material.set_alpha(0.1);
         else
-            material.alpha = 0.25;
+            material.set_alpha(0.25);
         (*scene)[scene_id.first].set_material(material);
         hide ^= 1;
     }

@@ -73,7 +73,7 @@ namespace eng {
 			return fragment_shader;
 		}
 
-		void Deallocate() noexcept {
+		void deallocate() {
 			if (count_links_ != nullptr) {
 				--(*count_links_);
 				if (*count_links_ == 0) {
@@ -87,9 +87,11 @@ namespace eng {
 			vertex_shader_code_ = nullptr;
 			fragment_shader_code_ = nullptr;
 			program_id_ = 0;
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void Swap(Shader<T>& other) noexcept {
+		void swap(Shader<T>& other) noexcept {
 			std::swap(count_links_, other.count_links_);
 			std::swap(program_id_, other.program_id_);
 			std::swap(vertex_shader_code_, other.vertex_shader_code_);
@@ -165,18 +167,18 @@ namespace eng {
 		}
 
 		Shader(Shader<T>&& other) noexcept {
-			Swap(other);
+			swap(other);
 		}
 
 		Shader<T>& operator=(const Shader<T>& other)& noexcept {
 			Shader<T> object(other);
-			Swap(object);
+			swap(object);
 			return *this;
 		}
 
-		Shader<T>& operator=(Shader<T>&& other)& noexcept {
-			Deallocate();
-			Swap(other);
+		Shader<T>& operator=(Shader<T>&& other)& {
+			deallocate();
+			swap(other);
 			return *this;
 		}
 
@@ -388,8 +390,8 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		~Shader() noexcept {
-			Deallocate();
+		~Shader() {
+			deallocate();
 		}
 
 		static size_t get_type() noexcept {

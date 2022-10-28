@@ -6,9 +6,9 @@ class Point : public RenderObject {
         if (points_location == -1) {
             GraphObject point = get_sphere(6, true, MAX_COUNT_MODELS);
 
-            Material material;
-            material.ambient = eng::Vect3(INTERFACE_TEXT_COLOR) / 255;
-            material.diffuse = eng::Vect3(INTERFACE_TEXT_COLOR) / 255;
+            eng::Mesh::Material material;
+            material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+            material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
             point.set_material(material);
 
             scene_id.second = point.add_model(eng::Matrix::scale_matrix(radius));

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string>
 #include <vector>
+#include <iterator>
 
 
 namespace eng {
@@ -56,6 +57,14 @@ namespace eng {
     template <typename T>  // Structures required: std::hash<T>
     void hash_combine(size_t& seed, const T& value) {
         seed ^= std::hash<T>()(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+
+    template <typename T, typename It>  // Operators required: !=(It, It), ++(It), *(It); Structures required: std::iterator_traits<It>
+    T get_value(It container_begin, It container_end, T value, std::function<void(typename std::iterator_traits<It>::value_type, T*)> func) {
+        for (; container_begin != container_end; ++container_begin) {
+            func(*container_begin, &value);
+        }
+        return value;
     }
 
 

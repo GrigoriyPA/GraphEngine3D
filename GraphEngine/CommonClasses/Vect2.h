@@ -174,6 +174,13 @@ namespace eng {
             return Vect2(x / other, y / other);
         }
 
+        template <typename T>
+        T get_value(T value, std::function<void(double, T*)> func) const {
+            func(x, &value);
+            func(y, &value);
+            return value;
+        }
+
         double length_sqr() const noexcept {
             return *this * *this;
         }
@@ -239,6 +246,17 @@ namespace eng {
 
         static Vect2 zip_map(const Vect2& v1, const Vect2& v2, std::function<double(double, double)> zip_func) {
             return Vect2(zip_func(v1.x, v2.x), zip_func(v1.y, v2.y));
+        }
+
+        template <typename T>  // Casts required: double(T)
+        static std::vector<Vect2> move_in(size_t size, T* data) {
+            std::vector<Vect2> result(size);
+            for (size_t i = 0; i < size; ++i) {
+                result[i] = Vect2(static_cast<double>(data[2 * i]), static_cast<double>(data[2 * i + 1]));
+            }
+
+            delete[] data;
+            return result;
         }
     };
 

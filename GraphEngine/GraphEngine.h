@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GraphObjects/GraphObject.h"
 #include "GraphicClasses/Kernel.h"
 #include "GraphicClasses/Shader.h"
 #include "GraphicClasses/Texture.h"
@@ -15,11 +16,7 @@
 #include <vector>
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include "Camera.h"
-#include "GraphObjects/GraphObject.h"
 #include "Light/Light.h"
 
 

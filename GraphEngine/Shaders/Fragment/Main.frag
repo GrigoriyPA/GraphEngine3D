@@ -13,7 +13,7 @@ struct Light {
 
 
 struct Material {
-    bool light, use_vertex_color;
+    bool shadow, use_vertex_color;
     float shininess, alpha;
     vec3 ambient, diffuse, specular, emission;
 };
@@ -83,7 +83,7 @@ vec3 calc_dir_light(Light light, vec3 normal, vec3 view_dir, Material material, 
     vec3 halfway_dir = normalize(light_dir + view_dir);
     float spec = pow(max(dot(normal, halfway_dir), 0.0), material.shininess);
 
-    float shadow = calc_shadow(light, light_dir, normal, id);
+    float shadow = material.shadow ? calc_shadow(light, light_dir, normal, id) : 0.0;
     vec3 ambient = light.ambient * material.ambient;
     vec3 diffuse = light.diffuse * diff * material.diffuse;
     vec3 specular = light.specular * spec * material.specular;
@@ -130,7 +130,7 @@ vec3 calc_spot_light(Light light, vec3 normal, vec3 view_dir, Material material,
     float theta = dot(light_dir, normalize(-light.direction));
     float intensity = clamp((theta - light.cut_out) / (light.cut_in - light.cut_out), 0.0, 1.0);    
     
-    float shadow = calc_shadow(light, light_dir, normal, id);
+    float shadow = material.shadow ? calc_shadow(light, light_dir, normal, id) : 0.0;
     vec3 ambient = light.ambient * material.ambient * attenuation;
     vec3 diffuse = light.diffuse * diff * material.diffuse * attenuation * intensity;
     vec3 specular = light.specular * spec * material.specular * attenuation * intensity;
@@ -151,6 +151,7 @@ void main() {
 
     Material material = object_material;
     if (object_material.use_vertex_color) {
+		material.ambient = vert_color;
         material.diffuse = vert_color;
     }
 	if (use_diffuse_map) {
@@ -163,11 +164,6 @@ void main() {
 		material.specular = vec3(texture(specular_map, tex_coord));
     if (use_emission_map)
         material.emission = vec3(texture(emission_map, tex_coord));
-
-    if (material.light) {
-        color = vec4(material.emission, 1.0);
-        return;
-    }
 
     if (material.alpha < 0.1)
         discard;

@@ -2,6 +2,7 @@
 
 #include <GL/glew.h>
 #include "../CommonClasses/Functions.h"
+#include "../CommonClasses/Vect3.h"
 
 
 namespace eng {
@@ -32,5 +33,11 @@ namespace eng {
 		}
 
 		throw EngRuntimeError(filename, line, std::string(func_name) + ", GL error with name \"" + error + "\".\n\n");
+	}
+
+	void check_color_value(const char* filename, uint32_t line, const char* func_name, const Vect3& color) {
+		if (color.get_value<bool>(false, [](auto coord, auto* result) { *result = *result || coord < 0.0 || 1.0 < coord; })) {
+			throw EngInvalidArgument(filename, line, std::string(func_name) + ", invalid color value.\n\n");
+		}
 	}
 }

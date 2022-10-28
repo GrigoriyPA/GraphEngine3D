@@ -89,22 +89,23 @@ signed main() {
         }*/
 
         obj_id = scene.add_object(GraphObject(1));
-        int pol_id = scene[obj_id].add_polygon(Polygon(4));
+        int pol_id = scene[obj_id].add_polygon(eng::Mesh(4));
         scene[obj_id][pol_id].set_positions({
             eng::Vect3(1, 0, 1),
             eng::Vect3(1, 0, -1),
             eng::Vect3(-1, 0, -1),
             eng::Vect3(-1, 0, 1)
-            });
+            }, true);
         scene[obj_id][pol_id].set_tex_coords({
             eng::Vect2(1, 1),
             eng::Vect2(1, 0),
             eng::Vect2(0, 0),
             eng::Vect2(0, 1)
             });
-        scene[obj_id][pol_id].invert_points_order();
-        scene[obj_id][pol_id].material.diffuse = eng::Vect3(1, 1, 1);
-        scene[obj_id][pol_id].material.alpha = 0.5;
+        scene[obj_id][pol_id].invert_points_order(true);
+        scene[obj_id][pol_id].material.set_ambient(eng::Vect3(0.5, 0.5, 0.5));
+        scene[obj_id][pol_id].material.set_diffuse(eng::Vect3(1, 1, 1));
+        scene[obj_id][pol_id].material.set_alpha(0.5);
         scene[obj_id].transparent = true;
         scene[obj_id].add_model(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
 

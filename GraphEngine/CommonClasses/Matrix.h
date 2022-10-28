@@ -424,6 +424,16 @@ namespace eng {
 			return result;
 		}
 
+		template <typename T>
+		T get_value(T value, std::function<void(double, T*)> func) const {
+			for (size_t i = 0; i < matrix_.size(); ++i) {
+				for (size_t j = 0; j < matrix_[i].size(); ++j) {
+					func(matrix_[i][j], &value);
+				}
+			}
+			return value;
+		}
+
 		size_t count_strings() const noexcept {
 			return matrix_.size();
 		}

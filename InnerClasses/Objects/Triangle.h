@@ -6,15 +6,15 @@ class Triangle : public RenderObject {
         GraphObject triangle(1);
         triangle.set_border_bit(2);
 
-        int polygon_id = triangle.add_polygon(3);
-        triangle[polygon_id].material.ambient = eng::Vect3(INTERFACE_TEXT_COLOR) / 255;
-        triangle[polygon_id].material.diffuse = eng::Vect3(INTERFACE_TEXT_COLOR) / 255;
-        triangle[polygon_id].material.specular = eng::Vect3(INTERFACE_TEXT_COLOR) / 255;
-        triangle[polygon_id].material.shininess = 64;
+        int polygon_id = triangle.add_polygon(eng::Mesh(3));
+        triangle[polygon_id].material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        triangle[polygon_id].material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        triangle[polygon_id].material.set_specular(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        triangle[polygon_id].material.set_shininess(64);
 
-        polygon_id = triangle.add_polygon(3);
-        triangle[polygon_id].material.diffuse = eng::Vect3(INTERFACE_BORDER_COLOR) / 255;
-        triangle[polygon_id].border_width = 3;
+        polygon_id = triangle.add_polygon(eng::Mesh(3));
+        triangle[polygon_id].material.set_diffuse(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
+        triangle[polygon_id].set_border_width(3);
         triangle[polygon_id].frame = true;
 
         polygon_id = triangle.add_polygon(triangle[polygon_id]);
@@ -51,19 +51,19 @@ class Triangle : public RenderObject {
         points[0],
         points[1],
         points[2]
-            });
+            }, true);
 
         (*scene)[scene_id.first][1].set_positions({
         points[0] - delt,
         points[1] - delt,
         points[2] - delt
-            });
+            }, true);
 
         (*scene)[scene_id.first][2].set_positions({
         points[2] + delt,
         points[1] + delt,
         points[0] + delt
-            });
+            }, true);
 
         (*scene)[scene_id.first].set_center();
     }
@@ -220,15 +220,15 @@ public:
 
     void switch_hide() {
         if (!hide) {
-            (*scene)[scene_id.first][0].material.alpha = 0.25;
-            (*scene)[scene_id.first][1].material.alpha = 0.25;
-            (*scene)[scene_id.first][2].material.alpha = 0.25;
+            (*scene)[scene_id.first][0].material.set_alpha(0.25);
+            (*scene)[scene_id.first][1].material.set_alpha(0.25);
+            (*scene)[scene_id.first][2].material.set_alpha(0.25);
             (*scene)[scene_id.first].transparent = true;
         }
         else {
-            (*scene)[scene_id.first][0].material.alpha = 1;
-            (*scene)[scene_id.first][1].material.alpha = 1;
-            (*scene)[scene_id.first][2].material.alpha = 1;
+            (*scene)[scene_id.first][0].material.set_alpha(1);
+            (*scene)[scene_id.first][1].material.set_alpha(1);
+            (*scene)[scene_id.first][2].material.set_alpha(1);
             (*scene)[scene_id.first].transparent = false;
         }
         hide ^= 1;

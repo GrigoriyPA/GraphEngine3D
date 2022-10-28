@@ -92,9 +92,9 @@ public:
         GraphObject shadow_box = get_cube();
         shadow_box.transparent = true;
 
-        Material material;
-        material.diffuse = eng::Vect3(1, 1, 1);
-        material.alpha = 0.3;
+        eng::Mesh::Material material;
+        material.set_diffuse(eng::Vect3(1, 1, 1));
+        material.set_alpha(0.3);
         shadow_box.set_material(material);
 
         int model_id = shadow_box.add_model(eng::Matrix::scale_matrix(eng::Vect3(shadow_width, shadow_height, shadow_depth)));

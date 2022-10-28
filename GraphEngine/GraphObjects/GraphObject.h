@@ -1,11 +1,14 @@
 #pragma once
 
+#include "Mesh.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #include <cassert>
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <unordered_map>
-#include "Polygon.h"
 
 
 struct Model {
@@ -30,7 +33,7 @@ class GraphObject {
 	unsigned int matrix_buffer;
 	std::vector < int > used_memory;
 	std::unordered_map < int, Model > models;
-	std::unordered_map < int, Polygon > polygons;
+	std::unordered_map < int, eng::Mesh > polygons;
 
 	template <size_t T>
 	void set_uniforms(eng::Shader<T>* shader_program, int object_id) {
@@ -52,7 +55,7 @@ class GraphObject {
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
+		for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
 			polygon->second.set_matrix_buffer(matrix_buffer);
 	}
 
@@ -78,8 +81,8 @@ class GraphObject {
 			cur_id = models[model_id].used_memory;
 		shader_program->set_uniform_i("model_id", cur_id);
 
-		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
-			polygon->second.draw(cnt, shader_program);
+		for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
+			polygon->second.draw(cnt, *shader_program);
 	}
 
 	std::vector<eng::Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
@@ -100,7 +103,7 @@ class GraphObject {
 		return textures;
 	}
 
-	Polygon process_mesh(aiMesh* mesh, const aiScene* scene, std::string& directory, eng::Matrix transform) {
+	eng::Mesh process_mesh(aiMesh* mesh, const aiScene* scene, std::string& directory, eng::Matrix transform) {
 		std::vector < eng::Vect2 > tex_coords;
 		std::vector < eng::Vect3 > positions, normals;
 		std::vector < eng::Vect3 > colors;
@@ -120,14 +123,14 @@ class GraphObject {
 			else
 				colors.push_back(eng::Vect3(0, 0, 0));
 		}
-		Polygon polygon_mesh(positions.size());
+		eng::Mesh polygon_mesh(positions.size());
 		polygon_mesh.set_positions(positions, normals.empty());
 		if (!normals.empty())
 			polygon_mesh.set_normals(normals);
 		polygon_mesh.set_tex_coords(tex_coords);
 		polygon_mesh.set_colors(colors);
 
-		polygon_mesh.material.diffuse = eng::Vect3(1, 1, 1);
+		polygon_mesh.material.set_diffuse(eng::Vect3(1, 1, 1));
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
 			aiFace face = mesh->mFaces[i];
 			for (unsigned int j = 0; j < face.mNumIndices; j++)
@@ -155,29 +158,29 @@ class GraphObject {
 			//std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";
 
 			material->Get(AI_MATKEY_COLOR_AMBIENT, color);
-			polygon_mesh.material.ambient = eng::Vect3(color.r, color.g, color.b);
+			polygon_mesh.material.set_ambient(eng::Vect3(color.r, color.g, color.b));
 			//polygon_mesh.material.ambient.print();
 
 			material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-			polygon_mesh.material.diffuse = eng::Vect3(color.r, color.g, color.b);
+			polygon_mesh.material.set_diffuse(eng::Vect3(color.r, color.g, color.b));
 			//polygon_mesh.material.diffuse.print();
 
 			material->Get(AI_MATKEY_COLOR_SPECULAR, color);
-			polygon_mesh.material.specular = eng::Vect3(color.r, color.g, color.b);
+			polygon_mesh.material.set_specular(eng::Vect3(color.r, color.g, color.b));
 			//polygon_mesh.material.specular.print();
 
 			material->Get(AI_MATKEY_COLOR_EMISSIVE, color);
-			polygon_mesh.material.emission = eng::Vect3(color.r, color.g, color.b);
+			polygon_mesh.material.set_emission(eng::Vect3(color.r, color.g, color.b));
 			//polygon_mesh.material.emission.print();
 
 			float opacity;
 			material->Get(AI_MATKEY_OPACITY, opacity);
-			polygon_mesh.material.alpha = opacity;
+			polygon_mesh.material.set_alpha(opacity);
 			//std::cout << polygon_mesh.material.alpha << "\n";
 
 			float shininess;
 			material->Get(AI_MATKEY_SHININESS, shininess);
-			polygon_mesh.material.shininess = shininess;
+			polygon_mesh.material.set_shininess(shininess);
 			//std::cout << polygon_mesh.material.shininess << "\n";
 
 			//if (polygon_mesh.material.shininess > 0)
@@ -256,7 +259,7 @@ public:
 		return *this;
 	}
 
-	Polygon& operator[](int polygon_id) {
+	eng::Mesh& operator[](int polygon_id) {
 		if (!polygons.count(polygon_id)) {
 			std::cout << "ERROR::GRAPH_OBJECT::OPERATOR[]\n" << "Invalid polygon id.\n";
 			assert(0);
@@ -268,7 +271,7 @@ public:
 	void set_center() {
 		center = eng::Vect3(0, 0, 0);
 		std::vector < eng::Vect3 > used_positions;
-		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++) {
+		for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++) {
 			for (eng::Vect3 position : polygon->second.get_positions()) {
 				if (std::count(used_positions.begin(), used_positions.end(), position))
 					continue;
@@ -281,8 +284,8 @@ public:
 			center /= used_positions.size();
 	}
 
-	void set_material(Material material) {
-		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
+	void set_material(eng::Mesh::Material material) {
+		for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
 			polygon->second.material = material;
 	}
 
@@ -321,7 +324,7 @@ public:
 	std::vector < std::pair < int, int > > get_models() {
 		std::vector < std::pair < int, int > > models_description;
 		for (std::unordered_map < int, Model >::iterator model = models.begin(); model != models.end(); model++) {
-			for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
+			for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
 				models_description.push_back({ model->first, polygon->first });
 		}
 
@@ -398,7 +401,7 @@ public:
 		return used_memory[memory_id];
 	}
 
-	int add_polygon(Polygon polygon) {
+	int add_polygon(eng::Mesh polygon) {
 		int free_polygon_id = 0;
 		for (; polygons.count(free_polygon_id); free_polygon_id++) {}
 
@@ -467,11 +470,11 @@ public:
 	}
 
 	void draw_depth_map() {
-		for (std::unordered_map < int, Polygon >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++) {
-			if (polygon->second.material.light)
+		for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++) {
+			if (!polygon->second.material.shadow)
 				continue;
 
-			polygon->second.draw<eng::ShaderType::NONE>(models.size(), nullptr);
+			polygon->second.draw(models.size(), eng::Shader());
 		}
 	}
 
@@ -496,7 +499,7 @@ public:
 			glStencilMask(border_bit);
 		}
 
-		polygons[polygon_id].draw(1, shader_program);
+		polygons[polygon_id].draw(1, *shader_program);
 
 		if (models[model_id].border)
 			glStencilMask(0x00);

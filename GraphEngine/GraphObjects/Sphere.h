@@ -28,15 +28,15 @@ GraphObject get_sphere(int count_points, bool real_normals = false, int max_coun
 
 			std::vector < eng::Vect3 > positions;
 			if (i == 0) {
-				polygon_id = sphere.add_polygon(Polygon(3));
+				polygon_id = sphere.add_polygon(eng::Mesh(3));
 				positions = { eng::Vect3(0, 1, 0), cur_positions[j], cur_positions[next] };
 			}
 			else if (i == count_points - 1) {
-				polygon_id = sphere.add_polygon(Polygon(3));
+				polygon_id = sphere.add_polygon(eng::Mesh(3));
 				positions = { last_position[j], eng::Vect3(0, -1, 0), last_position[next] };
 			}
 			else {
-				polygon_id = sphere.add_polygon(Polygon(4));
+				polygon_id = sphere.add_polygon(eng::Mesh(4));
 				positions = { last_position[next], last_position[j], cur_positions[j], cur_positions[next] };
 			}
 

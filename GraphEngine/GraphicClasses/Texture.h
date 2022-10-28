@@ -12,7 +12,7 @@ namespace eng {
 		size_t* count_links_ = nullptr;
 		GLuint texture_id_ = 0;
 
-		void Deallocate() noexcept {
+		void deallocate() {
 			if (count_links_ != nullptr) {
 				--(*count_links_);
 				if (*count_links_ == 0) {
@@ -22,9 +22,11 @@ namespace eng {
 			}
 			count_links_ = nullptr;
 			texture_id_ = 0;
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void Swap(Texture& other) noexcept {
+		void swap(Texture& other) noexcept {
 			std::swap(texture_size_, other.texture_size_);
 			std::swap(count_links_, other.count_links_);
 			std::swap(texture_id_, other.texture_id_);
@@ -81,18 +83,18 @@ namespace eng {
 		}
 
 		Texture(Texture&& other) noexcept {
-			Swap(other);
+			swap(other);
 		}
 
 		Texture& operator=(const Texture& other)& noexcept {
 			Texture object(other);
-			Swap(object);
+			swap(object);
 			return *this;
 		}
 
-		Texture& operator=(Texture&& other)& noexcept {
-			Deallocate();
-			Swap(other);
+		Texture& operator=(Texture&& other)& {
+			deallocate();
+			swap(other);
 			return *this;
 		}
 
@@ -162,8 +164,8 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		~Texture() noexcept {
-			Deallocate();
+		~Texture() {
+			deallocate();
 		}
 	};
 }

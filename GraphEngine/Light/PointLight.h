@@ -43,9 +43,9 @@ public:
     GraphObject get_light_object() {
         GraphObject light_object = get_cube();
 
-        Material material;
-        material.emission = eng::Vect3(1, 1, 1);
-        material.light = true;
+        eng::Mesh::Material material;
+        material.set_emission(eng::Vect3(1, 1, 1));
+        material.shadow = true;
         light_object.set_material(material);
 
         int model_id = light_object.add_model(eng::Matrix::scale_matrix(0.25));
