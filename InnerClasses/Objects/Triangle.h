@@ -3,7 +3,7 @@
 
 class Triangle : public RenderObject {
     void init() {
-        GraphObject triangle(1);
+        eng::GraphObject triangle(1);
         triangle.set_border_bit(2);
 
         int polygon_id = triangle.add_polygon(eng::Mesh(3));

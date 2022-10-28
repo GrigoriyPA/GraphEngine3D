@@ -3,7 +3,7 @@
 
 class Plane : public RenderObject {
     void init() {
-        GraphObject plane(1);
+        eng::GraphObject plane(1);
         plane.set_border_bit(1);
         plane.transparent = true;
 

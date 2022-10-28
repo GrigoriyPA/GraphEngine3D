@@ -1,18 +1,18 @@
 #pragma once
 
 
-GraphObject get_cylinder(int count_points, bool real_normals = false, int max_count_models = 1) {
+eng::GraphObject get_cylinder(int count_points, bool real_normals = false, int max_count_models = 1) {
 	if (count_points < 3) {
-		std::cout << "ERROR::GET_CYLINDER\n" << "The number of points is less than three.\n";
-		assert(0);
+		//std::cout << "ERROR::GET_CYLINDER\n" << "The number of points is less than three.\n";
+		//assert(0);
 	}
 
 	if (max_count_models < 0) {
-		std::cout << "ERROR::GET_CYLINDER\n" << "Negative number of models.\n";
-		assert(0);
+		//std::cout << "ERROR::GET_CYLINDER\n" << "Negative number of models.\n";
+		//assert(0);
 	}
 
-	GraphObject cylinder(max_count_models);
+	eng::GraphObject cylinder(max_count_models);
 
 	std::vector < eng::Vect3 > positions(count_points);
 	for (int i = 0; i < count_points; i++)

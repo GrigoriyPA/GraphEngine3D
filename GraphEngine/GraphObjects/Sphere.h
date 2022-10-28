@@ -1,18 +1,18 @@
 #pragma once
 
 
-GraphObject get_sphere(int count_points, bool real_normals = false, int max_count_models = 1) {
+eng::GraphObject get_sphere(int count_points, bool real_normals = false, int max_count_models = 1) {
 	if (count_points < 3) {
-		std::cout << "ERROR::GET_SPHERE\n" << "The number of points is less than three.\n";
-		assert(0);
+		//std::cout << "ERROR::GET_SPHERE\n" << "The number of points is less than three.\n";
+		//assert(0);
 	}
 
 	if (max_count_models < 0) {
-		std::cout << "ERROR::GET_SPHERE\n" << "Negative number of models.\n";
-		assert(0);
+		//std::cout << "ERROR::GET_SPHERE\n" << "Negative number of models.\n";
+		//assert(0);
 	}
 
-	GraphObject sphere(max_count_models);
+	eng::GraphObject sphere(max_count_models);
 	std::vector < eng::Vect3 > last_position(2 * count_points, eng::Vect3(0, 1, 0));
 	for (int i = 0; i < count_points; i++) {
 		std::vector < eng::Vect3 > cur_positions(2 * count_points);

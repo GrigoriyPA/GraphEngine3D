@@ -23,9 +23,9 @@
 struct TransparentObject {
 	int object_id, model_id, polygon_id;
 	double distance;
-	GraphObject* object;
+	eng::GraphObject* object;
 
-	TransparentObject(eng::Vect3 cam_position, GraphObject* object, int object_id, std::pair < int, int > description) {
+	TransparentObject(eng::Vect3 cam_position, eng::GraphObject* object, int object_id, std::pair < int, int > description) {
 		this->object = object;
 		this->object_id = object_id;
 		model_id = description.first;
@@ -45,7 +45,7 @@ class GraphEngine {
 
 	unsigned int primary_fbo, depth_map_fbo, center_object_ssbo, screen_tex, depth_stencil_tex, depth_map_tex, screen_coord;
 	std::vector < Light* > lights;
-	std::unordered_map < int, GraphObject > objects;
+	std::unordered_map < int, eng::GraphObject > objects;
 	sf::Vector2i mouse_position;
 	sf::RenderWindow* window;
 	eng::Shader<eng::ShaderType::MAIN> main_shader;
@@ -220,7 +220,7 @@ class GraphEngine {
 
 	void draw_objects() {
 		std::vector < TransparentObject > transparent_objects;
-		for (std::unordered_map < int, GraphObject >::iterator object = objects.begin(); object != objects.end(); object++) {
+		for (std::unordered_map < int, eng::GraphObject >::iterator object = objects.begin(); object != objects.end(); object++) {
 			if (object->second.transparent) {
 				for (std::pair < int, int > description : object->second.get_models())
 					transparent_objects.push_back(TransparentObject(cam.position, &object->second, object->first, description));
@@ -249,7 +249,7 @@ class GraphEngine {
 			glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_map_tex, 0, i);
 			depth_shader.set_uniform_matrix("light_space", lights[i]->get_light_space_matrix());
 
-			for (std::unordered_map < int, GraphObject >::iterator object = objects.begin(); object != objects.end(); object++)
+			for (std::unordered_map < int, eng::GraphObject >::iterator object = objects.begin(); object != objects.end(); object++)
 				object->second.draw_depth_map();
 		}
 
@@ -354,7 +354,7 @@ public:
 		return *this;
 	}
 
-	GraphObject& operator[](int object_id) {
+	eng::GraphObject& operator[](int object_id) {
 		if (!objects.count(object_id)) {
 			std::cout << "ERROR::GRAPH_ENGINE::OPERATOR[]\n" << "Invalid object id.\n";
 			assert(0);
@@ -469,7 +469,7 @@ public:
 		return gamma;
 	}
 
-	int add_object(GraphObject object) {
+	int add_object(eng::GraphObject object) {
 		int free_object_id = 0;
 		for (; objects.count(free_object_id); free_object_id++) {}
 

@@ -40,8 +40,8 @@ public:
         return eng::Matrix::one_matrix(4);
     }
 
-    GraphObject get_light_object() {
-        GraphObject light_object = get_cube();
+    eng::GraphObject get_light_object() {
+        eng::GraphObject light_object = get_cube();
 
         eng::Mesh::Material material;
         material.set_emission(eng::Vect3(1, 1, 1));

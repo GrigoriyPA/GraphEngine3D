@@ -1,13 +1,13 @@
 #pragma once
 
 
-GraphObject get_cube(int max_count_models = 1) {
+eng::GraphObject get_cube(int max_count_models = 1) {
     if (max_count_models < 0) {
-        std::cout << "ERROR::GET_CUBE\n" << "Negative number of models.\n";
-        assert(0);
+        //std::cout << "ERROR::GET_CUBE\n" << "Negative number of models.\n";
+        //assert(0);
     }
 
-    GraphObject cube(max_count_models);
+    eng::GraphObject cube(max_count_models);
 
     int polygon_id = cube.add_polygon(eng::Mesh(4));
     cube[polygon_id].set_positions({

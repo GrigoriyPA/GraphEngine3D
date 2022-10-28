@@ -4,7 +4,7 @@
 class Cut : public RenderObject {
     void init(int& cuts_location) {
         if (cuts_location == -1) {
-            GraphObject cut = get_cylinder(12, true, MAX_COUNT_MODELS);
+            eng::GraphObject cut = get_cylinder(12, true, MAX_COUNT_MODELS);
 
             eng::Mesh::Material material;
             material.set_ambient(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);

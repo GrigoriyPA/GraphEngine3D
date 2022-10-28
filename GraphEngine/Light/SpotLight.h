@@ -98,10 +98,10 @@ public:
         return projection * get_view_matrix();
     }
 
-    GraphObject get_shadow_box() {
+    eng::GraphObject get_shadow_box() {
         double delt = shadow_min_distance / shadow_max_distance;
 
-        GraphObject shadow_box(1);
+        eng::GraphObject shadow_box(1);
         shadow_box.transparent = true;
 
         int polygon_id = shadow_box.add_polygon(eng::Mesh(4));
@@ -145,8 +145,8 @@ public:
         return shadow_box;
     }
 
-    GraphObject get_light_object() {
-        GraphObject light_object(1);
+    eng::GraphObject get_light_object() {
+        eng::GraphObject light_object(1);
 
         int polygon_id = light_object.add_polygon(eng::Mesh(4));
         light_object[polygon_id].set_positions({

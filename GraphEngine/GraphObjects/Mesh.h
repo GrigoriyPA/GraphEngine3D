@@ -18,8 +18,8 @@ namespace eng {
 		GLfloat border_width_ = 1.0;
 		Vect3 center_ = Vect3(0, 0, 0);
 
-		size_t count_points_;
-		size_t count_indices_;
+		GLsizei count_points_;
+		GLsizei count_indices_;
 
 		template <size_t T>
 		void set_uniforms(const Shader<T>& shader) const {
@@ -114,18 +114,18 @@ namespace eng {
 				shader.set_uniform_i("use_emission_map", emission_map.get_id() != 0);
 
 				if (diffuse_map.get_id() == 0) {
-					shader.set_uniform_f("object_material.ambient", ambient_.x, ambient_.y, ambient_.z);
-					shader.set_uniform_f("object_material.diffuse", diffuse_.x, diffuse_.y, diffuse_.z);
-					shader.set_uniform_f("object_material.alpha", alpha_);
+					shader.set_uniform_f("object_material.ambient", static_cast<GLfloat>(ambient_.x), static_cast<GLfloat>(ambient_.y), static_cast<GLfloat>(ambient_.z));
+					shader.set_uniform_f("object_material.diffuse", static_cast<GLfloat>(diffuse_.x), static_cast<GLfloat>(diffuse_.y), static_cast<GLfloat>(diffuse_.z));
+					shader.set_uniform_f("object_material.alpha", static_cast<GLfloat>(alpha_));
 				}
 
 				if (specular_map.get_id() == 0) {
-					shader.set_uniform_f("object_material.specular", specular_.x, specular_.y, specular_.z);
+					shader.set_uniform_f("object_material.specular", static_cast<GLfloat>(specular_.x), static_cast<GLfloat>(specular_.y), static_cast<GLfloat>(specular_.z));
 				}
-				shader.set_uniform_f("object_material.shininess", shininess_);
+				shader.set_uniform_f("object_material.shininess", static_cast<GLfloat>(shininess_));
 
 				if (emission_map.get_id() == 0) {
-					shader.set_uniform_f("object_material.emission", emission_.x, emission_.y, emission_.z);
+					shader.set_uniform_f("object_material.emission", static_cast<GLfloat>(emission_.x), static_cast<GLfloat>(emission_.y), static_cast<GLfloat>(emission_.z));
 				}
 
 				shader.set_uniform_i("object_material.use_vertex_color", use_vertex_color);
@@ -209,7 +209,7 @@ namespace eng {
 		}
 
 		// Default polygon shape
-		explicit Mesh(size_t count_points) {
+		explicit Mesh(GLsizei count_points) {
 			if (!glew_is_ok()) {
 				throw EngRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
@@ -224,10 +224,10 @@ namespace eng {
 			create_vertex_array();
 
 			std::vector<GLuint> indices(count_indices_);
-			for (size_t i = 0; i < count_points - 2; ++i) {
-				indices[3 * i] = 0;
-				indices[3 * i + 1] = i + 1;
-				indices[3 * i + 2] = i + 2;
+			for (GLsizei i = 0; i < count_points - 2; ++i) {
+				indices[3 * static_cast<size_t>(i)] = 0;
+				indices[3 * static_cast<size_t>(i) + 1] = static_cast<GLuint>(i + 1);
+				indices[3 * static_cast<size_t>(i) + 2] = static_cast<GLuint>(i + 2);
 			}
 			set_indices(indices);
 		}
@@ -297,10 +297,10 @@ namespace eng {
 			for (size_t i = 0; i < count_points_; ++i) {
 				center_ += positions[i];
 				for (size_t j = 0; j < 3; ++j) {
-					converted_positions[3 * i + j] = positions[i][j];
+					converted_positions[3 * i + j] = static_cast<GLfloat>(positions[i][j]);
 				}
 			}
-			center_ /= count_points_;
+			center_ /= static_cast<double>(count_points_);
 
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<const GLvoid*>(&converted_positions[0]));
@@ -326,7 +326,7 @@ namespace eng {
 			std::vector<GLfloat> converted_normals(count_points_ * 3);
 			for (size_t i = 0; i < count_points_; ++i) {
 				for (size_t j = 0; j < 3; ++j) {
-					converted_normals[3 * i + j] = normals[i][j];
+					converted_normals[3 * i + j] = static_cast<GLfloat>(normals[i][j]);
 				}
 			}
 
@@ -346,7 +346,7 @@ namespace eng {
 			std::vector<GLfloat> converted_tex_coords(count_points_ * 2);
 			for (size_t i = 0; i < count_points_; ++i) {
 				for (size_t j = 0; j < 2; ++j) {
-					converted_tex_coords[2 * i + j] = tex_coords[i][j];
+					converted_tex_coords[2 * i + j] = static_cast<GLfloat>(tex_coords[i][j]);
 				}
 			}
 
@@ -366,7 +366,7 @@ namespace eng {
 			std::vector<GLfloat> converted_colors(count_points_ * 3);
 			for (size_t i = 0; i < count_points_; ++i) {
 				for (size_t j = 0; j < 3; ++j) {
-					converted_colors[3 * i + j] = colors[i][j];
+					converted_colors[3 * i + j] = static_cast<GLfloat>(colors[i][j]);
 				}
 			}
 
@@ -403,7 +403,7 @@ namespace eng {
 			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
 			glBindVertexArray(vertex_array_);
 
-			GLuint attrib_offset = MEMORY_CONFIGURATION.size();
+			GLuint attrib_offset = static_cast<GLuint>(MEMORY_CONFIGURATION.size());
 			for (GLuint i = 0; i < 4; ++i) {
 				glVertexAttribPointer(attrib_offset + i, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 16, reinterpret_cast<GLvoid*>(sizeof(GLfloat) * 4 * i));
 				glEnableVertexAttribArray(attrib_offset + i);

@@ -4,7 +4,7 @@
 class Point : public RenderObject {
     void init(int& points_location, double radius = POINT_RADIUS) {
         if (points_location == -1) {
-            GraphObject point = get_sphere(6, true, MAX_COUNT_MODELS);
+            eng::GraphObject point = get_sphere(6, true, MAX_COUNT_MODELS);
 
             eng::Mesh::Material material;
             material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);

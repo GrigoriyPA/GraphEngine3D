@@ -88,8 +88,8 @@ public:
         return projection * get_view_matrix();
     }
 
-    GraphObject get_shadow_box() {
-        GraphObject shadow_box = get_cube();
+    eng::GraphObject get_shadow_box() {
+        eng::GraphObject shadow_box = get_cube();
         shadow_box.transparent = true;
 
         eng::Mesh::Material material;

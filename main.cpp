@@ -79,7 +79,7 @@ signed main() {
 
         RenderingSequence render(&scene);
 
-        int obj_id = scene.add_object(GraphObject(1));
+        int obj_id = scene.add_object(eng::GraphObject(1));
         scene[obj_id].import_from_file("Resources/Objects/ships/mjolnir.glb");
         scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
         //scene[obj_id].import_from_file("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
@@ -88,7 +88,7 @@ signed main() {
             scene[obj_id][i].material.use_vertex_color = true;
         }*/
 
-        obj_id = scene.add_object(GraphObject(1));
+        obj_id = scene.add_object(eng::GraphObject(1));
         int pol_id = scene[obj_id].add_polygon(eng::Mesh(4));
         scene[obj_id][pol_id].set_positions({
             eng::Vect3(1, 0, 1),
