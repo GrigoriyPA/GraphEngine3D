@@ -25,11 +25,6 @@ public:
 	std::pair < int, int > scene_id;
 	std::vector < RenderObject* > init_obj;
 
-	void set_border(bool flag) {
-		(*scene)[scene_id.first].set_border(flag, scene_id.second);
-		return;
-	}
-
 	int get_type() {
 		return type;
 	}
@@ -90,11 +85,13 @@ public:
 		}
 	}
 
+	virtual void set_border(bool flag) = 0;
+
 	virtual void switch_hide() = 0;
 
 	virtual void update() = 0;
 
-	virtual RenderObject* intersect(RenderObject* obj, std::vector < int >& location) = 0;
+	virtual RenderObject* intersect(RenderObject* obj) = 0;
 };
 
 

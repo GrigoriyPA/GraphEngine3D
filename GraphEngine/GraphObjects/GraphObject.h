@@ -12,34 +12,27 @@ namespace eng {
 	class GraphObject {
 		// ...
 		struct Model {
-			bool border;
-			int used_memory;
+			size_t used_memory;
 			Matrix matrix;
 
-			Model(Matrix matrix = Matrix::one_matrix(4), bool border = false, int used_memory = -1) : matrix(matrix) {
-				this->matrix = matrix;
-				this->border = border;
+			Model() : matrix(Matrix::one_matrix(4)) {
+				used_memory = std::numeric_limits<size_t>::max();
+			}
+
+			Model(size_t used_memory, Matrix matrix) : matrix(matrix) {
 				this->used_memory = used_memory;
+				this->matrix = matrix;
 			}
 		};
 
 		inline static double eps_ = 1e-5;
 
-		size_t count_borders_ = 0;
 		GLuint matrix_buffer_ = 0;
 
 		size_t max_count_models_;
-		std::vector<int> used_memory_;
+		std::vector<size_t> used_memory_;
 		std::unordered_map<size_t, Model> models_;
 		std::unordered_map<size_t, Mesh> meshes_;
-
-		void set_uniforms(GLint object_id, const Shader<size_t>& shader) const {
-			if (shader.description != eng::ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-			}
-
-			shader.set_uniform_i("object_id", object_id);
-		}
 
 		void create_matrix_buffer() {
 			glGenBuffers(1, &matrix_buffer_);
@@ -62,7 +55,7 @@ namespace eng {
 			}
 
 			const Model& model = models_.at(model_id);
-			shader.set_uniform_i("model_id", model.used_memory);
+			shader.set_uniform_i("model_id", static_cast<GLint>(model.used_memory));
 			shader.set_uniform_matrix("not_instance_model", model.matrix);
 
 			for (const auto& [id, mesh] : meshes_) {
@@ -214,19 +207,18 @@ namespace eng {
 		}
 
 		void swap(GraphObject& other) noexcept {
-			std::swap(border_mask, other.border_mask);
-			std::swap(count_borders_, other.count_borders_);
 			std::swap(matrix_buffer_, other.matrix_buffer_);
 			std::swap(max_count_models_, other.max_count_models_);
 			std::swap(used_memory_, other.used_memory_);
 			std::swap(models_, other.models_);
 			std::swap(meshes_, other.meshes_);
 			std::swap(transparent, other.transparent);
+			std::swap(border_mask, other.border_mask);
 		}
 
 	public:
 		bool transparent = false;
-		uint8_t border_mask = 1;
+		uint8_t border_mask = 0;
 
 		GraphObject() {
 			if (!glew_is_ok()) {
@@ -242,19 +234,17 @@ namespace eng {
 			}
 
 			max_count_models_ = max_count_models;
-			used_memory_.resize(max_count_models, -1);
 
 			create_matrix_buffer();
 		}
 
 		GraphObject(const GraphObject& other) {
-			border_mask = other.border_mask;
-			count_borders_ = other.count_borders_;
 			max_count_models_ = other.max_count_models_;
 			used_memory_ = other.used_memory_;
 			models_ = other.models_;
 			meshes_ = other.meshes_;
 			transparent = other.transparent;
+			border_mask = other.border_mask;
 
 			create_matrix_buffer();
 
@@ -316,16 +306,6 @@ namespace eng {
 			return *this;
 		}
 
-		GraphObject& set_border(bool border, size_t model_id)& {
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "set_border, invalid model id.\n\n");
-			}
-
-			count_borders_ += static_cast<int32_t>(border) - static_cast<int32_t>(models_[model_id].border);
-			models_[model_id].border = border;
-			return *this;
-		}
-
 		Matrix get_matrix(size_t model_id) const {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_matrix, invalid model id.\n\n");
@@ -335,7 +315,7 @@ namespace eng {
 		}
 
 		size_t get_model_id_by_memory_id(size_t memory_id) const {
-			if (models_.size() <= memory_id) {
+			if (used_memory_.size() <= memory_id) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_model_id_by_memory_id, invalid memory id.\n\n");
 			}
 
@@ -405,7 +385,7 @@ namespace eng {
 					center += position;
 				}
 			}
-			return models_.at(model_id).matrix * (center / used_positions.size());
+			return models_.at(model_id).matrix * (center / static_cast<double>(used_positions.size()));
 		}
 
 		// ...
@@ -451,8 +431,8 @@ namespace eng {
 			size_t free_model_id = 0;
 			for (; models_.count(free_model_id) == 1; ++free_model_id) {}
 
-			used_memory_[models_.size()] = free_model_id;
-			models_[free_model_id] = Model(matrix, false, models_.size());
+			used_memory_.push_back(free_model_id);
+			models_[free_model_id] = Model(models_.size(), matrix);
 
 			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
 			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[free_model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(matrix)[0]);
@@ -477,7 +457,7 @@ namespace eng {
 			}
 
 			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-			for (size_t i = models_[model_id].used_memory + 1; i < models_.size(); ++i) {
+			for (size_t i = models_[model_id].used_memory + 1; i < used_memory_.size(); ++i) {
 				used_memory_[i - 1] = used_memory_[i];
 				models_[used_memory_[i - 1]].used_memory = i - 1;
 
@@ -487,8 +467,7 @@ namespace eng {
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			count_borders_ -= static_cast<int32_t>(models_[model_id].border);
-			used_memory_[models_.size() - 1] = -1;
+			used_memory_.pop_back();
 			models_.erase(model_id);
 			return *this;
 		}
@@ -543,7 +522,7 @@ namespace eng {
 			}
 		}
 
-		void draw(size_t object_id, size_t model_id, size_t mesh_id, const Shader<size_t>& shader) const {
+		void draw(size_t model_id, size_t mesh_id, const Shader<size_t>& shader) const {
 			if (shader.description != eng::ShaderType::MAIN) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
 			}
@@ -555,61 +534,49 @@ namespace eng {
 			}
 
 			const Model& model = models_.at(model_id);
-			shader.set_uniform_i("model_id", model.used_memory);
+			shader.set_uniform_i("model_id", static_cast<GLint>(model.used_memory));
 			shader.set_uniform_matrix("not_instance_model", model.matrix);
-			set_uniforms(object_id, shader);
 
-			if (model.border) {
+			if (border_mask > 0) {
 				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
 				glStencilMask(border_mask);
 			}
 
 			meshes_.at(mesh_id).draw(1, shader);
 
-			if (model.border) {
+			if (border_mask > 0) {
 				glStencilMask(0x00);
 			}
 		}
 
-		void draw(size_t object_id, size_t model_id, const Shader<size_t>& shader) const {
+		void draw(size_t model_id, const Shader<size_t>& shader) const {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
 
-			set_uniforms(object_id, shader);
-
-			const Model& model = models_.at(model_id);
-			if (model.border) {
+			if (border_mask > 0) {
 				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
 				glStencilMask(border_mask);
 			}
 
 			draw_meshes(model_id, shader);
 
-			if (model.border) {
+			if (border_mask > 0) {
 				glStencilMask(0x00);
 			}
 		}
 
-		void draw(size_t object_id, const Shader<size_t>& shader_program) const {
-			set_uniforms(object_id, shader_program);
-
-			if (count_borders_ > 0) {
+		void draw(const Shader<size_t>& shader_program) const {
+			if (border_mask > 0) {
 				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
 				glStencilMask(border_mask);
-
-				for (const auto& [id, model] : models_) {
-					if (!model.border) {
-						continue;
-					}
-
-					draw_meshes(id, shader_program);
-				}
-
-				glStencilMask(0x00);
 			}
 
 			draw_meshes(shader_program);
+
+			if (border_mask > 0) {
+				glStencilMask(0x00);
+			}
 		}
 
 		// ...

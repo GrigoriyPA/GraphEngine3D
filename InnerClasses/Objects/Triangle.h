@@ -4,7 +4,6 @@
 class Triangle : public RenderObject {
     void init() {
         eng::GraphObject triangle(1);
-        triangle.border_mask = 0b100;
 
         int polygon_id = triangle.add_mesh(eng::Mesh(3));
         triangle[polygon_id].material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
@@ -127,7 +126,7 @@ class Triangle : public RenderObject {
         update_triangle(coords);
     }
 
-    RenderObject* intersect_cut(std::vector < eng::Vect3 > triangle, RenderObject* cut, std::vector < int >& location) {
+    RenderObject* intersect_cut(std::vector < eng::Vect3 > triangle, RenderObject* cut) {
         eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 1);
         eng::Cut cut_ot(coord1, coord2);
@@ -140,14 +139,14 @@ class Triangle : public RenderObject {
         if (!intersection.in_triangle(triangle[0], triangle[1], triangle[2]))
             return nullptr;
 
-        RenderObject* point = new Point(intersection, location[0], scene, POINT_RADIUS * 0.75);
+        RenderObject* point = new Point(intersection, scene, POINT_RADIUS * 0.75);
         point->action = 1;
         point->init_obj = { cut, this };
 
         return point;
     }
 
-    RenderObject* intersect_line(std::vector < eng::Vect3 > triangle, RenderObject* line, std::vector < int >& location) {
+    RenderObject* intersect_line(std::vector < eng::Vect3 > triangle, RenderObject* line) {
         eng::Vect3 coord1 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 1);
         eng::Line line_ot(coord1, coord2);
@@ -160,14 +159,14 @@ class Triangle : public RenderObject {
         if (!intersection.in_triangle(triangle[0], triangle[1], triangle[2]))
             return nullptr;
 
-        RenderObject* point = new Point(intersection, location[0], scene, POINT_RADIUS * 0.75);
+        RenderObject* point = new Point(intersection, scene, POINT_RADIUS * 0.75);
         point->action = 1;
         point->init_obj = { line, this };
 
         return point;
     }
 
-    RenderObject* intersect_plane(std::vector < eng::Vect3 > triangle, RenderObject* plane, std::vector < int >& location) {
+    RenderObject* intersect_plane(std::vector < eng::Vect3 > triangle, RenderObject* plane) {
         std::vector < eng::Vect3 > coords = (*scene)[plane->scene_id.first].get_mesh_positions(plane->scene_id.second, 0);
         eng::Flat plane_ot(coords);
         eng::Flat plane_cur(triangle);
@@ -198,7 +197,7 @@ class Triangle : public RenderObject {
         if (intersect_coords.size() == 1)
             intersect_coords.push_back(intersect_coords[0]);
 
-        RenderObject* cut = new Cut(intersect_coords[0], intersect_coords[1], location[1], scene);
+        RenderObject* cut = new Cut(intersect_coords[0], intersect_coords[1], scene);
         cut->action = 1;
         cut->init_obj = { plane, this };
 
@@ -232,6 +231,14 @@ public:
         hide ^= 1;
     }
 
+    void set_border(bool flag) {
+        if (flag) {
+            (*scene)[scene_id.first].border_mask = 0b100;
+        } else {
+            (*scene)[scene_id.first].border_mask = 0;
+        }
+    }
+
     void update() {
         if (action == 0)
             update_three_points(init_obj[0]->scene_id, init_obj[1]->scene_id, init_obj[2]->scene_id);
@@ -247,18 +254,18 @@ public:
             update_translate(init_obj[0]->scene_id, init_obj[1]->scene_id, init_obj[2]->scene_id);
     }
 
-    RenderObject* intersect(RenderObject* obj, std::vector < int >& location) {
+    RenderObject* intersect(RenderObject* obj) {
         if (obj->get_type() > type)
-            return obj->intersect(this, location);
+            return obj->intersect(this);
 
         std::vector < eng::Vect3 > coords = (*scene)[scene_id.first].get_mesh_positions(scene_id.second, 0);
 
         if (obj->get_type() == 1)
-            return intersect_cut(coords, obj, location);
+            return intersect_cut(coords, obj);
         if (obj->get_type() == 2)
-            return intersect_line(coords, obj, location);
+            return intersect_line(coords, obj);
         if (obj->get_type() == 3)
-            return intersect_plane(coords, obj, location);
+            return intersect_plane(coords, obj);
 
         return nullptr;
     }

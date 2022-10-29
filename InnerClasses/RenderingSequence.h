@@ -8,7 +8,6 @@ class RenderingSequence {
 	int input_state = 0, active_object = -1;
 	std::pair < int, int > active_button = std::make_pair(0, 0);
 	double point_distance = 1, scroll = 0, eps = 0.00005;
-	std::vector < int > location = std::vector < int >(5, -1);
 
 	std::vector < RenderObject* > selected_objects;
 	std::vector < RenderObject* > objects;
@@ -57,10 +56,10 @@ class RenderingSequence {
 			return;
 
 		if (active_button.first == 3 && active_button.second == 0) {
-			add_object(new Point(active_button, selected_objects, location[0], scene));
+			add_object(new Point(active_button, selected_objects, scene));
 		}
 		else if (active_button.first == 1 && active_button.second == 1) {
-			add_object(new Cut(active_button, selected_objects, location[1], scene));
+			add_object(new Cut(active_button, selected_objects, scene));
 		}
 		else if (active_button.first == 1 && active_button.second == 2 ||
 				active_button.first == 3 && active_button.second == 1 ||
@@ -68,7 +67,7 @@ class RenderingSequence {
 				active_button.first == 5 && active_button.second == 1 ||
 				active_button.first == 5 && active_button.second == 2) {
 
-			add_object(new Line(active_button, selected_objects, location[2], scene));
+			add_object(new Line(active_button, selected_objects, scene));
 		}
 		else if (active_button.first == 1 && active_button.second == 3 ||
 				active_button.first == 3 && active_button.second == 3 ||
@@ -102,7 +101,7 @@ class RenderingSequence {
 			}
 		}
 		else if (active_button.first == 2 && active_button.second == 3) {
-			RenderObject* intersect = selected_objects[0]->intersect(selected_objects[1], location);
+			RenderObject* intersect = selected_objects[0]->intersect(selected_objects[1]);
 			if (intersect != nullptr)
 				add_object(intersect);
 		}
@@ -111,11 +110,11 @@ class RenderingSequence {
 				active_button.first == 4 && active_button.second == 2 ||
 				active_button.first == 4 && active_button.second == 3) {
 			if (selected_objects[0]->get_type() == 0)
-				add_object(new Point(active_button, selected_objects, location[0], scene));
+				add_object(new Point(active_button, selected_objects, scene));
 			else if (selected_objects[0]->get_type() == 1)
-				add_object(new Cut(active_button, selected_objects, location[1], scene));
+				add_object(new Cut(active_button, selected_objects, scene));
 			else if (selected_objects[0]->get_type() == 2)
-				add_object(new Line(active_button, selected_objects, location[2], scene));
+				add_object(new Line(active_button, selected_objects, scene));
 			else if (selected_objects[0]->get_type() == 3)
 				add_object(new Plane(active_button, selected_objects, scene));
 			else if (selected_objects[0]->get_type() == 4)
@@ -123,11 +122,11 @@ class RenderingSequence {
 		}
 		else if (active_button.first == 5 && active_button.second == 0) {
 			if (selected_objects[0]->get_type() == 0) {
-				add_object(new Line(active_button, selected_objects, location[2], scene));
+				add_object(new Line(active_button, selected_objects, scene));
 			}
 			if (selected_objects[0]->get_type() < 3) {
-				add_object(new Line(active_button, selected_objects, location[2], scene));
-				int id = add_object(new Line(active_button, selected_objects, location[2], scene));
+				add_object(new Line(active_button, selected_objects, scene));
+				int id = add_object(new Line(active_button, selected_objects, scene));
 				objects[id]->special_coefficient = -1;
 				objects[id]->moved = true;
 			}
@@ -211,7 +210,7 @@ public:
 		object_id[std::make_pair(-1, -1)] = -1;
 
 		temp_point = scene->cam.position + scene->cam.get_direction() * point_distance;
-		add_object(new Point(temp_point, location[0], scene));
+		add_object(new Point(temp_point, scene));
 		objects[0]->switch_visibility();
 	}
 
@@ -265,8 +264,7 @@ public:
 			}
 
 			object_id.erase(object->scene_id);
-			if (object->delete_object())
-				location[object->get_type()] = -1;
+			object->delete_object();
 			delete object;
 		}
 		objects = new_objects;
@@ -307,7 +305,7 @@ public:
 							}
 						}
 						else if (get_cross_state() == 3) {
-							int id = add_object(new Point(intersect_point, location[0], scene));
+							int id = add_object(new Point(intersect_point, scene));
 							objects[id]->action = -objects[active_object]->get_type();
 							objects[id]->init_obj.push_back(objects[active_object]);
 							objects[id]->update();
@@ -317,7 +315,7 @@ public:
 						}
 					}
 					else {
-						int id = add_object(new Point(temp_point, location[0], scene));
+						int id = add_object(new Point(temp_point, scene));
 						objects[id]->set_border(true);
 						selected_objects.push_back(objects[id]);
 						check_button_state();

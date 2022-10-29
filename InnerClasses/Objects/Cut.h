@@ -2,24 +2,18 @@
 
 
 class Cut : public RenderObject {
-    void init(int& cuts_location) {
-        if (cuts_location == -1) {
-            eng::GraphObject cut = get_cylinder(12, true, MAX_COUNT_MODELS);
+    void init() {
+        eng::GraphObject cut = get_cylinder(12, true, MAX_COUNT_MODELS);
 
-            cut.apply_func_meshes([](auto& mesh) {
-                mesh.material.set_ambient(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
-                mesh.material.set_diffuse(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
-                mesh.material.set_specular(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
-            });
+        cut.apply_func_meshes([](auto& mesh) {
+            mesh.material.set_ambient(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
+            mesh.material.set_diffuse(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
+            mesh.material.set_specular(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
+        });
 
-            scene_id.second = cut.add_model();
+        scene_id.second = cut.add_model();
 
-            cuts_location = scene->add_object(cut);
-        }
-        else {
-            scene_id.second = (*scene)[cuts_location].add_model();
-        }
-        scene_id.first = cuts_location;
+        scene_id.first = scene->add_object(cut);
     }
 
     void set_action(std::pair < int, int > button) {
@@ -90,7 +84,7 @@ class Cut : public RenderObject {
         update_cut(coord1 + translate, coord2 + translate);
     }
 
-    RenderObject* intersect_cut(eng::Cut cut_cur, RenderObject* cut, std::vector < int >& location) {
+    RenderObject* intersect_cut(eng::Cut cut_cur, RenderObject* cut) {
         eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 1);
         eng::Cut cut_ot(coord1, coord2);
@@ -98,7 +92,7 @@ class Cut : public RenderObject {
         if (!cut_cur.is_intersect(cut_ot))
             return nullptr;
 
-        RenderObject* point = new Point(cut_cur.intersect(cut_ot), location[0], scene, POINT_RADIUS * 0.75);
+        RenderObject* point = new Point(cut_cur.intersect(cut_ot), scene, POINT_RADIUS * 0.75);
         point->action = 1;
         point->init_obj = { this, cut };
 
@@ -115,8 +109,7 @@ class Cut : public RenderObject {
     }
 
     void update_intersect() {
-        std::vector < int > location(2, scene_id.first);
-        RenderObject* cut = init_obj[0]->intersect(init_obj[1], location);
+        RenderObject* cut = init_obj[0]->intersect(init_obj[1]);
 
         if (cut == nullptr) {
             if (init_obj[0]->get_type() == 3)
@@ -131,22 +124,22 @@ class Cut : public RenderObject {
     }
 
 public:
-    Cut(eng::Vect3 point1, eng::Vect3 point2, int& cuts_location, GraphEngine* scene) {
+    Cut(eng::Vect3 point1, eng::Vect3 point2, GraphEngine* scene) {
         action = -1;
         type = 1;
         this->scene = scene;
 
-        init(cuts_location);
+        init();
         update_cut(point1, point2);
     }
 
-    Cut(std::pair < int, int > button, std::vector < RenderObject* > init_obj, int& cuts_location, GraphEngine* scene) {
+    Cut(std::pair < int, int > button, std::vector < RenderObject* > init_obj, GraphEngine* scene) {
         type = 1;
         this->scene = scene;
         this->init_obj = init_obj;
 
         set_action(button);
-        init(cuts_location);
+        init();
         update();
     }
 
@@ -157,6 +150,14 @@ public:
         } else
             (*scene)[scene_id.first].change_matrix_left(model * eng::Matrix::scale_matrix(eng::Vect3(3.0, 1.0, 3.0)) * model.inverse(), scene_id.second);
         hide ^= 1;
+    }
+
+    void set_border(bool flag) {
+        if (flag) {
+            (*scene)[scene_id.first].border_mask = 1;
+        } else {
+            (*scene)[scene_id.first].border_mask = 0;
+        }
     }
 
     void update() {
@@ -174,14 +175,14 @@ public:
             update_translate(init_obj[0]->scene_id, init_obj[1]->scene_id, init_obj[2]->scene_id);
     }
 
-    RenderObject* intersect(RenderObject* obj, std::vector < int >& location) {
+    RenderObject* intersect(RenderObject* obj) {
         if (obj->get_type() > type)
-            return obj->intersect(this, location);
+            return obj->intersect(this);
 
         eng::Vect3 coord1 = (*scene)[scene_id.first].get_mesh_center(scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[scene_id.first].get_mesh_center(scene_id.second, 1);
         eng::Cut cut_cur(coord1, coord2);
 
-        return intersect_cut(cut_cur, obj, location);
+        return intersect_cut(cut_cur, obj);
     }
 };

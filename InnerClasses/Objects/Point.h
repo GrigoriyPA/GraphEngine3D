@@ -2,23 +2,17 @@
 
 
 class Point : public RenderObject {
-    void init(int& points_location, double radius = POINT_RADIUS) {
-        if (points_location == -1) {
-            eng::GraphObject point = get_sphere(6, true, MAX_COUNT_MODELS);
+    void init(double radius = POINT_RADIUS) {
+        eng::GraphObject point = get_sphere(6, true, MAX_COUNT_MODELS);
 
-            point.apply_func_meshes([](auto& mesh) {
-                mesh.material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-                mesh.material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-            });
+        point.apply_func_meshes([](auto& mesh) {
+            mesh.material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+            mesh.material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        });
 
-            scene_id.second = point.add_model(eng::Matrix::scale_matrix(radius));
+        scene_id.second = point.add_model(eng::Matrix::scale_matrix(radius));
 
-            points_location = scene->add_object(point);
-        }
-        else {
-            scene_id.second = (*scene)[points_location].add_model(eng::Matrix::scale_matrix(radius));
-        }
-        scene_id.first = points_location;
+        scene_id.first = scene->add_object(point);
     }
 
     void set_action(std::pair < int, int > button) {
@@ -136,7 +130,7 @@ class Point : public RenderObject {
 
     void update_intersect() {
         std::vector < int > location(1, scene_id.first);
-        RenderObject* point = init_obj[0]->intersect(init_obj[1], location);
+        RenderObject* point = init_obj[0]->intersect(init_obj[1]);
 
         if (point == nullptr) {
             if (init_obj[0]->get_type() == 1)
@@ -157,23 +151,23 @@ class Point : public RenderObject {
     }
 
 public:
-    Point(eng::Vect3 position, int& points_location, GraphEngine* scene, double radius = POINT_RADIUS) {
+    Point(eng::Vect3 position, GraphEngine* scene, double radius = POINT_RADIUS) {
         type = 0;
         action = 0;
         this->scene = scene;
 
-        init(points_location, radius);
+        init(radius);
 
         (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(position), scene_id.second);
     }
 
-    Point(std::pair < int, int > button, std::vector < RenderObject* > init_obj, int& points_location, GraphEngine* scene) {
+    Point(std::pair < int, int > button, std::vector < RenderObject* > init_obj, GraphEngine* scene) {
         type = 0;
         this->scene = scene;
         this->init_obj = init_obj;
 
         set_action(button);
-        init(points_location);
+        init();
         update();
     }
 
@@ -185,6 +179,14 @@ public:
         else
             (*scene)[scene_id.first].change_matrix_left(model * eng::Matrix::scale_matrix(eng::Vect3(3.0, 3.0, 3.0)) * model.inverse(), scene_id.second);
         hide ^= 1;
+    }
+    
+    void set_border(bool flag) {
+        if (flag) {
+            (*scene)[scene_id.first].border_mask = 1;
+        } else {
+            (*scene)[scene_id.first].border_mask = 0;
+        }
     }
 
     void update() {
@@ -215,7 +217,7 @@ public:
             update_translate(init_obj[0]->scene_id, init_obj[1]->scene_id, init_obj[2]->scene_id);
     }
 
-    RenderObject* intersect(RenderObject* obj, std::vector < int >& location) {
+    RenderObject* intersect(RenderObject* obj) {
         return nullptr;
     }
 };

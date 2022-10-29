@@ -228,12 +228,15 @@ class GraphEngine {
 				continue;
 			}
 
-			object->second.draw(object->first, main_shader);
+			main_shader.set_uniform_i("object_id", object->first);
+			object->second.draw(main_shader);
 		}
 
 		std::sort(transparent_objects.rbegin(), transparent_objects.rend());
-		for (TransparentObject object : transparent_objects)
-			object.object->draw(object.object_id, object.model_id, object.polygon_id, main_shader);
+		for (TransparentObject object : transparent_objects) {
+			main_shader.set_uniform_i("object_id", object.object_id);
+			object.object->draw(object.model_id, object.polygon_id, main_shader);
+		}
 	}
 
 	void draw_depth_map() {
