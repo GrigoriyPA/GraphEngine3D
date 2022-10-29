@@ -11,7 +11,6 @@ struct Light {
     mat4 light_space;
 };
 
-
 struct Material {
     bool shadow, use_vertex_color;
     float shininess, alpha;

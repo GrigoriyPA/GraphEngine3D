@@ -8,28 +8,30 @@ namespace eng {
 	class Texture {
 		inline static GLint max_texture_image_units_ = 0;
 
-		size_t texture_size_ = 0;
 		size_t* count_links_ = nullptr;
 		GLuint texture_id_ = 0;
+		GLsizei width_ = 0;
+		GLsizei height_ = 0;
 
 		void deallocate() {
 			if (count_links_ != nullptr) {
 				--(*count_links_);
 				if (*count_links_ == 0) {
 					delete count_links_;
+
 					glDeleteTextures(1, &texture_id_);
+					check_gl_errors(__FILE__, __LINE__, __func__);
 				}
 			}
 			count_links_ = nullptr;
 			texture_id_ = 0;
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
 		void swap(Texture& other) noexcept {
-			std::swap(texture_size_, other.texture_size_);
 			std::swap(count_links_, other.count_links_);
 			std::swap(texture_id_, other.texture_id_);
+			std::swap(width_, other.width_);
+			std::swap(height_, other.height_);
 		}
 
 	public:
@@ -52,7 +54,8 @@ namespace eng {
 			}
 
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_image_units_);
-			texture_size_ =  static_cast<size_t>(image.getSize().x) * static_cast<size_t>(image.getSize().y) * 4;
+			width_ = static_cast<GLsizei>(image.getSize().x);
+			height_ = static_cast<GLsizei>(image.getSize().y);
 			count_links_ = new size_t(1);
 
 			glGenTextures(1, &texture_id_);
@@ -74,7 +77,8 @@ namespace eng {
 		}
 
 		Texture(const Texture& other) noexcept {
-			texture_size_ = other.texture_size_;
+			width_ = other.width_;
+			height_ = other.height_;
 			texture_id_ = other.texture_id_;
 			count_links_ = other.count_links_;
 			if (count_links_ != nullptr) {
@@ -103,7 +107,6 @@ namespace eng {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_wrapping, invalid wrapping type.\n\n");
 			}
 
-			glBindTexture(GL_TEXTURE_2D, texture_id_);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapping);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapping);
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -116,19 +119,27 @@ namespace eng {
 			return texture_id_;
 		}
 
+		GLsizei get_width() const noexcept {
+			return width_;
+		}
+
+		GLsizei get_height() const noexcept {
+			return height_;
+		}
+
 		template <typename T>
 		T get_value(T value, std::function<void(sf::Color, T*)> func) const {
-			uint8_t* buffer = new uint8_t[texture_size_];
+			uint8_t* buffer = new uint8_t[4 * width_ * height_];
 			glBindTexture(GL_TEXTURE_2D, texture_id_);
 			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 			glBindTexture(GL_TEXTURE_2D, 0);
+			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			for (size_t i = 0; i < texture_size_; i += 4) {
+			for (size_t i = 0; i < 4 * width_ * height_; i += 4) {
 				func(sf::Color(buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]), &value);
 			}
 
 			delete[] buffer;
-			check_gl_errors(__FILE__, __LINE__, __func__);
 			return value;
 		}
 

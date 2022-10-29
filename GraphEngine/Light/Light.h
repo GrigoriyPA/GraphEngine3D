@@ -19,10 +19,10 @@ public:
 
     virtual eng::Matrix get_light_space_matrix() = 0;
 
-    virtual void set_uniforms(int draw_id, eng::Shader<eng::ShaderType::MAIN>* shader_program) = 0;
+    virtual void set_uniforms(int draw_id, eng::Shader<size_t>* shader_program) = 0;
 };
 
-void set_default_light_uniforms(int draw_id, eng::Shader<eng::ShaderType::MAIN>* shader_program) {
+void set_default_light_uniforms(int draw_id, eng::Shader<size_t>* shader_program) {
     if (draw_id < 0) {
         std::cout << "ERROR::SET_DEFAULT_LIGHT_UNIFORMS\n" << "Invalid draw id.\n";
         assert(0);

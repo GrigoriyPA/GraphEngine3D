@@ -16,14 +16,12 @@ namespace eng {
 		GLuint vertex_buffer_ = 0;
 		GLuint index_buffer_ = 0;
 		GLfloat border_width_ = 1.0;
-		Vect3 center_ = Vect3(0, 0, 0);
 
 		GLsizei count_points_;
 		GLsizei count_indices_;
 
-		template <size_t T>
-		void set_uniforms(const Shader<T>& shader) const {
-			if (T == ShaderType::MAIN) {
+		void set_uniforms(const Shader<size_t>& shader) const {
+			if (shader.description == ShaderType::MAIN) {
 				material.set_uniforms(shader);
 			}
 
@@ -31,10 +29,9 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		template <size_t T>
-		void delete_uniforms(const Shader<T>& shader_program) const {
-			if (T == ShaderType::MAIN) {
-				material.delete_uniforms(shader_program);
+		void delete_uniforms(const Shader<size_t>& shader) const {
+			if (shader.description == ShaderType::MAIN) {
+				material.delete_uniforms(shader);
 			}
 
 			glLineWidth(1.0);
@@ -70,12 +67,12 @@ namespace eng {
 			glDeleteVertexArrays(1, &vertex_array_);
 			glDeleteBuffers(1, &vertex_buffer_);
 			glDeleteBuffers(1, &index_buffer_);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
 			vertex_array_ = 0;
 			matrix_buffer_ = 0;
 			vertex_buffer_ = 0;
 			index_buffer_ = 0;
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
 		void swap(Mesh& other) noexcept {
@@ -84,7 +81,6 @@ namespace eng {
 			std::swap(vertex_buffer_, other.vertex_buffer_);
 			std::swap(index_buffer_, other.index_buffer_);
 			std::swap(border_width_, other.border_width_);
-			std::swap(center_, other.center_);
 			std::swap(count_points_, other.count_points_);
 			std::swap(count_indices_, other.count_indices_);
 			std::swap(frame, other.frame);
@@ -102,13 +98,11 @@ namespace eng {
 			Vect3 specular_ = Vect3(0.0, 0.0, 0.0);
 			Vect3 emission_ = Vect3(0.0, 0.0, 0.0);
 
-			template <size_t T>
-			void set_uniforms(const Shader<T>& shader) const {
-				if (T != eng::ShaderType::MAIN) {
+			void set_uniforms(const Shader<size_t>& shader) const {
+				if (shader.description != eng::ShaderType::MAIN) {
 					throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 				}
 
-				shader.use();
 				shader.set_uniform_i("use_diffuse_map", diffuse_map.get_id() != 0);
 				shader.set_uniform_i("use_specular_map", specular_map.get_id() != 0);
 				shader.set_uniform_i("use_emission_map", emission_map.get_id() != 0);
@@ -134,20 +128,16 @@ namespace eng {
 				diffuse_map.activate(0);
 				specular_map.activate(1);
 				emission_map.activate(2);
-				check_gl_errors(__FILE__, __LINE__, __func__);
 			}
 
-			template <size_t T>
-			void delete_uniforms(const Shader<T>& shader) const {
-				if (T != eng::ShaderType::MAIN) {
+			void delete_uniforms(const Shader<size_t>& shader) const {
+				if (shader.description != eng::ShaderType::MAIN) {
 					throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 				}
 
-				shader.use();
 				diffuse_map.deactive(0);
 				specular_map.deactive(1);
 				emission_map.deactive(2);
-				check_gl_errors(__FILE__, __LINE__, __func__);
 			}
 
 		public:
@@ -292,19 +282,18 @@ namespace eng {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points.\n\n");
 			}
 
-			center_ = Vect3(0, 0, 0);
 			std::vector<GLfloat> converted_positions(count_points_ * 3);
 			for (size_t i = 0; i < count_points_; ++i) {
-				center_ += positions[i];
 				for (size_t j = 0; j < 3; ++j) {
 					converted_positions[3 * i + j] = static_cast<GLfloat>(positions[i][j]);
 				}
 			}
-			center_ /= static_cast<double>(count_points_);
 
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<const GLvoid*>(&converted_positions[0]));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
 
 			if (update_normals) {
 				if (positions.size() < 3) {
@@ -313,8 +302,6 @@ namespace eng {
 
 				set_normals(std::vector<Vect3>(count_points_, (positions[2] - positions[0]) ^ (positions[1] - positions[0])));
 			}
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
 			return *this;
 		}
 
@@ -421,10 +408,6 @@ namespace eng {
 			return vertex_array_;
 		}
 
-		Vect3 get_center() const noexcept {
-			return center_;
-		}
-
 		size_t get_count_points() const noexcept {
 			return count_points_;
 		}
@@ -479,18 +462,24 @@ namespace eng {
 			glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLuint) * count_indices_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
 			std::vector<GLuint> result(count_indices_);
 			for (size_t i = 0; i < count_indices_; ++i) {
 				result[i] = buffer[i];
 			}
 			delete[] buffer;
 
-			check_gl_errors(__FILE__, __LINE__, __func__);
 			return result;
 		}
 
+		Vect3 get_center() const {
+			std::vector<Vect3> positions = get_positions();
+			return get_value<Vect3>(positions.begin(), positions.end(), Vect3(0, 0, 0), [&](auto element, auto* result) { *result += element; }) / static_cast<double>(positions.size());
+		}
+
 		Mesh& apply_matrix(const Matrix& transform)& {
-			Matrix normal_transform = transform.inverse().transpose();
+			Matrix normal_transform = Matrix::normal_transform(transform);
 			std::vector<Vect3> positions = get_positions();
 			std::vector<Vect3> normals = get_normals();
 			for (size_t i = 0; i < count_points_; ++i) {
@@ -509,13 +498,12 @@ namespace eng {
 			return *this;
 		}
 
-		template <size_t T>
-		void draw(GLsizei count, const Shader<T>& shader_program) const {
+		void draw(GLsizei count, const Shader<size_t>& shader) const {
 			if (count == 0) {
 				return;
 			}
 
-			set_uniforms(shader_program);
+			set_uniforms(shader);
 
 			glBindVertexArray(vertex_array_);
 			if (!frame) {
@@ -525,8 +513,9 @@ namespace eng {
 			}
 			glBindVertexArray(0);
 
-			delete_uniforms(shader_program);
 			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			delete_uniforms(shader);
 		}
 
 		~Mesh() {

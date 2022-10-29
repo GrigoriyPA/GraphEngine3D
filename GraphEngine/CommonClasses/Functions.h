@@ -59,11 +59,18 @@ namespace eng {
     }
 
     template <typename T, typename It>  // Operators required: !=(It, It), ++(It), *(It); Structures required: std::iterator_traits<It>
-    T get_value(It container_begin, It container_end, T value, std::function<void(typename std::iterator_traits<It>::value_type, T*)> func) {
+    T get_value(It container_begin, It container_end, T value, std::function<void(const typename std::iterator_traits<It>::value_type&, T*)> func) {
         for (; container_begin != container_end; ++container_begin) {
             func(*container_begin, &value);
         }
         return value;
+    }
+
+    template <typename It>  // Operators required: !=(It, It), ++(It), *(It); Structures required: std::iterator_traits<It>
+    void apply_func(It container_begin, It container_end, std::function<void(const typename std::iterator_traits<It>::value_type&)> func) {
+        for (; container_begin != container_end; ++container_begin) {
+            func(*container_begin);
+        }
     }
 
 

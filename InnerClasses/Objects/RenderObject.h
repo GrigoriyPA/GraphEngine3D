@@ -12,7 +12,7 @@ protected:
 
 	void change_matrix(eng::Matrix trans) {
 		if (visibility)
-			(*scene)[scene_id.first].change_matrix(trans, scene_id.second);
+			(*scene)[scene_id.first].change_matrix_left(trans, scene_id.second);
 		else
 			save_matrix = trans * save_matrix;
 	}

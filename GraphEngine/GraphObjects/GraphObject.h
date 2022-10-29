@@ -4,86 +4,83 @@
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <unordered_map>
+#include <unordered_set>
 #include "Mesh.h"
 
 
 namespace eng {
-	struct Model {
-		bool border;
-		int used_memory;
-		eng::Matrix matrix;
-
-		eng::Model(eng::Matrix matrix = eng::Matrix::one_matrix(4), bool border = false, int used_memory = -1) : matrix(matrix) {
-			this->matrix = matrix;
-			this->border = border;
-			this->used_memory = used_memory;
-		}
-	};
-
-
 	class GraphObject {
-		int count_borders = 0, border_bit = 1;
-		double eps = 0.00001;
-		eng::Vect3 center = eng::Vect3(0, 0, 0);
+		// ...
+		struct Model {
+			bool border;
+			int used_memory;
+			Matrix matrix;
 
-		int max_count_models;
-		unsigned int matrix_buffer;
-		std::vector < int > used_memory;
-		std::unordered_map < int, eng::Model > models;
-		std::unordered_map < int, eng::Mesh > polygons;
+			Model(Matrix matrix = Matrix::one_matrix(4), bool border = false, int used_memory = -1) : matrix(matrix) {
+				this->matrix = matrix;
+				this->border = border;
+				this->used_memory = used_memory;
+			}
+		};
 
-		template <size_t T>
-		void set_uniforms(eng::Shader<T>* shader_program, int object_id) {
-			try {
-				shader_program->use();
-				shader_program->set_uniform_i("object_id", object_id);
+		inline static double eps_ = 1e-5;
+
+		size_t count_borders_ = 0;
+		GLuint matrix_buffer_ = 0;
+
+		size_t max_count_models_;
+		std::vector<int> used_memory_;
+		std::unordered_map<size_t, Model> models_;
+		std::unordered_map<size_t, Mesh> meshes_;
+
+		void set_uniforms(GLint object_id, const Shader<size_t>& shader) const {
+			if (shader.description != eng::ShaderType::MAIN) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
-			catch (const std::exception& error) {
-				//std::cout << "ERROR::GRAPH_OBJECT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
-				//assert(0);
-			}
+
+			shader.set_uniform_i("object_id", object_id);
 		}
 
 		void create_matrix_buffer() {
-			glGenBuffers(1, &matrix_buffer);
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
+			glGenBuffers(1, &matrix_buffer_);
+			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
 
-			glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16 * max_count_models, NULL, GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * max_count_models_, NULL, GL_DYNAMIC_DRAW);
 
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-			for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
-				polygon->second.set_matrix_buffer(matrix_buffer);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			for (auto& [id, mesh] : meshes_) {
+				mesh.set_matrix_buffer(matrix_buffer_);
+			}
 		}
 
-		void delete_buffers() {
-			glDeleteBuffers(1, &matrix_buffer);
-		}
-
-		template <size_t T>
-		void draw_polygons(eng::Shader<T>* shader_program, int model_id = -1) {
-			if (model_id != -1 && !models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::DRAW_POLYGONS\n" << "Invalid model id.\n";
-				//assert(0);
+		void draw_meshes(size_t model_id, const Shader<size_t>& shader) const {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
 
-			int cnt = models.size();
-			if (model_id != -1) {
-				shader_program->set_uniform_matrix("not_instance_model", models[model_id].matrix);
-				cnt = 1;
+			const Model& model = models_.at(model_id);
+			shader.set_uniform_i("model_id", model.used_memory);
+			shader.set_uniform_matrix("not_instance_model", model.matrix);
+
+			for (const auto& [id, mesh] : meshes_) {
+				mesh.draw(1, shader);
 			}
-
-			int cur_id = -1;
-			if (model_id != -1)
-				cur_id = models[model_id].used_memory;
-			shader_program->set_uniform_i("model_id", cur_id);
-
-			for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
-				polygon->second.draw(cnt, *shader_program);
 		}
 
-		std::vector<eng::Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
-			std::vector<eng::Texture> textures;
+		void draw_meshes(const Shader<size_t>& shader) const {
+			shader.set_uniform_i("model_id", -1);
+
+			for (const auto& [id, mesh] : meshes_) {
+				mesh.draw(models_.size(), shader);
+			}
+		}
+
+		// ...
+		std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
+			std::vector<Texture> textures;
 			for (unsigned int i = 0; i < material->GetTextureCount(type); i++) {
 				aiString str;
 				material->GetTexture(type, i, &str);
@@ -94,40 +91,41 @@ namespace eng {
 					path = "inline_texture" + path + "." + std::string(scene->mTextures[std::stoi(path)]->achFormatHint);
 				}
 
-				eng::Texture texture(directory + "/" + path, true);
+				Texture texture(directory + "/" + path, true);
 				textures.push_back(texture);
 			}
 			return textures;
 		}
 
-		eng::Mesh process_mesh(aiMesh* mesh, const aiScene* scene, std::string& directory, eng::Matrix transform) {
-			std::vector < eng::Vect2 > tex_coords;
-			std::vector < eng::Vect3 > positions, normals;
-			std::vector < eng::Vect3 > colors;
+		// ...
+		Mesh processMesh(aiMesh* mesh, const aiScene* scene, std::string& directory, Matrix transform) {
+			std::vector < Vect2 > tex_coords;
+			std::vector < Vect3 > positions, normals;
+			std::vector < Vect3 > colors;
 			std::vector<unsigned int> indices;
 
-			eng::Matrix norm_transform = transform.inverse().transpose();
+			Matrix norm_transform = transform.inverse().transpose();
 			for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-				positions.push_back(transform * eng::Vect3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
+				positions.push_back(transform * Vect3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
 				if (mesh->mNormals)
-					normals.push_back(norm_transform * eng::Vect3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
+					normals.push_back(norm_transform * Vect3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
 				if (mesh->mTextureCoords[0])
-					tex_coords.push_back(eng::Vect2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
+					tex_coords.push_back(Vect2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
 				else
-					tex_coords.push_back(eng::Vect2(0, 0));
+					tex_coords.push_back(Vect2(0, 0));
 				if (mesh->mColors[0])
-					colors.push_back(eng::Vect3(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b));
+					colors.push_back(Vect3(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b));
 				else
-					colors.push_back(eng::Vect3(0, 0, 0));
+					colors.push_back(Vect3(0, 0, 0));
 			}
-			eng::Mesh polygon_mesh(positions.size());
+			Mesh polygon_mesh(positions.size());
 			polygon_mesh.set_positions(positions, normals.empty());
 			if (!normals.empty())
 				polygon_mesh.set_normals(normals);
 			polygon_mesh.set_tex_coords(tex_coords);
 			polygon_mesh.set_colors(colors);
 
-			polygon_mesh.material.set_diffuse(eng::Vect3(1, 1, 1));
+			polygon_mesh.material.set_diffuse(Vect3(1, 1, 1));
 			for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
 				aiFace face = mesh->mFaces[i];
 				for (unsigned int j = 0; j < face.mNumIndices; j++)
@@ -139,35 +137,35 @@ namespace eng {
 				aiColor3D color(0, 0, 0);
 				aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-				std::vector<eng::Texture> diffuse_textures = loadMaterialTextures(material, aiTextureType_DIFFUSE, scene, directory);
+				std::vector<Texture> diffuse_textures = loadMaterialTextures(material, aiTextureType_DIFFUSE, scene, directory);
 				if (!diffuse_textures.empty())
 					polygon_mesh.material.diffuse_map = diffuse_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
 
-				std::vector<eng::Texture> specular_textures = loadMaterialTextures(material, aiTextureType_SPECULAR, scene, directory);
+				std::vector<Texture> specular_textures = loadMaterialTextures(material, aiTextureType_SPECULAR, scene, directory);
 				if (!specular_textures.empty())
 					polygon_mesh.material.specular_map = specular_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_SPECULAR) << "\n";
 
-				std::vector<eng::Texture> emissive_textures = loadMaterialTextures(material, aiTextureType_EMISSIVE, scene, directory);
+				std::vector<Texture> emissive_textures = loadMaterialTextures(material, aiTextureType_EMISSIVE, scene, directory);
 				if (!emissive_textures.empty())
 					polygon_mesh.material.emission_map = emissive_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";
 
 				material->Get(AI_MATKEY_COLOR_AMBIENT, color);
-				polygon_mesh.material.set_ambient(eng::Vect3(color.r, color.g, color.b));
+				polygon_mesh.material.set_ambient(Vect3(color.r, color.g, color.b));
 				//polygon_mesh.material.ambient.print();
 
 				material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-				polygon_mesh.material.set_diffuse(eng::Vect3(color.r, color.g, color.b));
+				polygon_mesh.material.set_diffuse(Vect3(color.r, color.g, color.b));
 				//polygon_mesh.material.diffuse.print();
 
 				material->Get(AI_MATKEY_COLOR_SPECULAR, color);
-				polygon_mesh.material.set_specular(eng::Vect3(color.r, color.g, color.b));
+				polygon_mesh.material.set_specular(Vect3(color.r, color.g, color.b));
 				//polygon_mesh.material.specular.print();
 
 				material->Get(AI_MATKEY_COLOR_EMISSIVE, color);
-				polygon_mesh.material.set_emission(eng::Vect3(color.r, color.g, color.b));
+				polygon_mesh.material.set_emission(Vect3(color.r, color.g, color.b));
 				//polygon_mesh.material.emission.print();
 
 				float opacity;
@@ -181,14 +179,15 @@ namespace eng {
 				//std::cout << polygon_mesh.material.shininess << "\n";
 
 				//if (polygon_mesh.material.shininess > 0)
-				//	polygon_mesh.material.specular = eng::Vect3(1, 1, 1);
+				//	polygon_mesh.material.specular = Vect3(1, 1, 1);
 			}
 
 			return polygon_mesh;
 		}
 
-		void process_node(aiNode* node, const aiScene* scene, std::string& directory, eng::Matrix transform) {
-			eng::Matrix trans(4, 4, 0);
+		// ...
+		void processNode(aiNode* node, const aiScene* scene, std::string& directory, Matrix transform) {
+			Matrix trans(4, 4, 0);
 			aiMatrix4x4 cur_transform = node->mTransformation;
 			for (int i = 0; i < 4; i++) {
 				for (int j = 0; j < 4; j++)
@@ -197,363 +196,425 @@ namespace eng {
 			transform = trans * transform;
 
 			for (int i = 0; i < node->mNumMeshes; i++) {
-				polygons[polygons.size()] = process_mesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform);
-				polygons[polygons.size() - 1].set_matrix_buffer(matrix_buffer);
+				meshes_[meshes_.size()] = processMesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform);
+				meshes_[meshes_.size() - 1].set_matrix_buffer(matrix_buffer_);
 				break;
 			}
 
 			for (unsigned int i = 0; i < node->mNumChildren; i++) {
-				process_node(node->mChildren[i], scene, directory, transform);
+				processNode(node->mChildren[i], scene, directory, transform);
 			}
+		}
+
+		void deallocate() {
+			glDeleteBuffers(1, &matrix_buffer_);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			matrix_buffer_ = 0;
+		}
+
+		void swap(GraphObject& other) noexcept {
+			std::swap(border_mask, other.border_mask);
+			std::swap(count_borders_, other.count_borders_);
+			std::swap(matrix_buffer_, other.matrix_buffer_);
+			std::swap(max_count_models_, other.max_count_models_);
+			std::swap(used_memory_, other.used_memory_);
+			std::swap(models_, other.models_);
+			std::swap(meshes_, other.meshes_);
+			std::swap(transparent, other.transparent);
 		}
 
 	public:
 		bool transparent = false;
+		uint8_t border_mask = 1;
 
-		eng::GraphObject(const eng::GraphObject& object) {
-			*this = object;
-		}
-
-		eng::GraphObject(int max_count_models = 0) {
-			if (max_count_models < 0) {
-				//std::cout << "ERROR::GRAPH_OBJECT::BUILDER\n" << "Negative number of models.\n";
-				//assert(0);
+		GraphObject() {
+			if (!glew_is_ok()) {
+				throw EngRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
 			}
 
-			this->max_count_models = max_count_models;
-			used_memory.resize(max_count_models, -1);
-			matrix_buffer = 0;
+			max_count_models_ = 0;
+		}
+
+		explicit GraphObject(size_t max_count_models) {
+			if (!glew_is_ok()) {
+				throw EngRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
+			}
+
+			max_count_models_ = max_count_models;
+			used_memory_.resize(max_count_models, -1);
 
 			create_matrix_buffer();
 		}
 
-		eng::GraphObject& operator=(const eng::GraphObject& other) {
-			delete_buffers();
-
-			count_borders = other.count_borders;
-			border_bit = other.border_bit;
-			eps = other.eps;
-			center = other.center;
-			max_count_models = other.max_count_models;
-			used_memory = other.used_memory;
-			models = other.models;
-			polygons = other.polygons;
+		GraphObject(const GraphObject& other) {
+			border_mask = other.border_mask;
+			count_borders_ = other.count_borders_;
+			max_count_models_ = other.max_count_models_;
+			used_memory_ = other.used_memory_;
+			models_ = other.models_;
+			meshes_ = other.meshes_;
 			transparent = other.transparent;
 
 			create_matrix_buffer();
-			set_center();
 
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-			glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer);
-			glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer);
+			glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer_);
+			glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer_);
 
-			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(float) * 16 * max_count_models);
+			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * 16 * max_count_models_);
 
 			glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
 			glBindBuffer(GL_COPY_READ_BUFFER, 0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		GraphObject(GraphObject&& other) noexcept {
+			swap(other);
+		}
+
+		GraphObject& operator=(const GraphObject& other)& {
+			GraphObject object(other);
+			swap(object);
 			return *this;
 		}
 
-		eng::Mesh& operator[](int polygon_id) {
-			if (!polygons.count(polygon_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::OPERATOR[]\n" << "Invalid polygon id.\n";
-				//assert(0);
-			}
-
-			return polygons[polygon_id];
+		GraphObject& operator=(GraphObject&& other)& {
+			deallocate();
+			swap(other);
+			return *this;
 		}
 
-		void set_center() {
-			center = eng::Vect3(0, 0, 0);
-			std::vector < eng::Vect3 > used_positions;
-			for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++) {
-				for (eng::Vect3 position : polygon->second.get_positions()) {
-					if (std::count(used_positions.begin(), used_positions.end(), position))
-						continue;
+		Mesh& operator[](size_t mesh_id) {
+			if (meshes_.count(mesh_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
+			}
 
-					used_positions.push_back(position);
+			return meshes_[mesh_id];
+		}
+
+		const Mesh& operator[](size_t mesh_id) const {
+			if (meshes_.count(mesh_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
+			}
+
+			return meshes_.at(mesh_id);
+		}
+
+		GraphObject& set_matrix(const Matrix& matrix, size_t model_id)& {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "set_matrix, invalid model id.\n\n");
+			}
+
+			models_[model_id].matrix = matrix;
+
+			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(matrix)[0]);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
+			return *this;
+		}
+
+		GraphObject& set_border(bool border, size_t model_id)& {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "set_border, invalid model id.\n\n");
+			}
+
+			count_borders_ += static_cast<int32_t>(border) - static_cast<int32_t>(models_[model_id].border);
+			models_[model_id].border = border;
+			return *this;
+		}
+
+		Matrix get_matrix(size_t model_id) const {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_matrix, invalid model id.\n\n");
+			}
+
+			return models_.at(model_id).matrix;
+		}
+
+		size_t get_model_id_by_memory_id(size_t memory_id) const {
+			if (models_.size() <= memory_id) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_model_id_by_memory_id, invalid memory id.\n\n");
+			}
+
+			return used_memory_[memory_id];
+		}
+
+		std::vector<Vect3> get_mesh_positions(size_t model_id, size_t mesh_id) const {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid model id.\n\n");
+			}
+			if (meshes_.count(mesh_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid mesh id.\n\n");
+			}
+
+			Matrix transform = models_.at(model_id).matrix;
+			std::vector<Vect3> positions;
+			for (Vect3 position : meshes_.at(mesh_id).get_positions()) {
+				positions.push_back(transform * position);
+			}
+			return positions;
+		}
+
+		std::vector<Vect3> get_mesh_normals(size_t model_id, size_t mesh_id) const {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid model id.\n\n");
+			}
+			if (meshes_.count(mesh_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid mesh id.\n\n");
+			}
+
+			Matrix transform = Matrix::normal_transform(models_.at(model_id).matrix);
+			std::vector<Vect3> normals;
+			for (Vect3 normal : meshes_.at(mesh_id).get_normals()) {
+				normals.push_back(transform * normal);
+			}
+			return normals;
+		}
+
+		Vect3 get_mesh_center(size_t model_id, size_t mesh_id) const {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid model id.\n\n");
+			}
+			if (meshes_.count(mesh_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid mesh id.\n\n");
+			}
+
+			return models_.at(model_id).matrix * meshes_.at(mesh_id).get_center();
+		}
+
+		Vect3 get_center(size_t model_id) const {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_center, invalid model id.\n\n");
+			}
+			if (meshes_.size() == 0) {
+				throw EngDomainError(__FILE__, __LINE__, "get_center, object does not contain vertices.\n\n");
+			}
+
+			Vect3 center(0, 0, 0);
+			std::unordered_set<Vect3> used_positions;
+			for (const auto& [id, mesh] : meshes_) {
+				for (const Vect3& position : mesh.get_positions()) {
+					if (used_positions.count(position) == 1) {
+						continue;
+					}
+
+					used_positions.insert(position);
 					center += position;
 				}
 			}
-			if (used_positions.size() > 0)
-				center /= used_positions.size();
+			return models_.at(model_id).matrix * (center / used_positions.size());
 		}
 
-		void set_material(eng::Mesh::Material material) {
-			for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
-				polygon->second.material = material;
-		}
-
-		void set_matrix(eng::Matrix trans, int model_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::SET_MATRIX\n" << "Invalid model id.\n";
-				//assert(0);
-			}
-
-			models[model_id].matrix = trans;
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[model_id].used_memory, sizeof(float) * 16, &std::vector<float>(models[model_id].matrix)[0]);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
-
-		void set_border(bool border, int model_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::SET_BORDER\n" << "Invalid model id.\n";
-				//assert(0);
-			}
-
-			count_borders += int(border) - int(models[model_id].border);
-			models[model_id].border = border;
-		}
-
-		void set_border_bit(int bit_id) {
-			if (bit_id < 0 || 8 <= bit_id) {
-				//std::cout << "ERROR::GRAPH_OBJECT::SET_BORDER_BIT\n" << "Invalid bit id.\n";
-				//assert(0);
-			}
-
-			border_bit = 1 << bit_id;
-		}
-
-		std::vector < std::pair < int, int > > get_models() {
+		// ...
+		std::vector < std::pair < int, int > > getModels() {
 			std::vector < std::pair < int, int > > models_description;
-			for (std::unordered_map < int, eng::Model >::iterator model = models.begin(); model != models.end(); model++) {
-				for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++)
+			for (std::unordered_map < size_t, Model >::iterator model = models_.begin(); model != models_.end(); model++) {
+				for (std::unordered_map < size_t, Mesh >::iterator polygon = meshes_.begin(); polygon != meshes_.end(); polygon++)
 					models_description.push_back({ model->first, polygon->first });
 			}
 
 			return models_description;
 		}
 
-		eng::Vect3 get_center(int model_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::GET_CENTER\n" << "Invalid model id.\n";
-				//assert(0);
-			}
-
-			return models[model_id].matrix * center;
+		size_t count_models() const noexcept {
+			return models_.size();
 		}
 
-		eng::Vect3 get_polygon_center(int model_id, int polygon_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::GET_POLYGON_CENTER\n" << "Invalid model id.\n";
-				//assert(0);
-			}
-
-			if (!polygons.count(polygon_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::GET_POLYGON_CENTER\n" << "Invalid polygon id.\n";
-				//assert(0);
-			}
-
-			return models[model_id].matrix * polygons[polygon_id].get_center();
+		size_t count_meshes() const noexcept {
+			return meshes_.size();
 		}
 
-		std::vector < eng::Vect3 > get_polygon_positions(int model_id, int polygon_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::GET_POLYGON_CENTER\n" << "Invalid model id.\n";
-				//assert(0);
+		bool contains_model(size_t model_id) const noexcept {
+			return static_cast<bool>(models_.count(model_id));
+		}
+
+		bool contains_mesh(size_t mesh_id) const noexcept {
+			return static_cast<bool>(meshes_.count(mesh_id));
+		}
+
+		GraphObject& apply_func_meshes(std::function<void(Mesh&)> func)& {
+			for (auto& [id, mesh] : meshes_) {
+				func(mesh);
+				mesh.set_matrix_buffer(matrix_buffer_);
+			}
+			return *this;
+		}
+
+		size_t add_model(const Matrix& matrix = Matrix::one_matrix(4))& {
+			if (models_.size() == max_count_models_) {
+				throw EngRuntimeError(__FILE__, __LINE__, "add_model, too many instances created.\n\n");
 			}
 
-			if (!polygons.count(polygon_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::GET_POLYGON_CENTER\n" << "Invalid polygon id.\n";
-				//assert(0);
-			}
+			size_t free_model_id = 0;
+			for (; models_.count(free_model_id) == 1; ++free_model_id) {}
 
-			std::vector < eng::Vect3 > positions;
-			for (eng::Vect3 position : polygons[polygon_id].get_positions())
-				positions.push_back(models[model_id].matrix * position);
+			used_memory_[models_.size()] = free_model_id;
+			models_[free_model_id] = Model(matrix, false, models_.size());
 
-			return positions;
-		}
-
-		eng::Matrix get_matrix(int model_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::GET_MATRIX\n" << "Invalid model id.\n";
-				//assert(0);
-			}
-
-			return models[model_id].matrix;
-		}
-
-		int get_count_polygons() {
-			return polygons.size();
-		}
-
-		int get_count_models() {
-			return models.size();
-		}
-
-		int get_model_id(int memory_id) {
-			if (memory_id == -1)
-				return -1;
-
-			if (memory_id < 0 || models.size() <= memory_id) {
-				//std::cout << "ERROR::GRAPH_OBJECT::GET_MODEL_ID\n" << "Invalid memory id.\n";
-				//assert(0);
-			}
-
-			return used_memory[memory_id];
-		}
-
-		int add_polygon(eng::Mesh polygon) {
-			int free_polygon_id = 0;
-			for (; polygons.count(free_polygon_id); free_polygon_id++) {}
-
-			polygons[free_polygon_id] = polygon;
-			polygons[free_polygon_id].set_matrix_buffer(matrix_buffer);
-
-			set_center();
-
-			return free_polygon_id;
-		}
-
-		int add_model(eng::Matrix matrix = eng::Matrix::one_matrix(4)) {
-			if (models.size() == max_count_models) {
-				//std::cout << "ERROR::GRAPH_OBJECT::ADD_MATRYX\n" << "Too many instances created.\n";
-				//assert(0);
-			}
-
-			int free_model_id = 0;
-			for (; models.count(free_model_id); free_model_id++) {}
-
-			used_memory[models.size()] = free_model_id;
-			models[free_model_id] = eng::Model(matrix, false, models.size());
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[free_model_id].used_memory, sizeof(float) * 16, &std::vector<float>(models[free_model_id].matrix)[0]);
+			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[free_model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(matrix)[0]);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+			check_gl_errors(__FILE__, __LINE__, __func__);
 			return free_model_id;
 		}
 
-		void delete_model(int model_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::DELETE_MODEL\n" << "Invalid model id.\n";
-				//assert(0);
+		size_t add_mesh(const Mesh& mesh)& {
+			size_t free_mesh_id = 0;
+			for (; meshes_.count(free_mesh_id) == 1; ++free_mesh_id) {}
+
+			meshes_[free_mesh_id] = mesh;
+			meshes_[free_mesh_id].set_matrix_buffer(matrix_buffer_);
+			return free_mesh_id;
+		}
+
+		GraphObject& delete_model(size_t model_id)& {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "delete_model, invalid model id.\n\n");
 			}
 
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-			for (int i = models[model_id].used_memory + 1; i < models.size(); i++) {
-				used_memory[i - 1] = used_memory[i];
-				models[used_memory[i - 1]].used_memory = i - 1;
+			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+			for (size_t i = models_[model_id].used_memory + 1; i < models_.size(); ++i) {
+				used_memory_[i - 1] = used_memory_[i];
+				models_[used_memory_[i - 1]].used_memory = i - 1;
 
-				glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * (i - 1), sizeof(float) * 16, &std::vector<float>(models[used_memory[i - 1]].matrix)[0]);
+				glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * (i - 1), sizeof(GLfloat) * 16, &std::vector<GLfloat>(models_[used_memory_[i - 1]].matrix)[0]);
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-			count_borders -= int(models[model_id].border);
-			used_memory[models.size() - 1] = -1;
-			models.erase(model_id);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			count_borders_ -= static_cast<int32_t>(models_[model_id].border);
+			used_memory_[models_.size() - 1] = -1;
+			models_.erase(model_id);
+			return *this;
 		}
 
-		void change_matrix(eng::Matrix trans, int model_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::CHANGE_MATRIX\n" << "Invalid model id.\n";
-				//assert(0);
+		GraphObject& delete_mesh(size_t mesh_id)& {
+			if (meshes_.count(mesh_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "delete_mesh, invalid mesh id.\n\n");
 			}
 
-			models[model_id].matrix = trans * models[model_id].matrix;
+			meshes_[mesh_id].set_matrix_buffer(0);
+			meshes_.erase(mesh_id);
+			return *this;
+		}
 
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 16 * models[model_id].used_memory, sizeof(float) * 16, &std::vector<float>(models[model_id].matrix)[0]);
+		GraphObject& change_matrix_left(const Matrix& transform, size_t model_id)& {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "change_matrix_left, invalid model id.\n\n");
+			}
+
+			models_[model_id].matrix = transform * models_[model_id].matrix;
+
+			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(models_[model_id].matrix)[0]);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
+			return *this;
 		}
 
-		bool is_model(int model_id) {
-			return models.count(model_id);
+		GraphObject& change_matrix_right(const Matrix& transform, size_t model_id)& {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "change_matrix_right, invalid model id.\n\n");
+			}
+
+			models_[model_id].matrix = models_[model_id].matrix * transform;
+
+			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(models_[model_id].matrix)[0]);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
+			return *this;
 		}
 
-		void draw_depth_map() {
-			for (std::unordered_map < int, eng::Mesh >::iterator polygon = polygons.begin(); polygon != polygons.end(); polygon++) {
-				if (!polygon->second.material.shadow)
+		void draw_depth_map() const {
+			for (const auto& [id, mesh] : meshes_) {
+				if (!mesh.material.shadow) {
 					continue;
-
-				polygon->second.draw(models.size(), eng::Shader());
-			}
-		}
-
-		template <size_t T>
-		void draw_polygon(eng::Shader<T>* shader_program, int object_id, int model_id, int polygon_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::DRAW_POLYGON\n" << "Invalid model id.\n";
-				//assert(0);
-			}
-
-			if (!polygons.count(polygon_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::DRAW_POLYGON\n" << "Invalid polygon id.\n";
-				//assert(0);
-			}
-
-			set_uniforms(shader_program, object_id);
-			shader_program->set_uniform_matrix("not_instance_model", models[model_id].matrix);
-			shader_program->set_uniform_i("model_id", models[model_id].used_memory);
-
-			if (models[model_id].border) {
-				glStencilFunc(GL_ALWAYS, border_bit, 0xFF);
-				glStencilMask(border_bit);
-			}
-
-			polygons[polygon_id].draw(1, *shader_program);
-
-			if (models[model_id].border)
-				glStencilMask(0x00);
-		}
-
-		template <size_t T>
-		void draw(eng::Vect3 view_pos, eng::Shader<T>* shader_program, int object_id, int model_id = -1) {
-			if (model_id != -1 && !models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::DRAW\n" << "Invalid model id.\n";
-				//assert(0);
-			}
-
-			set_uniforms(shader_program, object_id);
-
-			if (model_id != -1) {
-				if (models[model_id].border) {
-					glStencilFunc(GL_ALWAYS, border_bit, 0xFF);
-					glStencilMask(border_bit);
 				}
 
-				draw_polygons(shader_program, model_id);
+				mesh.draw(models_.size(), Shader<size_t>());
+			}
+		}
 
-				if (models[model_id].border)
-					glStencilMask(0x00);
-
-				return;
+		void draw(size_t object_id, size_t model_id, size_t mesh_id, const Shader<size_t>& shader) const {
+			if (shader.description != eng::ShaderType::MAIN) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
+			}
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
+			}
+			if (meshes_.count(mesh_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid mesh id.\n\n");
 			}
 
-			if (count_borders) {
-				glStencilFunc(GL_ALWAYS, border_bit, 0xFF);
-				glStencilMask(border_bit);
+			const Model& model = models_.at(model_id);
+			shader.set_uniform_i("model_id", model.used_memory);
+			shader.set_uniform_matrix("not_instance_model", model.matrix);
+			set_uniforms(object_id, shader);
 
-				for (std::unordered_map < int, eng::Model >::iterator model = models.begin(); model != models.end(); model++) {
-					if (!model->second.border)
+			if (model.border) {
+				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
+				glStencilMask(border_mask);
+			}
+
+			meshes_.at(mesh_id).draw(1, shader);
+
+			if (model.border) {
+				glStencilMask(0x00);
+			}
+		}
+
+		void draw(size_t object_id, size_t model_id, const Shader<size_t>& shader) const {
+			if (models_.count(model_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
+			}
+
+			set_uniforms(object_id, shader);
+
+			const Model& model = models_.at(model_id);
+			if (model.border) {
+				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
+				glStencilMask(border_mask);
+			}
+
+			draw_meshes(model_id, shader);
+
+			if (model.border) {
+				glStencilMask(0x00);
+			}
+		}
+
+		void draw(size_t object_id, const Shader<size_t>& shader_program) const {
+			set_uniforms(object_id, shader_program);
+
+			if (count_borders_ > 0) {
+				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
+				glStencilMask(border_mask);
+
+				for (const auto& [id, model] : models_) {
+					if (!model.border) {
 						continue;
+					}
 
-					draw_polygons(shader_program, model->first);
+					draw_meshes(id, shader_program);
 				}
 
 				glStencilMask(0x00);
 			}
 
-			draw_polygons(shader_program);
+			draw_meshes(shader_program);
 		}
 
-		void central_scaling(eng::Vect3 scale, int model_id) {
-			if (!models.count(model_id)) {
-				//std::cout << "ERROR::GRAPH_OBJECT::CENTRAL_SCALING\n" << "Invalid model id.\n";
-				//assert(0);
-			}
-
-			eng::Matrix model_matrix = get_matrix(model_id);
-			change_matrix(model_matrix * eng::Matrix::scale_matrix(scale) * model_matrix.inverse(), model_id);
-		}
-
-		void import_from_file(std::string path) {
-			polygons.clear();
+		// ...
+		void importFromFile(std::string path) {
+			meshes_.clear();
 
 			Assimp::Importer importer;
 			const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals);
@@ -573,11 +634,19 @@ namespace eng {
 				}
 			}
 
-			process_node(scene->mRootNode, scene, directory, eng::Matrix::one_matrix(4));
+			processNode(scene->mRootNode, scene, directory, Matrix::one_matrix(4));
 		}
 
 		~GraphObject() {
-			delete_buffers();
+			deallocate();
+		}
+
+		static void set_epsilon(double eps) {
+			if (eps <= 0) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
 		}
 	};
 }

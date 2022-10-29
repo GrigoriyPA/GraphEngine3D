@@ -18,18 +18,18 @@ eng::GraphObject get_cylinder(int count_points, bool real_normals = false, int m
 	for (int i = 0; i < count_points; i++)
 		positions[i] = eng::Vect3(cos((2 * eng::PI / count_points) * i), 0, sin((2 * eng::PI / count_points) * i));
 
-	int polygon_id = cylinder.add_polygon(eng::Mesh(count_points));
+	int polygon_id = cylinder.add_mesh(eng::Mesh(count_points));
 	cylinder[polygon_id].set_positions(positions);
 	cylinder[polygon_id].invert_points_order();
 
-	polygon_id = cylinder.add_polygon(cylinder[polygon_id]);
+	polygon_id = cylinder.add_mesh(cylinder[polygon_id]);
 	cylinder[polygon_id].apply_matrix(eng::Matrix::translation_matrix(eng::Vect3(0, 1, 0)));
 	cylinder[polygon_id].invert_points_order();
 
 	for (int i = 0; i < count_points; i++) {
 		int j = (i + 1) % count_points;
 
-		polygon_id = cylinder.add_polygon(eng::Mesh(4));
+		polygon_id = cylinder.add_mesh(eng::Mesh(4));
 		cylinder[polygon_id].set_positions({
 		positions[i],
 		positions[j],
@@ -46,8 +46,6 @@ eng::GraphObject get_cylinder(int count_points, bool real_normals = false, int m
 				});
 		}
 	}
-
-	cylinder.set_center();
 
 	return cylinder;
 }

@@ -30,7 +30,7 @@ struct TransparentObject {
 		this->object_id = object_id;
 		model_id = description.first;
 		polygon_id = description.second;
-		distance = (cam_position - object->get_polygon_center(model_id, polygon_id)).length();
+		distance = (cam_position - object->get_mesh_center(model_id, polygon_id)).length();
 	}
 
 	bool operator <(TransparentObject other) const {
@@ -48,9 +48,9 @@ class GraphEngine {
 	std::unordered_map < int, eng::GraphObject > objects;
 	sf::Vector2i mouse_position;
 	sf::RenderWindow* window;
-	eng::Shader<eng::ShaderType::MAIN> main_shader;
-	eng::Shader<eng::ShaderType::DEPTH> depth_shader;
-	eng::Shader<eng::ShaderType::POST> post_shader;
+	eng::Shader<size_t> main_shader;
+	eng::Shader<size_t> depth_shader;
+	eng::Shader<size_t> post_shader;
 
 	void init_gl() {
 		glewExperimental = GL_TRUE;
@@ -222,18 +222,18 @@ class GraphEngine {
 		std::vector < TransparentObject > transparent_objects;
 		for (std::unordered_map < int, eng::GraphObject >::iterator object = objects.begin(); object != objects.end(); object++) {
 			if (object->second.transparent) {
-				for (std::pair < int, int > description : object->second.get_models())
+				for (std::pair < int, int > description : object->second.getModels())
 					transparent_objects.push_back(TransparentObject(cam.position, &object->second, object->first, description));
 				
 				continue;
 			}
 
-			object->second.draw(cam.position, &main_shader, object->first);
+			object->second.draw(object->first, main_shader);
 		}
 
 		std::sort(transparent_objects.rbegin(), transparent_objects.rend());
 		for (TransparentObject object : transparent_objects)
-			object.object->draw_polygon(&main_shader, object.object_id, object.model_id, object.polygon_id);
+			object.object->draw(object.object_id, object.model_id, object.polygon_id, main_shader);
 	}
 
 	void draw_depth_map() {
@@ -325,9 +325,9 @@ public:
 		init_gl();
 
 		cam = Camera(fov, min_distance, max_distance, ((double)window->getSize().x) / ((double)window->getSize().y));
-		main_shader = eng::Shader<eng::ShaderType::MAIN>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main");
-		post_shader = eng::Shader<eng::ShaderType::POST>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post");
-		depth_shader = eng::Shader<eng::ShaderType::DEPTH>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth");
+		main_shader = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main", eng::ShaderType::MAIN);
+		post_shader = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post", eng::ShaderType::POST);
+		depth_shader = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth", eng::ShaderType::DEPTH);
 		lights.resize(std::stoi(main_shader.get_value_frag("NR_LIGHTS")), nullptr);
 
 		create_buffers();
@@ -451,10 +451,10 @@ public:
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 		if (center_object_id.first != -1) {
-			if (!objects.count(center_object_id.first) || center_object_id.second >= objects[center_object_id.first].get_count_models())
+			if (!objects.count(center_object_id.first) || center_object_id.second == -1 || center_object_id.second >= objects[center_object_id.first].count_models())
 				center_object_id = std::make_pair(-1, -1);
 			else
-				center_object_id.second = objects[center_object_id.first].get_model_id(center_object_id.second);
+				center_object_id.second = objects[center_object_id.first].get_model_id_by_memory_id(center_object_id.second);
 		}
 
 		distance = 2.0 * distance - 1;
@@ -487,7 +487,7 @@ public:
 		if (model_id != -1)
 			objects[object_id].delete_model(model_id);
 
-		if (model_id == -1 || objects[object_id].get_count_models() == 0) {
+		if (model_id == -1 || objects[object_id].count_models() == 0) {
 			objects.erase(object_id);
 			return true;
 		}

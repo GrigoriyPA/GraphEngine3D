@@ -43,6 +43,8 @@ signed main() {
         }
         //window.setVerticalSyncEnabled(true);
 
+        eng::Shader test;
+
         int window_width = window.getSize().x, window_height = window.getSize().y;
 
         sf::Texture cross_tex;
@@ -80,16 +82,16 @@ signed main() {
         RenderingSequence render(&scene);
 
         int obj_id = scene.add_object(eng::GraphObject(1));
-        scene[obj_id].import_from_file("Resources/Objects/ships/mjolnir.glb");
+        scene[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
         scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
-        //scene[obj_id].import_from_file("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
+        //scene[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
         //scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1) * 0.01));
         /*for (size_t i = 0; i < scene[obj_id].get_count_polygons(); ++i) {
             scene[obj_id][i].material.use_vertex_color = true;
         }*/
 
         obj_id = scene.add_object(eng::GraphObject(1));
-        int pol_id = scene[obj_id].add_polygon(eng::Mesh(4));
+        int pol_id = scene[obj_id].add_mesh(eng::Mesh(4));
         scene[obj_id][pol_id].set_positions({
             eng::Vect3(1, 0, 1),
             eng::Vect3(1, 0, -1),

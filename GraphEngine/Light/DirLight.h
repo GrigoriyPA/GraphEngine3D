@@ -31,7 +31,7 @@ public:
         set_projection_matrix();
     }
 
-    void set_uniforms(int draw_id, eng::Shader<eng::ShaderType::MAIN>* shader_program) {
+    void set_uniforms(int draw_id, eng::Shader<size_t>* shader_program) {
         if (draw_id < 0) {
             std::cout << "ERROR::DIR_LIGHT::SET_UNIFORMS\n" << "Invalid draw id.\n";
             assert(0);
@@ -92,14 +92,14 @@ public:
         eng::GraphObject shadow_box = get_cube();
         shadow_box.transparent = true;
 
-        eng::Mesh::Material material;
-        material.set_diffuse(eng::Vect3(1, 1, 1));
-        material.set_alpha(0.3);
-        shadow_box.set_material(material);
+        shadow_box.apply_func_meshes([](auto& mesh) {
+            mesh.material.set_diffuse(eng::Vect3(1, 1, 1));
+            mesh.material.set_alpha(0.3);
+        });
 
         int model_id = shadow_box.add_model(eng::Matrix::scale_matrix(eng::Vect3(shadow_width, shadow_height, shadow_depth)));
-        shadow_box.change_matrix(eng::Matrix::translation_matrix(eng::Vect3(0, 0, (1 - eps) * shadow_depth / 2)), model_id);
-        shadow_box.change_matrix(get_view_matrix().inverse(), model_id);
+        shadow_box.change_matrix_left(eng::Matrix::translation_matrix(eng::Vect3(0, 0, (1 - eps) * shadow_depth / 2)), model_id);
+        shadow_box.change_matrix_left(get_view_matrix().inverse(), model_id);
 
         return shadow_box;
     }

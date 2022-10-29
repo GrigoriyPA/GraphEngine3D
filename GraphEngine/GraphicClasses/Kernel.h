@@ -39,8 +39,8 @@ namespace eng {
 
 		friend std::ostream& operator<<(std::ostream& fout, const Kernel& kernel) noexcept;
 
-		template <size_t N>
-		void use(const std::string& uniform_name, const Shader<N>& shader) const {
+		template <typename T>
+		void use(const std::string& uniform_name, const Shader<T>& shader) const {
 			shader.set_uniform_fv<1>(uniform_name.c_str(), 9, &std::vector<float>(kernel_)[0]);
 		}
 	};

@@ -6,10 +6,10 @@ class Point : public RenderObject {
         if (points_location == -1) {
             eng::GraphObject point = get_sphere(6, true, MAX_COUNT_MODELS);
 
-            eng::Mesh::Material material;
-            material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-            material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-            point.set_material(material);
+            point.apply_func_meshes([](auto& mesh) {
+                mesh.material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+                mesh.material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+            });
 
             scene_id.second = point.add_model(eng::Matrix::scale_matrix(radius));
 
@@ -43,15 +43,15 @@ class Point : public RenderObject {
         eng::Vect3 coord2 = (*scene)[point2.first].get_center(point2.second);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix((coord1 + coord2) / 2 - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix((coord1 + coord2) / 2 - point), scene_id.second);
     }
 
     void update_center_cut(std::pair < int, int > cut) {
-        eng::Vect3 coord1 = (*scene)[cut.first].get_polygon_center(cut.second, 0);
-        eng::Vect3 coord2 = (*scene)[cut.first].get_polygon_center(cut.second, 1);
+        eng::Vect3 coord1 = (*scene)[cut.first].get_mesh_center(cut.second, 0);
+        eng::Vect3 coord2 = (*scene)[cut.first].get_mesh_center(cut.second, 1);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix((coord1 + coord2) / 2 - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix((coord1 + coord2) / 2 - point), scene_id.second);
     }
 
     void update_point_symmetry(std::pair < int, int > point, std::pair < int, int > center) {
@@ -59,26 +59,26 @@ class Point : public RenderObject {
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(coord_point.symmetry(coord_center) - point_cur), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(coord_point.symmetry(coord_center) - point_cur), scene_id.second);
     }
 
     void update_line_symmetry(std::pair < int, int > point, std::pair < int, int > center) {
-        eng::Vect3 coord_center1 = (*scene)[center.first].get_polygon_center(center.second, 0);
-        eng::Vect3 coord_center2 = (*scene)[center.first].get_polygon_center(center.second, 1);
+        eng::Vect3 coord_center1 = (*scene)[center.first].get_mesh_center(center.second, 0);
+        eng::Vect3 coord_center2 = (*scene)[center.first].get_mesh_center(center.second, 1);
         eng::Line center_line(coord_center1, coord_center2);
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(center_line.symmetry(coord_point) - point_cur), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(center_line.symmetry(coord_point) - point_cur), scene_id.second);
     }
 
     void update_plane_symmetry(std::pair < int, int > point, std::pair < int, int > center) {
-        std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_polygon_positions(center.second, 0);
+        std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_mesh_positions(center.second, 0);
         eng::Flat center_plane(center_coords);
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(center_plane.symmetry(coord_point) - point_cur), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(center_plane.symmetry(coord_point) - point_cur), scene_id.second);
     }
 
     void update_translate(std::pair < int, int > point, std::pair < int, int > start, std::pair < int, int > end) {
@@ -88,34 +88,34 @@ class Point : public RenderObject {
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(coord_point + translate - point_cur), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(coord_point + translate - point_cur), scene_id.second);
     }
 
     void update_cut_connect(std::pair < int, int > cut) {
-        eng::Vect3 coord1 = (*scene)[cut.first].get_polygon_center(cut.second, 0);
-        eng::Vect3 coord2 = (*scene)[cut.first].get_polygon_center(cut.second, 1);
+        eng::Vect3 coord1 = (*scene)[cut.first].get_mesh_center(cut.second, 0);
+        eng::Vect3 coord2 = (*scene)[cut.first].get_mesh_center(cut.second, 1);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(eng::Cut(coord1, coord2).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(eng::Cut(coord1, coord2).project_point(point) - point), scene_id.second);
     }
 
     void update_line_connect(std::pair < int, int > line) {
-        eng::Vect3 coord1 = (*scene)[line.first].get_polygon_center(line.second, 0);
-        eng::Vect3 coord2 = (*scene)[line.first].get_polygon_center(line.second, 1);
+        eng::Vect3 coord1 = (*scene)[line.first].get_mesh_center(line.second, 0);
+        eng::Vect3 coord2 = (*scene)[line.first].get_mesh_center(line.second, 1);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(eng::Line(coord1, coord2).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(eng::Line(coord1, coord2).project_point(point) - point), scene_id.second);
     }
 
     void update_plan_connect(std::pair < int, int > plane) {
-        std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_polygon_positions(plane.second, 0);
+        std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(eng::Flat(coords).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(eng::Flat(coords).project_point(point) - point), scene_id.second);
     }
 
     void update_triangle_connect(std::pair < int, int > triangle) {
-        std::vector < eng::Vect3 > coords = (*scene)[triangle.first].get_polygon_positions(triangle.second, 0);
+        std::vector < eng::Vect3 > coords = (*scene)[triangle.first].get_mesh_positions(triangle.second, 0);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
         eng::Vect3 new_point = eng::Flat(coords).project_point(point);
@@ -131,7 +131,7 @@ class Point : public RenderObject {
             new_point = projection[closest];
         }
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(new_point - point), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(new_point - point), scene_id.second);
     }
 
     void update_intersect() {
@@ -164,7 +164,7 @@ public:
 
         init(points_location, radius);
 
-        (*scene)[scene_id.first].change_matrix(eng::Matrix::translation_matrix(position), scene_id.second);
+        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(position), scene_id.second);
     }
 
     Point(std::pair < int, int > button, std::vector < RenderObject* > init_obj, int& points_location, GraphEngine* scene) {
@@ -178,10 +178,12 @@ public:
     }
 
     void switch_hide() {
-        if (!hide)
-            (*scene)[scene_id.first].central_scaling(eng::Vect3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0), scene_id.second);
+        eng::Matrix model = (*scene)[scene_id.first].get_matrix(scene_id.second);
+        if (!hide) {
+            (*scene)[scene_id.first].change_matrix_left(model * eng::Matrix::scale_matrix(eng::Vect3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0)) * model.inverse(), scene_id.second);
+        }
         else
-            (*scene)[scene_id.first].central_scaling(eng::Vect3(3, 3, 3), scene_id.second);
+            (*scene)[scene_id.first].change_matrix_left(model * eng::Matrix::scale_matrix(eng::Vect3(3.0, 3.0, 3.0)) * model.inverse(), scene_id.second);
         hide ^= 1;
     }
 

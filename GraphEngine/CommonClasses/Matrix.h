@@ -638,6 +638,10 @@ namespace eng {
 				{                     0.0,                     0.0,                     0.0, 1.0 },
 			});
 		}
+
+		static Matrix normal_transform(const Matrix& transform) noexcept {
+			return transform.inverse().transpose();
+		}
 	};
 
 	std::istream& operator>>(std::istream& fin, Matrix& matrix) noexcept {
