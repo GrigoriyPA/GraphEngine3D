@@ -3,7 +3,6 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
-#include <unordered_map>
 #include <unordered_set>
 #include "Mesh.h"
 
@@ -27,7 +26,7 @@ namespace eng {
 				glBindVertexArray(mesh.get_vertex_array());
 				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
 
-				GLuint attrib_offset = Mesh::get_count_params();
+				GLuint attrib_offset = static_cast<GLuint>(Mesh::get_count_params());
 				for (GLuint i = 0; i < 4; ++i) {
 					glVertexAttribPointer(attrib_offset + i, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 16, reinterpret_cast<GLvoid*>(sizeof(GLfloat) * 4 * i));
 					glEnableVertexAttribArray(attrib_offset + i);
@@ -41,6 +40,10 @@ namespace eng {
 			}
 
 			void set_matrix_buffer(GLuint matrix_buffer) {
+				if (matrix_buffer_ == matrix_buffer) {
+					return;
+				}
+
 				matrix_buffer_ = matrix_buffer;
 
 				for (auto& [id, mesh] : meshes_) {
@@ -50,12 +53,6 @@ namespace eng {
 
 		public:
 			using Iterator = std::vector<std::pair<size_t, Mesh>>::const_iterator;
-
-			MeshStorage() {
-				if (!glew_is_ok()) {
-					throw EngRuntimeError(__FILE__, __LINE__, "MeshStorage, failed to initialize GLEW.\n\n");
-				}
-			}
 
 			const Mesh& operator[](size_t id) const {
 				if (!contains(id)) {
@@ -71,6 +68,22 @@ namespace eng {
 				}
 
 				return meshes_[meshes_index_[id]].second;
+			}
+
+			size_t get_memory_id(size_t id) const {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid mesh id.\n\n");
+				}
+
+				return meshes_index_[id];
+			}
+
+			size_t get_id(size_t memory_id) const {
+				if (meshes_.size() <= memory_id) {
+					throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				}
+
+				return meshes_[memory_id].first;
 			}
 
 			bool contains(size_t id) const noexcept {
@@ -101,7 +114,7 @@ namespace eng {
 				free_mesh_id_.push_back(id);
 
 				meshes_index_[meshes_.back().first] = meshes_index_[id];
-				std::swap(meshes_[meshes_index_[id]], meshes_.back());
+				meshes_[meshes_index_[id]].swap(meshes_.back());
 
 				meshes_.pop_back();
 				meshes_index_[id] = std::numeric_limits<size_t>::max();
@@ -160,61 +173,229 @@ namespace eng {
 			}
 		};
 
-		// ...
-		struct Model {
-			size_t used_memory;
-			Matrix matrix;
+		class ModelStorage {
+			friend class GraphObject;
 
-			Model() : matrix(Matrix::one_matrix(4)) {
-				used_memory = std::numeric_limits<size_t>::max();
+			GLuint matrix_buffer_ = 0;
+
+			size_t max_count_models_;
+			std::vector<size_t> models_index_;
+			std::vector<size_t> free_model_id_;
+			std::vector<std::pair<size_t, Matrix>> models_;
+
+			GLuint create_matrix_buffer(size_t max_count_models) {
+				max_count_models_ = max_count_models;
+
+				glGenBuffers(1, &matrix_buffer_);
+				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+
+				glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * max_count_models, NULL, GL_DYNAMIC_DRAW);
+
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				check_gl_errors(__FILE__, __LINE__, __func__);
+				return matrix_buffer_;
 			}
 
-			Model(size_t used_memory, Matrix matrix) : matrix(matrix) {
-				this->used_memory = used_memory;
-				this->matrix = matrix;
+			void update_matrix(size_t memory_id) const {
+				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+				glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * memory_id, sizeof(GLfloat) * 16, &std::vector<GLfloat>(models_[memory_id].second)[0]);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				check_gl_errors(__FILE__, __LINE__, __func__);
+			}
+
+			void deallocate() {
+				glDeleteBuffers(1, &matrix_buffer_);
+				check_gl_errors(__FILE__, __LINE__, __func__);
+
+				matrix_buffer_ = 0;
+			}
+
+			void swap(ModelStorage& other) noexcept {
+				std::swap(matrix_buffer_, other.matrix_buffer_);
+				std::swap(max_count_models_, other.max_count_models_);
+				std::swap(models_index_, other.models_index_);
+				std::swap(free_model_id_, other.free_model_id_);
+				std::swap(models_, other.models_);
+			}
+
+		public:
+			using Iterator = std::vector<std::pair<size_t, Matrix>>::const_iterator;
+
+			ModelStorage() noexcept {
+				max_count_models_ = 0;
+			}
+
+			ModelStorage(const ModelStorage& other) {
+				max_count_models_ = other.max_count_models_;
+				models_index_ = other.models_index_;
+				free_model_id_ = other.free_model_id_;
+				models_ = other.models_;
+
+				create_matrix_buffer(max_count_models_);
+
+				glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer_);
+				glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer_);
+
+				glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * 16 * max_count_models_);
+
+				glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+				glBindBuffer(GL_COPY_READ_BUFFER, 0);
+
+				check_gl_errors(__FILE__, __LINE__, __func__);
+			}
+
+			ModelStorage(ModelStorage&& other) noexcept {
+				swap(other);
+			}
+
+			ModelStorage& operator=(const ModelStorage& other)& {
+				ModelStorage object(other);
+				swap(object);
+				return *this;
+			}
+
+			ModelStorage& operator=(ModelStorage&& other)& {
+				deallocate();
+				swap(other);
+				return *this;
+			}
+
+			const Matrix& operator[](size_t id) const {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid model id.\n\n");
+				}
+
+				return models_[models_index_[id]].second;
+			}
+
+			ModelStorage& set(size_t id, const Matrix& matrix) {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "set, invalid model id.\n\n");
+				}
+
+				models_[models_index_[id]].second = matrix;
+
+				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+				glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_index_[id], sizeof(GLfloat) * 16, &std::vector<GLfloat>(matrix)[0]);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				check_gl_errors(__FILE__, __LINE__, __func__);
+				return *this;
+			}
+
+			Matrix get(size_t id) const {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "get, invalid model id.\n\n");
+				}
+
+				return models_[models_index_[id]].second;
+			}
+
+			size_t get_memory_id(size_t id) const {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid model id.\n\n");
+				}
+
+				return models_index_[id];
+			}
+
+			size_t get_id(size_t memory_id) const {
+				if (models_.size() <= memory_id) {
+					throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				}
+
+				return models_[memory_id].first;
+			}
+
+			bool contains(size_t id) const noexcept {
+				return id < models_index_.size() && models_index_[id] < std::numeric_limits<size_t>::max();
+			}
+
+			size_t size() const noexcept {
+				return models_.size();
+			}
+
+			bool empty() const noexcept {
+				return models_.empty();
+			}
+
+			Iterator begin() const noexcept {
+				return models_.begin();
+			}
+
+			Iterator end() const noexcept {
+				return models_.end();
+			}
+
+			ModelStorage& erase(size_t id) {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
+				}
+
+				free_model_id_.push_back(id);
+
+				models_index_[models_.back().first] = models_index_[id];
+				models_[models_index_[id]] = models_.back();
+
+				update_matrix(models_index_[id]);
+
+				models_.pop_back();
+				models_index_[id] = std::numeric_limits<size_t>::max();
+				return *this;
+			}
+
+			ModelStorage& clear() noexcept {
+				models_index_.clear();
+				free_model_id_.clear();
+				models_.clear();
+				return *this;
+			}
+
+			size_t insert(const Matrix& matrix) {
+				if (models_.size() == max_count_models_) {
+					throw EngRuntimeError(__FILE__, __LINE__, "insert, too many instances created.\n\n");
+				}
+
+				size_t free_model_id = models_index_.size();
+				if (free_model_id_.empty()) {
+					models_index_.push_back(models_.size());
+				} else {
+					free_model_id = free_model_id_.back();
+					free_model_id_.pop_back();
+					models_index_[free_model_id] = models_.size();
+				}
+
+				models_.push_back({ free_model_id, matrix });
+				update_matrix(models_.size() - 1);
+				return free_model_id;
+			}
+
+			ModelStorage& change_left(size_t id, const Matrix& matrix) {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
+				}
+
+				models_[models_index_[id]].second = matrix * models_[models_index_[id]].second;
+				update_matrix(models_index_[id]);
+				return *this;
+			}
+
+			ModelStorage& change_right(size_t id, const Matrix& matrix) {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
+				}
+
+				models_[models_index_[id]].second *= matrix;
+				update_matrix(models_index_[id]);
+				return *this;
+			}
+
+			~ModelStorage() {
+				deallocate();
 			}
 		};
-
-		GLuint matrix_buffer_ = 0;
-
-		size_t max_count_models_;
-		std::vector<size_t> used_memory_;
-		std::unordered_map<size_t, Model> models_;
-
-		void create_matrix_buffer() {
-			glGenBuffers(1, &matrix_buffer_);
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-
-			glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * max_count_models_, NULL, GL_DYNAMIC_DRAW);
-
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-
-			meshes.set_matrix_buffer(matrix_buffer_);
-		}
-
-		void draw_meshes(size_t model_id, const Shader<size_t>& shader) const {
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
-			}
-
-			const Model& model = models_.at(model_id);
-			shader.set_uniform_i("model_id", static_cast<GLint>(model.used_memory));
-			shader.set_uniform_matrix("not_instance_model", model.matrix);
-
-			for (const auto& [id, mesh] : meshes) {
-				mesh.draw(1, shader);
-			}
-		}
-
-		void draw_meshes(const Shader<size_t>& shader) const {
-			shader.set_uniform_i("model_id", -1);
-
-			for (const auto& [id, mesh] : meshes) {
-				mesh.draw(models_.size(), shader);
-			}
-		}
 
 		// ...
 		std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
@@ -333,7 +514,7 @@ namespace eng {
 			}
 			transform = trans * transform;
 
-			for (int i = 0; i < node->mNumMeshes; i++) {
+			for (size_t i = 0; i < node->mNumMeshes; i++) {
 				meshes.insert(processMesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform));
 				break;
 			}
@@ -343,34 +524,44 @@ namespace eng {
 			}
 		}
 
-		void deallocate() {
-			glDeleteBuffers(1, &matrix_buffer_);
-			check_gl_errors(__FILE__, __LINE__, __func__);
+		void draw_meshes(size_t model_id, const Shader<size_t>& shader) const {
+			if (shader.description != eng::ShaderType::MAIN) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
+			}
+			if (!models.contains(model_id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "draw_meshes, invalid model id.\n\n");
+			}
 
-			matrix_buffer_ = 0;
+			shader.set_uniform_i("model_id", static_cast<GLint>(models.get_memory_id(model_id)));
+			shader.set_uniform_matrix("not_instance_model", models[model_id]);
+
+			for (const auto& [id, mesh] : meshes) {
+				mesh.draw(1, shader);
+			}
 		}
 
-		void swap(GraphObject& other) noexcept {
-			std::swap(matrix_buffer_, other.matrix_buffer_);
-			std::swap(max_count_models_, other.max_count_models_);
-			std::swap(used_memory_, other.used_memory_);
-			std::swap(models_, other.models_);
-			std::swap(transparent, other.transparent);
-			std::swap(border_mask, other.border_mask);
-			std::swap(meshes, other.meshes);
+		void draw_meshes(const Shader<size_t>& shader) const {
+			if (shader.description != eng::ShaderType::MAIN) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
+			}
+			shader.set_uniform_i("model_id", -1);
+
+			for (const auto& [id, mesh] : meshes) {
+				mesh.draw(models.size(), shader);
+			}
 		}
 
 	public:
 		bool transparent = false;
 		uint8_t border_mask = 0;
+
 		MeshStorage meshes;
+		ModelStorage models;
 
 		GraphObject() {
 			if (!glew_is_ok()) {
 				throw EngRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
 			}
-
-			max_count_models_ = 0;
 		}
 
 		explicit GraphObject(size_t max_count_models) {
@@ -378,30 +569,16 @@ namespace eng {
 				throw EngRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
 			}
 
-			max_count_models_ = max_count_models;
-
-			create_matrix_buffer();
+			meshes.set_matrix_buffer(models.create_matrix_buffer(max_count_models));
 		}
 
 		GraphObject(const GraphObject& other) {
-			max_count_models_ = other.max_count_models_;
-			used_memory_ = other.used_memory_;
-			models_ = other.models_;
 			transparent = other.transparent;
 			border_mask = other.border_mask;
 			meshes = other.meshes;
+			models = other.models;
 
-			create_matrix_buffer();
-
-			glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer_);
-			glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer_);
-
-			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * 16 * max_count_models_);
-
-			glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
-			glBindBuffer(GL_COPY_READ_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
+			meshes.set_matrix_buffer(models.matrix_buffer_);
 		}
 
 		GraphObject(GraphObject&& other) noexcept {
@@ -415,88 +592,55 @@ namespace eng {
 		}
 
 		GraphObject& operator=(GraphObject&& other)& {
-			deallocate();
 			swap(other);
 			return *this;
 		}
 
-		GraphObject& set_matrix(const Matrix& matrix, size_t model_id) {
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "set_matrix, invalid model id.\n\n");
-			}
-
-			models_[model_id].matrix = matrix;
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(matrix)[0]);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-			return *this;
-		}
-
-		Matrix get_matrix(size_t model_id) const {
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_matrix, invalid model id.\n\n");
-			}
-
-			return models_.at(model_id).matrix;
-		}
-
-		size_t get_model_id_by_memory_id(size_t memory_id) const {
-			if (used_memory_.size() <= memory_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_model_id_by_memory_id, invalid memory id.\n\n");
-			}
-
-			return used_memory_[memory_id];
-		}
-
 		std::vector<Vect3> get_mesh_positions(size_t model_id, size_t mesh_id) const {
-			if (models_.count(model_id) == 0) {
+			if (!models.contains(model_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid mesh id.\n\n");
 			}
 
-			Matrix transform = models_.at(model_id).matrix;
+			const Matrix& transform = models[model_id];
 			std::vector<Vect3> positions;
-			for (Vect3 position : meshes[mesh_id].get_positions()) {
+			for (const Vect3& position : meshes[mesh_id].get_positions()) {
 				positions.push_back(transform * position);
 			}
 			return positions;
 		}
 
 		std::vector<Vect3> get_mesh_normals(size_t model_id, size_t mesh_id) const {
-			if (models_.count(model_id) == 0) {
+			if (!models.contains(model_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid mesh id.\n\n");
 			}
 
-			Matrix transform = Matrix::normal_transform(models_.at(model_id).matrix);
+			const Matrix& transform = Matrix::normal_transform(models[model_id]);
 			std::vector<Vect3> normals;
-			for (Vect3 normal : meshes[mesh_id].get_normals()) {
+			for (const Vect3& normal : meshes[mesh_id].get_normals()) {
 				normals.push_back(transform * normal);
 			}
 			return normals;
 		}
 
 		Vect3 get_mesh_center(size_t model_id, size_t mesh_id) const {
-			if (models_.count(model_id) == 0) {
+			if (!models.contains(model_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid mesh id.\n\n");
 			}
 
-			return models_.at(model_id).matrix * meshes[mesh_id]
-				.get_center();
+			return models[model_id] * meshes[mesh_id].get_center();
 		}
 
 		Vect3 get_center(size_t model_id) const {
-			if (models_.count(model_id) == 0) {
+			if (!models.contains(model_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_center, invalid model id.\n\n");
 			}
 			if (meshes.size() == 0) {
@@ -515,163 +659,16 @@ namespace eng {
 					center += position;
 				}
 			}
-			return models_.at(model_id).matrix * (center / static_cast<double>(used_positions.size()));
+			return models[model_id] * (center / static_cast<double>(used_positions.size()));
 		}
 
-		// ...
-		std::vector < std::pair < int, int > > getModels() {
-			std::vector < std::pair < int, int > > models_description;
-			for (std::unordered_map < size_t, Model >::iterator model = models_.begin(); model != models_.end(); model++) {
-				for (auto polygon = meshes.begin(); polygon != meshes.end(); polygon++)
-					models_description.push_back({ model->first, polygon->first });
-			}
+		void swap(GraphObject& other) noexcept {
+			std::swap(transparent, other.transparent);
+			std::swap(border_mask, other.border_mask);
+			std::swap(meshes, other.meshes);
+			models.swap(other.models);
 
-			return models_description;
-		}
-
-		size_t count_models() const noexcept {
-			return models_.size();
-		}
-
-		bool contains_model(size_t model_id) const noexcept {
-			return models_.count(model_id) == 1;
-		}
-
-		size_t add_model(const Matrix& matrix = Matrix::one_matrix(4)) {
-			if (models_.size() == max_count_models_) {
-				throw EngRuntimeError(__FILE__, __LINE__, "add_model, too many instances created.\n\n");
-			}
-
-			size_t free_model_id = 0;
-			for (; models_.count(free_model_id) == 1; ++free_model_id) {}
-
-			used_memory_.push_back(free_model_id);
-			models_[free_model_id] = Model(models_.size(), matrix);
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[free_model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(matrix)[0]);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-			return free_model_id;
-		}
-
-		GraphObject& delete_model(size_t model_id) {
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "delete_model, invalid model id.\n\n");
-			}
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-			for (size_t i = models_[model_id].used_memory + 1; i < used_memory_.size(); ++i) {
-				used_memory_[i - 1] = used_memory_[i];
-				models_[used_memory_[i - 1]].used_memory = i - 1;
-
-				glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * (i - 1), sizeof(GLfloat) * 16, &std::vector<GLfloat>(models_[used_memory_[i - 1]].matrix)[0]);
-			}
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-
-			used_memory_.pop_back();
-			models_.erase(model_id);
-			return *this;
-		}
-
-		GraphObject& change_matrix_left(const Matrix& transform, size_t model_id) {
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "change_matrix_left, invalid model id.\n\n");
-			}
-
-			models_[model_id].matrix = transform * models_[model_id].matrix;
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(models_[model_id].matrix)[0]);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-			return *this;
-		}
-
-		GraphObject& change_matrix_right(const Matrix& transform, size_t model_id) {
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "change_matrix_right, invalid model id.\n\n");
-			}
-
-			models_[model_id].matrix = models_[model_id].matrix * transform;
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_[model_id].used_memory, sizeof(GLfloat) * 16, &std::vector<GLfloat>(models_[model_id].matrix)[0]);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-			return *this;
-		}
-
-		void draw_depth_map() const {
-			for (const auto& [id, mesh] : meshes) {
-				if (!mesh.material.shadow) {
-					continue;
-				}
-
-				mesh.draw(models_.size(), Shader<size_t>());
-			}
-		}
-
-		void draw(size_t model_id, size_t mesh_id, const Shader<size_t>& shader) const {
-			if (shader.description != eng::ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
-			}
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
-			}
-			if (!meshes.contains(mesh_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid mesh id.\n\n");
-			}
-
-			const Model& model = models_.at(model_id);
-			shader.set_uniform_i("model_id", static_cast<GLint>(model.used_memory));
-			shader.set_uniform_matrix("not_instance_model", model.matrix);
-
-			if (border_mask > 0) {
-				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
-				glStencilMask(border_mask);
-			}
-
-			meshes[mesh_id].draw(1, shader);
-
-			if (border_mask > 0) {
-				glStencilMask(0x00);
-			}
-		}
-
-		void draw(size_t model_id, const Shader<size_t>& shader) const {
-			if (models_.count(model_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
-			}
-
-			if (border_mask > 0) {
-				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
-				glStencilMask(border_mask);
-			}
-
-			draw_meshes(model_id, shader);
-
-			if (border_mask > 0) {
-				glStencilMask(0x00);
-			}
-		}
-
-		void draw(const Shader<size_t>& shader_program) const {
-			if (border_mask > 0) {
-				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
-				glStencilMask(border_mask);
-			}
-
-			draw_meshes(shader_program);
-
-			if (border_mask > 0) {
-				glStencilMask(0x00);
-			}
+			meshes.set_matrix_buffer(models.matrix_buffer_);
 		}
 
 		// ...
@@ -687,7 +684,11 @@ namespace eng {
 			}
 			std::string directory = path.substr(0, path.find_last_of('/'));
 
-			for (int i = 0; i < scene->mNumTextures; i++) {
+			if (scene == nullptr) {
+				return;
+			}
+
+			for (size_t i = 0; i < scene->mNumTextures; i++) {
 				aiTexture* tex = scene->mTextures[i];
 
 				if (tex->mHeight == 0) {
@@ -699,8 +700,77 @@ namespace eng {
 			processNode(scene->mRootNode, scene, directory, Matrix::one_matrix(4));
 		}
 
-		~GraphObject() {
-			deallocate();
+		void draw_depth_map() const {
+			for (const auto& [id, mesh] : meshes) {
+				if (!mesh.material.shadow) {
+					continue;
+				}
+
+				mesh.draw(models.size(), Shader<size_t>());
+			}
+		}
+
+		void draw(size_t model_id, size_t mesh_id, const Shader<size_t>& shader) const {
+			if (shader.description != eng::ShaderType::MAIN) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
+			}
+			if (!models.contains(model_id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
+			}
+			if (!meshes.contains(mesh_id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid mesh id.\n\n");
+			}
+
+			shader.set_uniform_i("model_id", static_cast<GLint>(models.get_memory_id(model_id)));
+			shader.set_uniform_matrix("not_instance_model", models[model_id]);
+
+			if (border_mask > 0) {
+				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
+				glStencilMask(border_mask);
+			}
+
+			meshes[mesh_id].draw(1, shader);
+
+			if (border_mask > 0) {
+				glStencilMask(0x00);
+			}
+		}
+
+		void draw(size_t model_id, const Shader<size_t>& shader) const {
+			if (shader.description != eng::ShaderType::MAIN) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
+			}
+			if (!models.contains(model_id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
+			}
+
+			if (border_mask > 0) {
+				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
+				glStencilMask(border_mask);
+			}
+
+			draw_meshes(model_id, shader);
+
+			if (border_mask > 0) {
+				glStencilMask(0x00);
+			}
+		}
+
+		void draw(const Shader<size_t>& shader) const {
+			if (shader.description != eng::ShaderType::MAIN) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
+			}
+
+			if (border_mask > 0) {
+				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
+				glStencilMask(border_mask);
+			}
+
+			draw_meshes(shader);
+
+			if (border_mask > 0) {
+				glStencilMask(0x00);
+			}
 		}
 	};
 }

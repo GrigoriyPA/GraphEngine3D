@@ -19,7 +19,7 @@ eng::GraphObject get_cylinder(int count_points, bool real_normals = false, int m
 		positions[i] = eng::Vect3(cos((2 * eng::PI / count_points) * i), 0, sin((2 * eng::PI / count_points) * i));
 
 	eng::Mesh mesh(count_points);
-	mesh.set_positions(positions);
+	mesh.set_positions(positions, true);
 	mesh.invert_points_order();
 	cylinder.meshes.insert(mesh);
 

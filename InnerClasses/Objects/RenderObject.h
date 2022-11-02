@@ -12,7 +12,7 @@ protected:
 
 	void change_matrix(eng::Matrix trans) {
 		if (visibility)
-			(*scene)[scene_id.first].change_matrix_left(trans, scene_id.second);
+			(*scene)[scene_id.first].models.change_left(scene_id.second, trans);
 		else
 			save_matrix = trans * save_matrix;
 	}
@@ -42,11 +42,11 @@ public:
 	}
 
 	void switch_visibility() {
-		eng::Matrix cur_matrix = (*scene)[scene_id.first].get_matrix(scene_id.second);
+		eng::Matrix cur_matrix = (*scene)[scene_id.first].models[scene_id.second];
 		if (visibility)
-			(*scene)[scene_id.first].set_matrix(eng::Matrix(4, 4, 0), scene_id.second);
+			(*scene)[scene_id.first].models.set(scene_id.second, eng::Matrix(4, 4, 0));
 		else
-			(*scene)[scene_id.first].set_matrix(save_matrix, scene_id.second);
+			(*scene)[scene_id.first].models.set(scene_id.second, save_matrix);
 		visibility ^= 1;
 		save_matrix = cur_matrix;
 	}

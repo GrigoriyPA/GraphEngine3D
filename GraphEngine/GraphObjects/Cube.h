@@ -15,7 +15,7 @@ eng::GraphObject get_cube(int max_count_models = 1) {
     eng::Vect3(0.5, -0.5, 0.5),
     eng::Vect3(-0.5, -0.5, 0.5),
     eng::Vect3(-0.5, 0.5, 0.5)
-    });
+    }, true);
     mesh.set_tex_coords({
     eng::Vect2(1, 1),
     eng::Vect2(1, 0),

@@ -71,17 +71,6 @@ namespace eng {
 			index_buffer_ = 0;
 		}
 
-		void swap(Mesh& other) noexcept {
-			std::swap(vertex_array_, other.vertex_array_);
-			std::swap(vertex_buffer_, other.vertex_buffer_);
-			std::swap(index_buffer_, other.index_buffer_);
-			std::swap(border_width_, other.border_width_);
-			std::swap(count_points_, other.count_points_);
-			std::swap(count_indices_, other.count_indices_);
-			std::swap(frame, other.frame);
-			std::swap(material, other.material);
-		}
-
 	public:
 		class Material {
 			friend class Mesh;
@@ -454,6 +443,17 @@ namespace eng {
 		Vect3 get_center() const {
 			std::vector<Vect3> positions = get_positions();
 			return get_value<Vect3>(positions.begin(), positions.end(), Vect3(0, 0, 0), [&](auto element, auto* result) { *result += element; }) / static_cast<double>(positions.size());
+		}
+
+		void swap(Mesh& other) noexcept {
+			std::swap(vertex_array_, other.vertex_array_);
+			std::swap(vertex_buffer_, other.vertex_buffer_);
+			std::swap(index_buffer_, other.index_buffer_);
+			std::swap(border_width_, other.border_width_);
+			std::swap(count_points_, other.count_points_);
+			std::swap(count_indices_, other.count_indices_);
+			std::swap(frame, other.frame);
+			std::swap(material, other.material);
 		}
 
 		Mesh& apply_matrix(const Matrix& transform) {

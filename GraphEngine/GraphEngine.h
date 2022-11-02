@@ -8,7 +8,7 @@
 #include "CommonClasses/Matrix.h"
 #include "CommonClasses/Random.h"
 #include "CommonClasses/Cut.h"
-#include "CommonClasses/Flat.h"
+#include "CommonClasses/Plane.h"
 #include <math.h>
 #include <cassert>
 #include <algorithm>
@@ -222,9 +222,10 @@ class GraphEngine {
 		std::vector < TransparentObject > transparent_objects;
 		for (std::unordered_map < int, eng::GraphObject >::iterator object = objects.begin(); object != objects.end(); object++) {
 			if (object->second.transparent) {
-				for (std::pair < int, int > description : object->second.getModels())
-					transparent_objects.push_back(TransparentObject(cam.position, &object->second, object->first, description));
-				
+				for (const auto& [id_model, model] : object->second.models) {
+					for (const auto& [id_mesh, mesh] : object->second.meshes)
+						transparent_objects.push_back(TransparentObject(cam.position, &object->second, object->first, { id_model, id_mesh }));
+				}
 				continue;
 			}
 
@@ -454,10 +455,10 @@ public:
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 		if (center_object_id.first != -1) {
-			if (!objects.count(center_object_id.first) || center_object_id.second == -1 || center_object_id.second >= objects[center_object_id.first].count_models())
+			if (!objects.count(center_object_id.first) || center_object_id.second == -1 || center_object_id.second >= objects[center_object_id.first].models.size())
 				center_object_id = std::make_pair(-1, -1);
 			else
-				center_object_id.second = objects[center_object_id.first].get_model_id_by_memory_id(center_object_id.second);
+				center_object_id.second = objects[center_object_id.first].models.get_id(center_object_id.second);
 		}
 
 		distance = 2.0 * distance - 1;
@@ -488,9 +489,9 @@ public:
 		}
 
 		if (model_id != -1)
-			objects[object_id].delete_model(model_id);
+			objects[object_id].models.erase(model_id);
 
-		if (model_id == -1 || objects[object_id].count_models() == 0) {
+		if (model_id == -1 || objects[object_id].models.size() == 0) {
 			objects.erase(object_id);
 			return true;
 		}

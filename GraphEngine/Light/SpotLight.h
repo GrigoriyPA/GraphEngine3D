@@ -139,8 +139,8 @@ public:
         mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
         shadow_box.meshes.insert(mesh);
 
-        int model_id = shadow_box.add_model(eng::Matrix::scale_matrix((1 - eps) * shadow_max_distance * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
-        shadow_box.change_matrix_left(get_view_matrix().inverse(), model_id);
+        int model_id = shadow_box.models.insert(eng::Matrix::scale_matrix((1 - eps) * shadow_max_distance * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
+        shadow_box.models.change_left(model_id, get_view_matrix().inverse());
 
         return shadow_box;
     }
@@ -178,8 +178,8 @@ public:
         mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
         light_object.meshes.insert(mesh);
 
-        int model_id = light_object.add_model(eng::Matrix::scale_matrix(0.25 * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
-        light_object.change_matrix_left(get_view_matrix().inverse(), model_id);
+        int model_id = light_object.models.insert(eng::Matrix::scale_matrix(0.25 * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
+        light_object.models.change_left(model_id, get_view_matrix().inverse());
 
         return light_object;
     }

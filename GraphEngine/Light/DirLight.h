@@ -97,9 +97,9 @@ public:
             mesh.material.set_alpha(0.3);
         });
 
-        int model_id = shadow_box.add_model(eng::Matrix::scale_matrix(eng::Vect3(shadow_width, shadow_height, shadow_depth)));
-        shadow_box.change_matrix_left(eng::Matrix::translation_matrix(eng::Vect3(0, 0, (1 - eps) * shadow_depth / 2)), model_id);
-        shadow_box.change_matrix_left(get_view_matrix().inverse(), model_id);
+        int model_id = shadow_box.models.insert(eng::Matrix::scale_matrix(eng::Vect3(shadow_width, shadow_height, shadow_depth)));
+        shadow_box.models.change_left(model_id, eng::Matrix::translation_matrix(eng::Vect3(0, 0, (1 - eps) * shadow_depth / 2)));
+        shadow_box.models.change_left(model_id, get_view_matrix().inverse());
 
         return shadow_box;
     }

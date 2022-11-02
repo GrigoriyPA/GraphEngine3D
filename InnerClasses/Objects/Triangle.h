@@ -20,7 +20,7 @@ class Triangle : public RenderObject {
 
         triangle.meshes.insert(mesh);
 
-        scene_id.second = triangle.add_model();
+        scene_id.second = triangle.models.insert(eng::Matrix::one_matrix(4));
         scene_id.first = scene->add_object(triangle);
     }
 
@@ -106,7 +106,7 @@ class Triangle : public RenderObject {
 
     void update_plane_symmetry(std::pair < int, int > triangle, std::pair < int, int > center) {
         std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_mesh_positions(center.second, 0);
-        eng::Flat center_plane(center_coords);
+        eng::Plane center_plane(center_coords);
         std::vector < eng::Vect3 > coords = (*scene)[triangle.first].get_mesh_positions(triangle.second, 0);
 
         std::reverse(coords.begin(), coords.end());
@@ -132,7 +132,7 @@ class Triangle : public RenderObject {
         eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 1);
         eng::Cut cut_ot(coord1, coord2);
-        eng::Flat plane(triangle);
+        eng::Plane plane(triangle);
 
         if (!plane.is_intersect(cut_ot))
             return nullptr;
@@ -152,7 +152,7 @@ class Triangle : public RenderObject {
         eng::Vect3 coord1 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 0);
         eng::Vect3 coord2 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 1);
         eng::Line line_ot(coord1, coord2);
-        eng::Flat plane(triangle);
+        eng::Plane plane(triangle);
 
         if (!plane.is_intersect(line_ot))
             return nullptr;
@@ -170,8 +170,8 @@ class Triangle : public RenderObject {
 
     RenderObject* intersect_plane(std::vector < eng::Vect3 > triangle, RenderObject* plane) {
         std::vector < eng::Vect3 > coords = (*scene)[plane->scene_id.first].get_mesh_positions(plane->scene_id.second, 0);
-        eng::Flat plane_ot(coords);
-        eng::Flat plane_cur(triangle);
+        eng::Plane plane_ot(coords);
+        eng::Plane plane_cur(triangle);
 
         if (!plane_cur.is_intersect(plane_ot))
             return nullptr;

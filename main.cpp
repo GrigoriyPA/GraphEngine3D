@@ -83,7 +83,7 @@ signed main() {
 
         int obj_id = scene.add_object(eng::GraphObject(1));
         scene[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
-        scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
+        scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
         //scene[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
         //scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1) * 0.01));
         /*for (size_t i = 0; i < scene[obj_id].get_count_polygons(); ++i) {
@@ -93,23 +93,14 @@ signed main() {
         obj_id = scene.add_object(eng::GraphObject(1));
         eng::Mesh mesh(4);
         mesh.set_positions({
-            eng::Vect3(1, 0, 1),
-            eng::Vect3(1, 0, -1),
+            eng::Vect3(-1, 0, 1),
             eng::Vect3(-1, 0, -1),
-            eng::Vect3(-1, 0, 1)
+            eng::Vect3(1, 0, -1),
+            eng::Vect3(1, 0, 1)
             }, true);
-        mesh.set_tex_coords({
-            eng::Vect2(1, 1),
-            eng::Vect2(1, 0),
-            eng::Vect2(0, 0),
-            eng::Vect2(0, 1)
-            });
-        mesh.invert_points_order(true);
         mesh.material.set_ambient(eng::Vect3(0.5, 0.5, 0.5));
-        mesh.material.set_diffuse(eng::Vect3(1, 1, 1));
-        mesh.material.set_alpha(0.5);
-        scene[obj_id].transparent = true;
-        scene[obj_id].add_model(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
+        mesh.material.set_diffuse(eng::Vect3(0.5, 0.5, 0.5));
+        scene[obj_id].models.insert(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
         scene[obj_id].meshes.insert(mesh);
 
         DirLight light(eng::Vect3(-1, -1, 1));
@@ -120,7 +111,7 @@ signed main() {
         light.shadow = true;
         scene.set_light(1, &light);
 
-        for (; window_interface.running; ) {
+        for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {
                 switch (event.type) {
                 case sf::Event::Closed: {

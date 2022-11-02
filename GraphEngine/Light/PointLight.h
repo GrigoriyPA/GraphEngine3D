@@ -47,8 +47,8 @@ public:
             mesh.material.set_emission(eng::Vect3(1, 1, 1));
         });
 
-        int model_id = light_object.add_model(eng::Matrix::scale_matrix(0.25));
-        light_object.change_matrix_left(eng::Matrix::translation_matrix(position), model_id);
+        int model_id = light_object.models.insert(eng::Matrix::scale_matrix(0.25));
+        light_object.models.change_left(model_id, eng::Matrix::translation_matrix(position));
 
         return light_object;
     }

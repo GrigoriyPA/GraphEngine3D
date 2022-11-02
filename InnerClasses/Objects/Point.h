@@ -10,7 +10,7 @@ class Point : public RenderObject {
             mesh.material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
         });
 
-        scene_id.second = point.add_model(eng::Matrix::scale_matrix(radius));
+        scene_id.second = point.models.insert(eng::Matrix::scale_matrix(radius));
 
         scene_id.first = scene->add_object(point);
     }
@@ -37,7 +37,7 @@ class Point : public RenderObject {
         eng::Vect3 coord2 = (*scene)[point2.first].get_center(point2.second);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix((coord1 + coord2) / 2 - point), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix((coord1 + coord2) / 2 - point));
     }
 
     void update_center_cut(std::pair < int, int > cut) {
@@ -45,7 +45,7 @@ class Point : public RenderObject {
         eng::Vect3 coord2 = (*scene)[cut.first].get_mesh_center(cut.second, 1);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix((coord1 + coord2) / 2 - point), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix((coord1 + coord2) / 2 - point));
     }
 
     void update_point_symmetry(std::pair < int, int > point, std::pair < int, int > center) {
@@ -53,7 +53,7 @@ class Point : public RenderObject {
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(coord_point.symmetry(coord_center) - point_cur), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(coord_point.symmetry(coord_center) - point_cur));
     }
 
     void update_line_symmetry(std::pair < int, int > point, std::pair < int, int > center) {
@@ -63,16 +63,16 @@ class Point : public RenderObject {
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(center_line.symmetry(coord_point) - point_cur), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(center_line.symmetry(coord_point) - point_cur));
     }
 
     void update_plane_symmetry(std::pair < int, int > point, std::pair < int, int > center) {
         std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_mesh_positions(center.second, 0);
-        eng::Flat center_plane(center_coords);
+        eng::Plane center_plane(center_coords);
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(center_plane.symmetry(coord_point) - point_cur), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(center_plane.symmetry(coord_point) - point_cur));
     }
 
     void update_translate(std::pair < int, int > point, std::pair < int, int > start, std::pair < int, int > end) {
@@ -82,7 +82,7 @@ class Point : public RenderObject {
         eng::Vect3 coord_point = (*scene)[point.first].get_center(point.second);
         eng::Vect3 point_cur = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(coord_point + translate - point_cur), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(coord_point + translate - point_cur));
     }
 
     void update_cut_connect(std::pair < int, int > cut) {
@@ -90,7 +90,7 @@ class Point : public RenderObject {
         eng::Vect3 coord2 = (*scene)[cut.first].get_mesh_center(cut.second, 1);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(eng::Cut(coord1, coord2).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(eng::Cut(coord1, coord2).project_point(point) - point));
     }
 
     void update_line_connect(std::pair < int, int > line) {
@@ -98,21 +98,21 @@ class Point : public RenderObject {
         eng::Vect3 coord2 = (*scene)[line.first].get_mesh_center(line.second, 1);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(eng::Line(coord1, coord2).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(eng::Line(coord1, coord2).project_point(point) - point));
     }
 
     void update_plan_connect(std::pair < int, int > plane) {
         std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(eng::Flat(coords).project_point(point) - point), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(eng::Plane(coords).project_point(point) - point));
     }
 
     void update_triangle_connect(std::pair < int, int > triangle) {
         std::vector < eng::Vect3 > coords = (*scene)[triangle.first].get_mesh_positions(triangle.second, 0);
         eng::Vect3 point = (*scene)[scene_id.first].get_center(scene_id.second);
 
-        eng::Vect3 new_point = eng::Flat(coords).project_point(point);
+        eng::Vect3 new_point = eng::Plane(coords).project_point(point);
         if (!new_point.in_triangle(coords[0], coords[1], coords[2])) {
             int closest = 0;
             std::vector < eng::Vect3 > projection(3);
@@ -125,7 +125,7 @@ class Point : public RenderObject {
             new_point = projection[closest];
         }
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(new_point - point), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(new_point - point));
     }
 
     void update_intersect() {
@@ -145,7 +145,7 @@ class Point : public RenderObject {
             return;
         }
 
-        (*scene)[scene_id.first].set_matrix((*scene)[point->scene_id.first].get_matrix(point->scene_id.second), scene_id.second);
+        (*scene)[scene_id.first].models.set(scene_id.second, (*scene)[point->scene_id.first].models[point->scene_id.second]);
         scene->delete_object(point->scene_id.first, point->scene_id.second);
         delete point;
     }
@@ -158,7 +158,7 @@ public:
 
         init(radius);
 
-        (*scene)[scene_id.first].change_matrix_left(eng::Matrix::translation_matrix(position), scene_id.second);
+        (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(position));
     }
 
     Point(std::pair < int, int > button, std::vector < RenderObject* > init_obj, GraphEngine* scene) {
@@ -172,12 +172,12 @@ public:
     }
 
     void switch_hide() {
-        eng::Matrix model = (*scene)[scene_id.first].get_matrix(scene_id.second);
+        eng::Matrix model = (*scene)[scene_id.first].models[scene_id.second];
         if (!hide) {
-            (*scene)[scene_id.first].change_matrix_left(model * eng::Matrix::scale_matrix(eng::Vect3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0)) * model.inverse(), scene_id.second);
+            (*scene)[scene_id.first].models.change_left(scene_id.second, model * eng::Matrix::scale_matrix(eng::Vect3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0)) * model.inverse());
         }
         else
-            (*scene)[scene_id.first].change_matrix_left(model * eng::Matrix::scale_matrix(eng::Vect3(3.0, 3.0, 3.0)) * model.inverse(), scene_id.second);
+            (*scene)[scene_id.first].models.change_left(scene_id.second, model * eng::Matrix::scale_matrix(eng::Vect3(3.0, 3.0, 3.0)) * model.inverse());
         hide ^= 1;
     }
     
