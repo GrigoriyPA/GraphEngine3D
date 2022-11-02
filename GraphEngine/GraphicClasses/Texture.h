@@ -8,10 +8,10 @@ namespace eng {
 	class Texture {
 		inline static GLint max_texture_image_units_ = 0;
 
+		size_t width_ = 0;
+		size_t height_ = 0;
 		size_t* count_links_ = nullptr;
 		GLuint texture_id_ = 0;
-		GLsizei width_ = 0;
-		GLsizei height_ = 0;
 
 		void deallocate() {
 			if (count_links_ != nullptr) {
@@ -28,10 +28,10 @@ namespace eng {
 		}
 
 		void swap(Texture& other) noexcept {
-			std::swap(count_links_, other.count_links_);
-			std::swap(texture_id_, other.texture_id_);
 			std::swap(width_, other.width_);
 			std::swap(height_, other.height_);
+			std::swap(count_links_, other.count_links_);
+			std::swap(texture_id_, other.texture_id_);
 		}
 
 	public:
@@ -54,17 +54,17 @@ namespace eng {
 			}
 
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_image_units_);
-			width_ = static_cast<GLsizei>(image.getSize().x);
-			height_ = static_cast<GLsizei>(image.getSize().y);
+			width_ = image.getSize().x;
+			height_ = image.getSize().y;
 			count_links_ = new size_t(1);
 
 			glGenTextures(1, &texture_id_);
 			glBindTexture(GL_TEXTURE_2D, texture_id_);
 
 			if (gamma) {
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, image.getSize().x, image.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, static_cast<GLsizei>(width_), static_cast<GLsizei>(height_), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
 			} else {
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.getSize().x, image.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(width_), static_cast<GLsizei>(height_), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.getPixelsPtr());
 			}
 
 			glGenerateMipmap(GL_TEXTURE_2D);
@@ -102,7 +102,7 @@ namespace eng {
 			return *this;
 		}
 
-		Texture& set_wrapping(GLint wrapping)& {
+		Texture& set_wrapping(GLint wrapping) {
 			if (wrapping != GL_REPEAT && wrapping != GL_MIRRORED_REPEAT && wrapping != GL_CLAMP_TO_EDGE && wrapping != GL_CLAMP_TO_BORDER) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_wrapping, invalid wrapping type.\n\n");
 			}
@@ -119,11 +119,11 @@ namespace eng {
 			return texture_id_;
 		}
 
-		GLsizei get_width() const noexcept {
+		size_t get_width() const noexcept {
 			return width_;
 		}
 
-		GLsizei get_height() const noexcept {
+		size_t get_height() const noexcept {
 			return height_;
 		}
 

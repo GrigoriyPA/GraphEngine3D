@@ -10,6 +10,156 @@
 
 namespace eng {
 	class GraphObject {
+		class MeshStorage {
+			friend class GraphObject;
+
+			GLuint matrix_buffer_ = 0;
+
+			std::vector<size_t> meshes_index_;
+			std::vector<size_t> free_mesh_id_;
+			std::vector<std::pair<size_t, Mesh>> meshes_;
+
+			void set_mesh_matrix_buffer(Mesh& mesh) const {
+				if (matrix_buffer_ == 0) {
+					return;
+				}
+
+				glBindVertexArray(mesh.get_vertex_array());
+				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
+
+				GLuint attrib_offset = Mesh::get_count_params();
+				for (GLuint i = 0; i < 4; ++i) {
+					glVertexAttribPointer(attrib_offset + i, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 16, reinterpret_cast<GLvoid*>(sizeof(GLfloat) * 4 * i));
+					glEnableVertexAttribArray(attrib_offset + i);
+					glVertexAttribDivisor(attrib_offset + i, 1);
+				}
+
+				glBindVertexArray(0);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				check_gl_errors(__FILE__, __LINE__, __func__);
+			}
+
+			void set_matrix_buffer(GLuint matrix_buffer) {
+				matrix_buffer_ = matrix_buffer;
+
+				for (auto& [id, mesh] : meshes_) {
+					set_mesh_matrix_buffer(mesh);
+				}
+			}
+
+		public:
+			using Iterator = std::vector<std::pair<size_t, Mesh>>::const_iterator;
+
+			MeshStorage() {
+				if (!glew_is_ok()) {
+					throw EngRuntimeError(__FILE__, __LINE__, "MeshStorage, failed to initialize GLEW.\n\n");
+				}
+			}
+
+			const Mesh& operator[](size_t id) const {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
+				}
+
+				return meshes_[meshes_index_[id]].second;
+			}
+
+			Mesh get(size_t id) const {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "get, invalid mesh id.\n\n");
+				}
+
+				return meshes_[meshes_index_[id]].second;
+			}
+
+			bool contains(size_t id) const noexcept {
+				return id < meshes_index_.size() && meshes_index_[id] < std::numeric_limits<size_t>::max();
+			}
+
+			size_t size() const noexcept {
+				return meshes_.size();
+			}
+
+			bool empty() const noexcept {
+				return meshes_.empty();
+			}
+
+			Iterator begin() const noexcept {
+				return meshes_.begin();
+			}
+
+			Iterator end() const noexcept {
+				return meshes_.end();
+			}
+
+			MeshStorage& erase(size_t id) {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid mesh id.\n\n");
+				}
+
+				free_mesh_id_.push_back(id);
+
+				meshes_index_[meshes_.back().first] = meshes_index_[id];
+				std::swap(meshes_[meshes_index_[id]], meshes_.back());
+
+				meshes_.pop_back();
+				meshes_index_[id] = std::numeric_limits<size_t>::max();
+				return *this;
+			}
+
+			MeshStorage& clear() noexcept {
+				meshes_index_.clear();
+				free_mesh_id_.clear();
+				meshes_.clear();
+				return *this;
+			}
+
+			size_t insert(const Mesh& mesh) {
+				size_t free_mesh_id = meshes_index_.size();
+				if (free_mesh_id_.empty()) {
+					meshes_index_.push_back(meshes_.size());
+				} else {
+					free_mesh_id = free_mesh_id_.back();
+					free_mesh_id_.pop_back();
+					meshes_index_[free_mesh_id] = meshes_.size();
+				}
+
+				meshes_.push_back({ free_mesh_id, mesh });
+				set_mesh_matrix_buffer(meshes_.back().second);
+				return free_mesh_id;
+			}
+
+			MeshStorage& modify(size_t id, const Mesh& mesh) {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "modify, invalid mesh id.\n\n");
+				}
+
+				set_mesh_matrix_buffer(meshes_[meshes_index_[id]].second = mesh);
+				return *this;
+			}
+
+			MeshStorage& apply_func(size_t id, std::function<void(Mesh&)> func) {
+				if (!contains(id)) {
+					throw EngOutOfRange(__FILE__, __LINE__, "apply_func, invalid mesh id.\n\n");
+				}
+
+				Mesh object(meshes_[meshes_index_[id]].second);
+				func(object);
+				set_mesh_matrix_buffer(meshes_[meshes_index_[id]].second = object);
+				return *this;
+			}
+
+			MeshStorage& apply_func(std::function<void(Mesh&)> func) {
+				for (auto& [id, mesh] : meshes_) {
+					Mesh object(mesh);
+					func(object);
+					set_mesh_matrix_buffer(mesh = object);
+				}
+				return *this;
+			}
+		};
+
 		// ...
 		struct Model {
 			size_t used_memory;
@@ -25,14 +175,11 @@ namespace eng {
 			}
 		};
 
-		inline static double eps_ = 1e-5;
-
 		GLuint matrix_buffer_ = 0;
 
 		size_t max_count_models_;
 		std::vector<size_t> used_memory_;
 		std::unordered_map<size_t, Model> models_;
-		std::unordered_map<size_t, Mesh> meshes_;
 
 		void create_matrix_buffer() {
 			glGenBuffers(1, &matrix_buffer_);
@@ -44,9 +191,7 @@ namespace eng {
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			for (auto& [id, mesh] : meshes_) {
-				mesh.set_matrix_buffer(matrix_buffer_);
-			}
+			meshes.set_matrix_buffer(matrix_buffer_);
 		}
 
 		void draw_meshes(size_t model_id, const Shader<size_t>& shader) const {
@@ -58,7 +203,7 @@ namespace eng {
 			shader.set_uniform_i("model_id", static_cast<GLint>(model.used_memory));
 			shader.set_uniform_matrix("not_instance_model", model.matrix);
 
-			for (const auto& [id, mesh] : meshes_) {
+			for (const auto& [id, mesh] : meshes) {
 				mesh.draw(1, shader);
 			}
 		}
@@ -66,7 +211,7 @@ namespace eng {
 		void draw_meshes(const Shader<size_t>& shader) const {
 			shader.set_uniform_i("model_id", -1);
 
-			for (const auto& [id, mesh] : meshes_) {
+			for (const auto& [id, mesh] : meshes) {
 				mesh.draw(models_.size(), shader);
 			}
 		}
@@ -189,8 +334,7 @@ namespace eng {
 			transform = trans * transform;
 
 			for (int i = 0; i < node->mNumMeshes; i++) {
-				meshes_[meshes_.size()] = processMesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform);
-				meshes_[meshes_.size() - 1].set_matrix_buffer(matrix_buffer_);
+				meshes.insert(processMesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform));
 				break;
 			}
 
@@ -211,14 +355,15 @@ namespace eng {
 			std::swap(max_count_models_, other.max_count_models_);
 			std::swap(used_memory_, other.used_memory_);
 			std::swap(models_, other.models_);
-			std::swap(meshes_, other.meshes_);
 			std::swap(transparent, other.transparent);
 			std::swap(border_mask, other.border_mask);
+			std::swap(meshes, other.meshes);
 		}
 
 	public:
 		bool transparent = false;
 		uint8_t border_mask = 0;
+		MeshStorage meshes;
 
 		GraphObject() {
 			if (!glew_is_ok()) {
@@ -242,9 +387,9 @@ namespace eng {
 			max_count_models_ = other.max_count_models_;
 			used_memory_ = other.used_memory_;
 			models_ = other.models_;
-			meshes_ = other.meshes_;
 			transparent = other.transparent;
 			border_mask = other.border_mask;
+			meshes = other.meshes;
 
 			create_matrix_buffer();
 
@@ -275,23 +420,7 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& operator[](size_t mesh_id) {
-			if (meshes_.count(mesh_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
-			}
-
-			return meshes_[mesh_id];
-		}
-
-		const Mesh& operator[](size_t mesh_id) const {
-			if (meshes_.count(mesh_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
-			}
-
-			return meshes_.at(mesh_id);
-		}
-
-		GraphObject& set_matrix(const Matrix& matrix, size_t model_id)& {
+		GraphObject& set_matrix(const Matrix& matrix, size_t model_id) {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "set_matrix, invalid model id.\n\n");
 			}
@@ -326,13 +455,13 @@ namespace eng {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid model id.\n\n");
 			}
-			if (meshes_.count(mesh_id) == 0) {
+			if (!meshes.contains(mesh_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid mesh id.\n\n");
 			}
 
 			Matrix transform = models_.at(model_id).matrix;
 			std::vector<Vect3> positions;
-			for (Vect3 position : meshes_.at(mesh_id).get_positions()) {
+			for (Vect3 position : meshes[mesh_id].get_positions()) {
 				positions.push_back(transform * position);
 			}
 			return positions;
@@ -342,13 +471,13 @@ namespace eng {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid model id.\n\n");
 			}
-			if (meshes_.count(mesh_id) == 0) {
+			if (!meshes.contains(mesh_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid mesh id.\n\n");
 			}
 
 			Matrix transform = Matrix::normal_transform(models_.at(model_id).matrix);
 			std::vector<Vect3> normals;
-			for (Vect3 normal : meshes_.at(mesh_id).get_normals()) {
+			for (Vect3 normal : meshes[mesh_id].get_normals()) {
 				normals.push_back(transform * normal);
 			}
 			return normals;
@@ -358,24 +487,25 @@ namespace eng {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid model id.\n\n");
 			}
-			if (meshes_.count(mesh_id) == 0) {
+			if (!meshes.contains(mesh_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid mesh id.\n\n");
 			}
 
-			return models_.at(model_id).matrix * meshes_.at(mesh_id).get_center();
+			return models_.at(model_id).matrix * meshes[mesh_id]
+				.get_center();
 		}
 
 		Vect3 get_center(size_t model_id) const {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "get_center, invalid model id.\n\n");
 			}
-			if (meshes_.size() == 0) {
+			if (meshes.size() == 0) {
 				throw EngDomainError(__FILE__, __LINE__, "get_center, object does not contain vertices.\n\n");
 			}
 
 			Vect3 center(0, 0, 0);
 			std::unordered_set<Vect3> used_positions;
-			for (const auto& [id, mesh] : meshes_) {
+			for (const auto& [id, mesh] : meshes) {
 				for (const Vect3& position : mesh.get_positions()) {
 					if (used_positions.count(position) == 1) {
 						continue;
@@ -392,7 +522,7 @@ namespace eng {
 		std::vector < std::pair < int, int > > getModels() {
 			std::vector < std::pair < int, int > > models_description;
 			for (std::unordered_map < size_t, Model >::iterator model = models_.begin(); model != models_.end(); model++) {
-				for (std::unordered_map < size_t, Mesh >::iterator polygon = meshes_.begin(); polygon != meshes_.end(); polygon++)
+				for (auto polygon = meshes.begin(); polygon != meshes.end(); polygon++)
 					models_description.push_back({ model->first, polygon->first });
 			}
 
@@ -403,27 +533,11 @@ namespace eng {
 			return models_.size();
 		}
 
-		size_t count_meshes() const noexcept {
-			return meshes_.size();
-		}
-
 		bool contains_model(size_t model_id) const noexcept {
-			return static_cast<bool>(models_.count(model_id));
+			return models_.count(model_id) == 1;
 		}
 
-		bool contains_mesh(size_t mesh_id) const noexcept {
-			return static_cast<bool>(meshes_.count(mesh_id));
-		}
-
-		GraphObject& apply_func_meshes(std::function<void(Mesh&)> func)& {
-			for (auto& [id, mesh] : meshes_) {
-				func(mesh);
-				mesh.set_matrix_buffer(matrix_buffer_);
-			}
-			return *this;
-		}
-
-		size_t add_model(const Matrix& matrix = Matrix::one_matrix(4))& {
+		size_t add_model(const Matrix& matrix = Matrix::one_matrix(4)) {
 			if (models_.size() == max_count_models_) {
 				throw EngRuntimeError(__FILE__, __LINE__, "add_model, too many instances created.\n\n");
 			}
@@ -442,16 +556,7 @@ namespace eng {
 			return free_model_id;
 		}
 
-		size_t add_mesh(const Mesh& mesh)& {
-			size_t free_mesh_id = 0;
-			for (; meshes_.count(free_mesh_id) == 1; ++free_mesh_id) {}
-
-			meshes_[free_mesh_id] = mesh;
-			meshes_[free_mesh_id].set_matrix_buffer(matrix_buffer_);
-			return free_mesh_id;
-		}
-
-		GraphObject& delete_model(size_t model_id)& {
+		GraphObject& delete_model(size_t model_id) {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "delete_model, invalid model id.\n\n");
 			}
@@ -472,17 +577,7 @@ namespace eng {
 			return *this;
 		}
 
-		GraphObject& delete_mesh(size_t mesh_id)& {
-			if (meshes_.count(mesh_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "delete_mesh, invalid mesh id.\n\n");
-			}
-
-			meshes_[mesh_id].set_matrix_buffer(0);
-			meshes_.erase(mesh_id);
-			return *this;
-		}
-
-		GraphObject& change_matrix_left(const Matrix& transform, size_t model_id)& {
+		GraphObject& change_matrix_left(const Matrix& transform, size_t model_id) {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "change_matrix_left, invalid model id.\n\n");
 			}
@@ -497,7 +592,7 @@ namespace eng {
 			return *this;
 		}
 
-		GraphObject& change_matrix_right(const Matrix& transform, size_t model_id)& {
+		GraphObject& change_matrix_right(const Matrix& transform, size_t model_id) {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "change_matrix_right, invalid model id.\n\n");
 			}
@@ -513,7 +608,7 @@ namespace eng {
 		}
 
 		void draw_depth_map() const {
-			for (const auto& [id, mesh] : meshes_) {
+			for (const auto& [id, mesh] : meshes) {
 				if (!mesh.material.shadow) {
 					continue;
 				}
@@ -529,7 +624,7 @@ namespace eng {
 			if (models_.count(model_id) == 0) {
 				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
-			if (meshes_.count(mesh_id) == 0) {
+			if (!meshes.contains(mesh_id)) {
 				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid mesh id.\n\n");
 			}
 
@@ -542,7 +637,7 @@ namespace eng {
 				glStencilMask(border_mask);
 			}
 
-			meshes_.at(mesh_id).draw(1, shader);
+			meshes[mesh_id].draw(1, shader);
 
 			if (border_mask > 0) {
 				glStencilMask(0x00);
@@ -581,7 +676,7 @@ namespace eng {
 
 		// ...
 		void importFromFile(std::string path) {
-			meshes_.clear();
+			meshes.clear();
 
 			Assimp::Importer importer;
 			const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals);
@@ -606,14 +701,6 @@ namespace eng {
 
 		~GraphObject() {
 			deallocate();
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 	};
 }

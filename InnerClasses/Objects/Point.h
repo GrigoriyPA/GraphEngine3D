@@ -5,7 +5,7 @@ class Point : public RenderObject {
     void init(double radius = POINT_RADIUS) {
         eng::GraphObject point = get_sphere(6, true, MAX_COUNT_MODELS);
 
-        point.apply_func_meshes([](auto& mesh) {
+        point.meshes.apply_func([](auto& mesh) {
             mesh.material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
             mesh.material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
         });

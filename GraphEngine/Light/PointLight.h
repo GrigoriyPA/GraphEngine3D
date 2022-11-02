@@ -43,7 +43,7 @@ public:
     eng::GraphObject get_light_object() {
         eng::GraphObject light_object = get_cube();
 
-        light_object.apply_func_meshes([](auto& mesh) {
+        light_object.meshes.apply_func([](auto& mesh) {
             mesh.material.set_emission(eng::Vect3(1, 1, 1));
         });
 

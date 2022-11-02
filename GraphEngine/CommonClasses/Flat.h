@@ -50,7 +50,7 @@ namespace eng {
 			*this = Flat(points[0], points[1], points[2]);
 		}
 
-		Flat& set_normal(const Vect3& normal)& {
+		Flat& set_normal(const Vect3& normal) {
 			try {
 				normal_ = normal.normalize();
 			}

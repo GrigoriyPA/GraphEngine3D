@@ -6,14 +6,15 @@ class Plane : public RenderObject {
         eng::GraphObject plane(1);
         plane.transparent = true;
 
-        int polygon_id = plane.add_mesh(eng::Mesh(4));
-        plane[polygon_id].material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-        plane[polygon_id].material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-        plane[polygon_id].material.set_specular(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-        plane[polygon_id].material.set_shininess(64);
-        plane[polygon_id].material.set_alpha(0.25);
+        eng::Mesh mesh(4);
+        mesh.material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_specular(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_shininess(64);
+        mesh.material.set_alpha(0.25);
+        plane.meshes.insert(mesh);
 
-        polygon_id = plane.add_mesh(plane[polygon_id]);
+        plane.meshes.insert(mesh);
 
         scene_id.second = plane.add_model();
         scene_id.first = scene->add_object(plane);
@@ -84,19 +85,19 @@ class Plane : public RenderObject {
         horizont *= sz * k;
         vertical *= sz * k;
 
-        (*scene)[scene_id.first][0].set_positions({
+        (*scene)[scene_id.first].meshes.modify(0, (*scene)[scene_id.first].meshes.get(0).set_positions({
         center + horizont + vertical,
         center + horizont - vertical,
         center - horizont - vertical,
         center - horizont + vertical
-            }, true);
+            }, true));
 
-        (*scene)[scene_id.first][1].set_positions({
+        (*scene)[scene_id.first].meshes.modify(1, (*scene)[scene_id.first].meshes.get(1).set_positions({
         center - horizont + vertical,
         center - horizont - vertical,
         center + horizont - vertical,
         center + horizont + vertical
-            }, true);
+            }, true));
     }
 
     void update_three_points(std::pair < int, int > point1, std::pair < int, int > point2, std::pair < int, int > point3) {
@@ -336,12 +337,12 @@ public:
     }
 
     void switch_hide() {
-        eng::Mesh::Material material = (*scene)[scene_id.first][0].material;
+        eng::Mesh::Material material = (*scene)[scene_id.first].meshes[0].material;
         if (!hide)
             material.set_alpha(0.1);
         else
             material.set_alpha(0.25);
-        (*scene)[scene_id.first].apply_func_meshes([&](auto& mesh) {
+        (*scene)[scene_id.first].meshes.apply_func([&](auto& mesh) {
             mesh.material = material;
         });
         hide ^= 1;

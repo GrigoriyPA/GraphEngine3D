@@ -26,23 +26,25 @@ eng::GraphObject get_sphere(int count_points, bool real_normals = false, int max
 		for (int j = 0; j < 2 * count_points; j++) {
 			int next = (j + 1) % (2 * count_points), polygon_id;
 
+			eng::Mesh mesh;
 			std::vector < eng::Vect3 > positions;
 			if (i == 0) {
-				polygon_id = sphere.add_mesh(eng::Mesh(3));
+				mesh = eng::Mesh(3);
 				positions = { eng::Vect3(0, 1, 0), cur_positions[j], cur_positions[next] };
 			}
 			else if (i == count_points - 1) {
-				polygon_id = sphere.add_mesh(eng::Mesh(3));
+				mesh = eng::Mesh(3);
 				positions = { last_position[j], eng::Vect3(0, -1, 0), last_position[next] };
 			}
 			else {
-				polygon_id = sphere.add_mesh(eng::Mesh(4));
+				mesh = eng::Mesh(4);
 				positions = { last_position[next], last_position[j], cur_positions[j], cur_positions[next] };
 			}
 
-			sphere[polygon_id].set_positions(positions, !real_normals);
+			mesh.set_positions(positions, !real_normals);
 			if (real_normals)
-				sphere[polygon_id].set_normals(positions);
+				mesh.set_normals(positions);
+			sphere.meshes.insert(mesh);
 		}
 		last_position = cur_positions;
 	}

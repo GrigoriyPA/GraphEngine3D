@@ -92,7 +92,7 @@ public:
         eng::GraphObject shadow_box = get_cube();
         shadow_box.transparent = true;
 
-        shadow_box.apply_func_meshes([](auto& mesh) {
+        shadow_box.meshes.apply_func([](auto& mesh) {
             mesh.material.set_diffuse(eng::Vect3(1, 1, 1));
             mesh.material.set_alpha(0.3);
         });

@@ -26,7 +26,7 @@ namespace eng {
 			start_point = point1;
 		}
 
-		Line& set_direction(const Vect3& direction)& {
+		Line& set_direction(const Vect3& direction) {
 			try {
 				direction_ = direction.normalize();
 			}

@@ -5,18 +5,20 @@ class Triangle : public RenderObject {
     void init() {
         eng::GraphObject triangle(1);
 
-        int polygon_id = triangle.add_mesh(eng::Mesh(3));
-        triangle[polygon_id].material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-        triangle[polygon_id].material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-        triangle[polygon_id].material.set_specular(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-        triangle[polygon_id].material.set_shininess(64);
+        eng::Mesh mesh(3);
+        mesh.material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_specular(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_shininess(64);
+        triangle.meshes.insert(mesh);
 
-        polygon_id = triangle.add_mesh(eng::Mesh(3));
-        triangle[polygon_id].material.set_diffuse(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
-        triangle[polygon_id].set_border_width(3);
-        triangle[polygon_id].frame = true;
+        mesh = eng::Mesh(3);
+        mesh.material.set_diffuse(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);
+        mesh.set_border_width(3);
+        mesh.frame = true;
+        triangle.meshes.insert(mesh);
 
-        polygon_id = triangle.add_mesh(triangle[polygon_id]);
+        triangle.meshes.insert(mesh);
 
         scene_id.second = triangle.add_model();
         scene_id.first = scene->add_object(triangle);
@@ -46,23 +48,23 @@ class Triangle : public RenderObject {
         eng::Vect3 normal = ((points[0] - points[1]) ^ (points[0] - points[2])).normalize();
         eng::Vect3 delt = normal * eps;
 
-        (*scene)[scene_id.first][0].set_positions({
+        (*scene)[scene_id.first].meshes.modify(0, (*scene)[scene_id.first].meshes.get(0).set_positions({
         points[0],
         points[1],
         points[2]
-            }, true);
+            }, true));
 
-        (*scene)[scene_id.first][1].set_positions({
+        (*scene)[scene_id.first].meshes.modify(1, (*scene)[scene_id.first].meshes.get(1).set_positions({
         points[0] - delt,
         points[1] - delt,
         points[2] - delt
-            }, true);
+            }, true));
 
-        (*scene)[scene_id.first][2].set_positions({
+        (*scene)[scene_id.first].meshes.modify(2, (*scene)[scene_id.first].meshes.get(2).set_positions({
         points[2] + delt,
         points[1] + delt,
         points[0] + delt
-            }, true);
+            }, true));
     }
 
     void update_three_points(std::pair < int, int > point1, std::pair < int, int > point2, std::pair < int, int > point3) {
@@ -217,15 +219,11 @@ public:
 
     void switch_hide() {
         if (!hide) {
-            (*scene)[scene_id.first][0].material.set_alpha(0.25);
-            (*scene)[scene_id.first][1].material.set_alpha(0.25);
-            (*scene)[scene_id.first][2].material.set_alpha(0.25);
+            (*scene)[scene_id.first].meshes.apply_func([](auto& mesh) { mesh.material.set_alpha(0.25); });
             (*scene)[scene_id.first].transparent = true;
         }
         else {
-            (*scene)[scene_id.first][0].material.set_alpha(1);
-            (*scene)[scene_id.first][1].material.set_alpha(1);
-            (*scene)[scene_id.first][2].material.set_alpha(1);
+            (*scene)[scene_id.first].meshes.apply_func([](auto& mesh) { mesh.material.set_alpha(1); });
             (*scene)[scene_id.first].transparent = false;
         }
         hide ^= 1;

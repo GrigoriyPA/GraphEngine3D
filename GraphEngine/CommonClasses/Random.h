@@ -14,7 +14,7 @@ namespace eng {
 			generator.seed(seed);
 		}
 
-		Random& set_seed(uint64_t seed)& noexcept {
+		Random& set_seed(uint64_t seed) noexcept {
 			generator.seed(seed);
 			return *this;
 		}

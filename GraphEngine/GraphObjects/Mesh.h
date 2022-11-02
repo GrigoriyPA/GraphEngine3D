@@ -9,16 +9,13 @@ namespace eng {
 	class Mesh {
 		inline static const std::vector<GLint> MEMORY_CONFIGURATION = { 3, 3, 2, 3 };
 
-		inline static double eps_ = 1e-5;
-
 		GLuint vertex_array_ = 0;
-		GLuint matrix_buffer_ = 0;
 		GLuint vertex_buffer_ = 0;
 		GLuint index_buffer_ = 0;
 		GLfloat border_width_ = 1.0;
 
-		GLsizei count_points_;
-		GLsizei count_indices_;
+		size_t count_points_;
+		size_t count_indices_;
 
 		void set_uniforms(const Shader<size_t>& shader) const {
 			if (shader.description == ShaderType::MAIN) {
@@ -70,14 +67,12 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
 			vertex_array_ = 0;
-			matrix_buffer_ = 0;
 			vertex_buffer_ = 0;
 			index_buffer_ = 0;
 		}
 
 		void swap(Mesh& other) noexcept {
 			std::swap(vertex_array_, other.vertex_array_);
-			std::swap(matrix_buffer_, other.matrix_buffer_);
 			std::swap(vertex_buffer_, other.vertex_buffer_);
 			std::swap(index_buffer_, other.index_buffer_);
 			std::swap(border_width_, other.border_width_);
@@ -148,7 +143,13 @@ namespace eng {
 			Texture specular_map;
 			Texture emission_map;
 
-			void set_shininess(double shininess)& {
+			Material() {
+				if (!glew_is_ok()) {
+					throw EngRuntimeError(__FILE__, __LINE__, "Material, failed to initialize GLEW.\n\n");
+				}
+			}
+
+			void set_shininess(double shininess) {
 				if (shininess < 0.0) {
 					throw EngInvalidArgument(__FILE__, __LINE__, "set_shininess, invalid shininess value.\n\n");
 				}
@@ -156,7 +157,7 @@ namespace eng {
 				shininess_ = shininess;
 			}
 
-			void set_alpha(double alpha)& {
+			void set_alpha(double alpha) {
 				if (alpha < 0.0 || 1.0 < alpha) {
 					throw EngInvalidArgument(__FILE__, __LINE__, "set_alpha, invalid alpha value.\n\n");
 				}
@@ -164,22 +165,22 @@ namespace eng {
 				alpha_ = alpha;
 			}
 
-			void set_ambient(const Vect3& ambient)& {
+			void set_ambient(const Vect3& ambient) {
 				check_color_value(__FILE__, __LINE__, __func__, ambient);
 				ambient_ = ambient;
 			}
 
-			void set_diffuse(const Vect3& diffuse)& {
+			void set_diffuse(const Vect3& diffuse) {
 				check_color_value(__FILE__, __LINE__, __func__, diffuse);
 				diffuse_ = diffuse;
 			}
 
-			void set_specular(const Vect3& specular)& {
+			void set_specular(const Vect3& specular) {
 				check_color_value(__FILE__, __LINE__, __func__, specular);
 				specular_ = specular;
 			}
 
-			void set_emission(const Vect3& emission)& {
+			void set_emission(const Vect3& emission) {
 				check_color_value(__FILE__, __LINE__, __func__, emission);
 				emission_ = emission;
 			}
@@ -199,11 +200,10 @@ namespace eng {
 		}
 
 		// Default polygon shape
-		explicit Mesh(GLsizei count_points) {
+		explicit Mesh(size_t count_points) {
 			if (!glew_is_ok()) {
 				throw EngRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
-
 			if (count_points < 2) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Mesh, invalid number of points.\n\n");
 			}
@@ -214,10 +214,10 @@ namespace eng {
 			create_vertex_array();
 
 			std::vector<GLuint> indices(count_indices_);
-			for (GLsizei i = 0; i < count_points - 2; ++i) {
-				indices[3 * static_cast<size_t>(i)] = 0;
-				indices[3 * static_cast<size_t>(i) + 1] = static_cast<GLuint>(i + 1);
-				indices[3 * static_cast<size_t>(i) + 2] = static_cast<GLuint>(i + 2);
+			for (size_t i = 0; i < count_points - 2; ++i) {
+				indices[3 * i] = 0;
+				indices[3 * i + 1] = static_cast<GLuint>(i + 1);
+				indices[3 * i + 2] = static_cast<GLuint>(i + 2);
 			}
 			set_indices(indices);
 		}
@@ -230,7 +230,6 @@ namespace eng {
 			material = other.material;
 
 			create_vertex_array();
-			set_matrix_buffer(other.matrix_buffer_);
 
 			glBindVertexArray(vertex_array_);
 			glBindBuffer(GL_COPY_READ_BUFFER, other.vertex_buffer_);
@@ -268,7 +267,7 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& set_border_width(GLfloat border_width)& {
+		Mesh& set_border_width(GLfloat border_width) {
 			if (border_width < 0.0) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_border_width, invalid border width value.\n\n");
 			}
@@ -277,7 +276,7 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& set_positions(const std::vector<Vect3>& positions, bool update_normals = false)& {
+		Mesh& set_positions(const std::vector<Vect3>& positions, bool update_normals = false) {
 			if (positions.size() != count_points_) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points.\n\n");
 			}
@@ -305,7 +304,7 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& set_normals(const std::vector<Vect3>& normals)& {
+		Mesh& set_normals(const std::vector<Vect3>& normals) {
 			if (normals.size() != count_points_) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_normals, invalid number of points.\n\n");
 			}
@@ -325,7 +324,7 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& set_tex_coords(const std::vector<Vect2>& tex_coords)& {
+		Mesh& set_tex_coords(const std::vector<Vect2>& tex_coords) {
 			if (tex_coords.size() != count_points_) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_tex_coords, invalid number of points.\n\n");
 			}
@@ -345,7 +344,7 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& set_colors(const std::vector<Vect3>& colors)& {
+		Mesh& set_colors(const std::vector<Vect3>& colors) {
 			if (colors.size() != count_points_) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_colors, invalid number of points.\n\n");
 			}
@@ -365,7 +364,9 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& set_indices(const std::vector<GLuint>& indices)& {
+		Mesh& set_indices(const std::vector<GLuint>& indices) {
+			count_indices_ = indices.size();
+
 			glBindVertexArray(vertex_array_);
 
 			glDeleteBuffers(1, &index_buffer_);
@@ -376,29 +377,6 @@ namespace eng {
 
 			glBindVertexArray(0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-			return *this;
-		}
-
-		Mesh& set_matrix_buffer(GLuint matrix_buffer)& {
-			matrix_buffer_ = matrix_buffer;
-			if (matrix_buffer == 0) {
-				return *this;
-			}
-
-			glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer);
-			glBindVertexArray(vertex_array_);
-
-			GLuint attrib_offset = static_cast<GLuint>(MEMORY_CONFIGURATION.size());
-			for (GLuint i = 0; i < 4; ++i) {
-				glVertexAttribPointer(attrib_offset + i, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 16, reinterpret_cast<GLvoid*>(sizeof(GLfloat) * 4 * i));
-				glEnableVertexAttribArray(attrib_offset + i);
-				glVertexAttribDivisor(attrib_offset + i, 1);
-			}
-
-			glBindVertexArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
 			return *this;
@@ -478,7 +456,7 @@ namespace eng {
 			return get_value<Vect3>(positions.begin(), positions.end(), Vect3(0, 0, 0), [&](auto element, auto* result) { *result += element; }) / static_cast<double>(positions.size());
 		}
 
-		Mesh& apply_matrix(const Matrix& transform)& {
+		Mesh& apply_matrix(const Matrix& transform) {
 			Matrix normal_transform = Matrix::normal_transform(transform);
 			std::vector<Vect3> positions = get_positions();
 			std::vector<Vect3> normals = get_normals();
@@ -491,14 +469,14 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& invert_points_order(bool update_normals = false)& {
+		Mesh& invert_points_order(bool update_normals = false) {
 			std::vector<Vect3> positions = get_positions();
 			std::reverse(positions.begin(), positions.end());
 			set_positions(positions, update_normals);
 			return *this;
 		}
 
-		void draw(GLsizei count, const Shader<size_t>& shader) const {
+		void draw(size_t count, const Shader<size_t>& shader) const {
 			if (count == 0) {
 				return;
 			}
@@ -507,9 +485,9 @@ namespace eng {
 
 			glBindVertexArray(vertex_array_);
 			if (!frame) {
-				glDrawElementsInstanced(GL_TRIANGLES, count_indices_, GL_UNSIGNED_INT, NULL, count);
+				glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(count_indices_), GL_UNSIGNED_INT, NULL, static_cast<GLsizei>(count));
 			} else {
-				glDrawElementsInstanced(GL_LINE_LOOP, count_indices_, GL_UNSIGNED_INT, NULL, count);
+				glDrawElementsInstanced(GL_LINE_LOOP, static_cast<GLsizei>(count_indices_), GL_UNSIGNED_INT, NULL, static_cast<GLsizei>(count));
 			}
 			glBindVertexArray(0);
 
@@ -522,12 +500,8 @@ namespace eng {
 			deallocate();
 		}
 
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
+		static size_t get_count_params() noexcept {
+			return MEMORY_CONFIGURATION.size();
 		}
 	};
 }
