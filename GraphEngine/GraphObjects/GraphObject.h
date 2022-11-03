@@ -4,399 +4,12 @@
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <unordered_set>
-#include "Mesh.h"
+#include "MeshStorage.h"
+#include "ModelStorage.h"
 
 
 namespace eng {
 	class GraphObject {
-		class MeshStorage {
-			friend class GraphObject;
-
-			GLuint matrix_buffer_ = 0;
-
-			std::vector<size_t> meshes_index_;
-			std::vector<size_t> free_mesh_id_;
-			std::vector<std::pair<size_t, Mesh>> meshes_;
-
-			void set_mesh_matrix_buffer(Mesh& mesh) const {
-				if (matrix_buffer_ == 0) {
-					return;
-				}
-
-				glBindVertexArray(mesh.get_vertex_array());
-				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-
-				GLuint attrib_offset = static_cast<GLuint>(Mesh::get_count_params());
-				for (GLuint i = 0; i < 4; ++i) {
-					glVertexAttribPointer(attrib_offset + i, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 16, reinterpret_cast<GLvoid*>(sizeof(GLfloat) * 4 * i));
-					glEnableVertexAttribArray(attrib_offset + i);
-					glVertexAttribDivisor(attrib_offset + i, 1);
-				}
-
-				glBindVertexArray(0);
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-				check_gl_errors(__FILE__, __LINE__, __func__);
-			}
-
-			void set_matrix_buffer(GLuint matrix_buffer) {
-				if (matrix_buffer_ == matrix_buffer) {
-					return;
-				}
-
-				matrix_buffer_ = matrix_buffer;
-
-				for (auto& [id, mesh] : meshes_) {
-					set_mesh_matrix_buffer(mesh);
-				}
-			}
-
-		public:
-			using Iterator = std::vector<std::pair<size_t, Mesh>>::const_iterator;
-
-			const Mesh& operator[](size_t id) const {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
-				}
-
-				return meshes_[meshes_index_[id]].second;
-			}
-
-			Mesh get(size_t id) const {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "get, invalid mesh id.\n\n");
-				}
-
-				return meshes_[meshes_index_[id]].second;
-			}
-
-			size_t get_memory_id(size_t id) const {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid mesh id.\n\n");
-				}
-
-				return meshes_index_[id];
-			}
-
-			size_t get_id(size_t memory_id) const {
-				if (meshes_.size() <= memory_id) {
-					throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
-				}
-
-				return meshes_[memory_id].first;
-			}
-
-			bool contains(size_t id) const noexcept {
-				return id < meshes_index_.size() && meshes_index_[id] < std::numeric_limits<size_t>::max();
-			}
-
-			size_t size() const noexcept {
-				return meshes_.size();
-			}
-
-			bool empty() const noexcept {
-				return meshes_.empty();
-			}
-
-			Iterator begin() const noexcept {
-				return meshes_.begin();
-			}
-
-			Iterator end() const noexcept {
-				return meshes_.end();
-			}
-
-			MeshStorage& erase(size_t id) {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid mesh id.\n\n");
-				}
-
-				free_mesh_id_.push_back(id);
-
-				meshes_index_[meshes_.back().first] = meshes_index_[id];
-				meshes_[meshes_index_[id]].swap(meshes_.back());
-
-				meshes_.pop_back();
-				meshes_index_[id] = std::numeric_limits<size_t>::max();
-				return *this;
-			}
-
-			MeshStorage& clear() noexcept {
-				meshes_index_.clear();
-				free_mesh_id_.clear();
-				meshes_.clear();
-				return *this;
-			}
-
-			size_t insert(const Mesh& mesh) {
-				size_t free_mesh_id = meshes_index_.size();
-				if (free_mesh_id_.empty()) {
-					meshes_index_.push_back(meshes_.size());
-				} else {
-					free_mesh_id = free_mesh_id_.back();
-					free_mesh_id_.pop_back();
-					meshes_index_[free_mesh_id] = meshes_.size();
-				}
-
-				meshes_.push_back({ free_mesh_id, mesh });
-				set_mesh_matrix_buffer(meshes_.back().second);
-				return free_mesh_id;
-			}
-
-			MeshStorage& modify(size_t id, const Mesh& mesh) {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "modify, invalid mesh id.\n\n");
-				}
-
-				set_mesh_matrix_buffer(meshes_[meshes_index_[id]].second = mesh);
-				return *this;
-			}
-
-			MeshStorage& apply_func(size_t id, std::function<void(Mesh&)> func) {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "apply_func, invalid mesh id.\n\n");
-				}
-
-				Mesh object(meshes_[meshes_index_[id]].second);
-				func(object);
-				set_mesh_matrix_buffer(meshes_[meshes_index_[id]].second = object);
-				return *this;
-			}
-
-			MeshStorage& apply_func(std::function<void(Mesh&)> func) {
-				for (auto& [id, mesh] : meshes_) {
-					Mesh object(mesh);
-					func(object);
-					set_mesh_matrix_buffer(mesh = object);
-				}
-				return *this;
-			}
-		};
-
-		class ModelStorage {
-			friend class GraphObject;
-
-			GLuint matrix_buffer_ = 0;
-
-			size_t max_count_models_;
-			std::vector<size_t> models_index_;
-			std::vector<size_t> free_model_id_;
-			std::vector<std::pair<size_t, Matrix>> models_;
-
-			GLuint create_matrix_buffer(size_t max_count_models) {
-				max_count_models_ = max_count_models;
-
-				glGenBuffers(1, &matrix_buffer_);
-				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-
-				glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * max_count_models, NULL, GL_DYNAMIC_DRAW);
-
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-				check_gl_errors(__FILE__, __LINE__, __func__);
-				return matrix_buffer_;
-			}
-
-			void update_matrix(size_t memory_id) const {
-				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-				glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * memory_id, sizeof(GLfloat) * 16, &std::vector<GLfloat>(models_[memory_id].second)[0]);
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-				check_gl_errors(__FILE__, __LINE__, __func__);
-			}
-
-			void deallocate() {
-				glDeleteBuffers(1, &matrix_buffer_);
-				check_gl_errors(__FILE__, __LINE__, __func__);
-
-				matrix_buffer_ = 0;
-			}
-
-			void swap(ModelStorage& other) noexcept {
-				std::swap(matrix_buffer_, other.matrix_buffer_);
-				std::swap(max_count_models_, other.max_count_models_);
-				std::swap(models_index_, other.models_index_);
-				std::swap(free_model_id_, other.free_model_id_);
-				std::swap(models_, other.models_);
-			}
-
-		public:
-			using Iterator = std::vector<std::pair<size_t, Matrix>>::const_iterator;
-
-			ModelStorage() noexcept {
-				max_count_models_ = 0;
-			}
-
-			ModelStorage(const ModelStorage& other) {
-				max_count_models_ = other.max_count_models_;
-				models_index_ = other.models_index_;
-				free_model_id_ = other.free_model_id_;
-				models_ = other.models_;
-
-				create_matrix_buffer(max_count_models_);
-
-				glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer_);
-				glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer_);
-
-				glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * 16 * max_count_models_);
-
-				glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
-				glBindBuffer(GL_COPY_READ_BUFFER, 0);
-
-				check_gl_errors(__FILE__, __LINE__, __func__);
-			}
-
-			ModelStorage(ModelStorage&& other) noexcept {
-				swap(other);
-			}
-
-			ModelStorage& operator=(const ModelStorage& other)& {
-				ModelStorage object(other);
-				swap(object);
-				return *this;
-			}
-
-			ModelStorage& operator=(ModelStorage&& other)& {
-				deallocate();
-				swap(other);
-				return *this;
-			}
-
-			const Matrix& operator[](size_t id) const {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid model id.\n\n");
-				}
-
-				return models_[models_index_[id]].second;
-			}
-
-			ModelStorage& set(size_t id, const Matrix& matrix) {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "set, invalid model id.\n\n");
-				}
-
-				models_[models_index_[id]].second = matrix;
-
-				glBindBuffer(GL_ARRAY_BUFFER, matrix_buffer_);
-				glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 16 * models_index_[id], sizeof(GLfloat) * 16, &std::vector<GLfloat>(matrix)[0]);
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-				check_gl_errors(__FILE__, __LINE__, __func__);
-				return *this;
-			}
-
-			Matrix get(size_t id) const {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "get, invalid model id.\n\n");
-				}
-
-				return models_[models_index_[id]].second;
-			}
-
-			size_t get_memory_id(size_t id) const {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid model id.\n\n");
-				}
-
-				return models_index_[id];
-			}
-
-			size_t get_id(size_t memory_id) const {
-				if (models_.size() <= memory_id) {
-					throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
-				}
-
-				return models_[memory_id].first;
-			}
-
-			bool contains(size_t id) const noexcept {
-				return id < models_index_.size() && models_index_[id] < std::numeric_limits<size_t>::max();
-			}
-
-			size_t size() const noexcept {
-				return models_.size();
-			}
-
-			bool empty() const noexcept {
-				return models_.empty();
-			}
-
-			Iterator begin() const noexcept {
-				return models_.begin();
-			}
-
-			Iterator end() const noexcept {
-				return models_.end();
-			}
-
-			ModelStorage& erase(size_t id) {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
-				}
-
-				free_model_id_.push_back(id);
-
-				models_index_[models_.back().first] = models_index_[id];
-				models_[models_index_[id]] = models_.back();
-
-				update_matrix(models_index_[id]);
-
-				models_.pop_back();
-				models_index_[id] = std::numeric_limits<size_t>::max();
-				return *this;
-			}
-
-			ModelStorage& clear() noexcept {
-				models_index_.clear();
-				free_model_id_.clear();
-				models_.clear();
-				return *this;
-			}
-
-			size_t insert(const Matrix& matrix) {
-				if (models_.size() == max_count_models_) {
-					throw EngRuntimeError(__FILE__, __LINE__, "insert, too many instances created.\n\n");
-				}
-
-				size_t free_model_id = models_index_.size();
-				if (free_model_id_.empty()) {
-					models_index_.push_back(models_.size());
-				} else {
-					free_model_id = free_model_id_.back();
-					free_model_id_.pop_back();
-					models_index_[free_model_id] = models_.size();
-				}
-
-				models_.push_back({ free_model_id, matrix });
-				update_matrix(models_.size() - 1);
-				return free_model_id;
-			}
-
-			ModelStorage& change_left(size_t id, const Matrix& matrix) {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
-				}
-
-				models_[models_index_[id]].second = matrix * models_[models_index_[id]].second;
-				update_matrix(models_index_[id]);
-				return *this;
-			}
-
-			ModelStorage& change_right(size_t id, const Matrix& matrix) {
-				if (!contains(id)) {
-					throw EngOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
-				}
-
-				models_[models_index_[id]].second *= matrix;
-				update_matrix(models_index_[id]);
-				return *this;
-			}
-
-			~ModelStorage() {
-				deallocate();
-			}
-		};
-
 		// ...
 		std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
 			std::vector<Texture> textures;
@@ -525,7 +138,7 @@ namespace eng {
 		}
 
 		void draw_meshes(size_t model_id, const Shader<size_t>& shader) const {
-			if (shader.description != eng::ShaderType::MAIN) {
+			if (shader.description != ShaderType::MAIN) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
 			}
 			if (!models.contains(model_id)) {
@@ -541,7 +154,7 @@ namespace eng {
 		}
 
 		void draw_meshes(const Shader<size_t>& shader) const {
-			if (shader.description != eng::ShaderType::MAIN) {
+			if (shader.description != ShaderType::MAIN) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
 			}
 			shader.set_uniform_i("model_id", -1);
@@ -711,7 +324,7 @@ namespace eng {
 		}
 
 		void draw(size_t model_id, size_t mesh_id, const Shader<size_t>& shader) const {
-			if (shader.description != eng::ShaderType::MAIN) {
+			if (shader.description != ShaderType::MAIN) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
 			}
 			if (!models.contains(model_id)) {
@@ -737,7 +350,7 @@ namespace eng {
 		}
 
 		void draw(size_t model_id, const Shader<size_t>& shader) const {
-			if (shader.description != eng::ShaderType::MAIN) {
+			if (shader.description != ShaderType::MAIN) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
 			}
 			if (!models.contains(model_id)) {
@@ -757,7 +370,7 @@ namespace eng {
 		}
 
 		void draw(const Shader<size_t>& shader) const {
-			if (shader.description != eng::ShaderType::MAIN) {
+			if (shader.description != ShaderType::MAIN) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
 			}
 
@@ -772,9 +385,130 @@ namespace eng {
 				glStencilMask(0x00);
 			}
 		}
+
+		static GraphObject cube(size_t max_count_models) {
+			GraphObject cube(max_count_models);
+
+			Mesh mesh(4);
+			mesh.set_positions({
+				Vect3(0.5, 0.5, 0.5),
+				Vect3(0.5, -0.5, 0.5),
+				Vect3(-0.5, -0.5, 0.5),
+				Vect3(-0.5, 0.5, 0.5)
+			}, true);
+			mesh.set_tex_coords({
+				Vect2(1.0, 1.0),
+				Vect2(1.0, 0.0),
+				Vect2(0.0, 0.0),
+				Vect2(0.0, 1.0)
+			});
+			cube.meshes.insert(mesh);
+
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2));
+			cube.meshes.insert(mesh);
+
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2));
+			cube.meshes.insert(mesh);
+
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2));
+			cube.meshes.insert(mesh);
+
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2));
+			cube.meshes.insert(mesh);
+
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI));
+			cube.meshes.insert(mesh);
+
+			cube.meshes.compress();
+			return cube;
+		}
+
+		static GraphObject cylinder(size_t count_points, bool real_normals, size_t max_count_models) {
+			if (count_points < 3) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "cylinder, the number of points is less than three.\n\n");
+			}
+
+			GraphObject cylinder(max_count_models);
+
+			std::vector<Vect3> positions;
+			for (size_t i = 0; i < count_points; ++i) {
+				positions.push_back(Vect3(cos((2.0 * PI / count_points) * i), 0.0, sin((2.0 * PI / count_points) * i)));
+			}
+
+			Mesh mesh(count_points);
+			mesh.set_positions(positions, true);
+			mesh.invert_points_order();
+			cylinder.meshes.insert(mesh);
+
+			mesh.apply_matrix(Matrix::translation_matrix(Vect3(0.0, 1.0, 0.0)));
+			mesh.invert_points_order();
+			cylinder.meshes.insert(mesh);
+
+			for (size_t i = 0; i < count_points; ++i) {
+				size_t j = (i + 1) % count_points;
+
+				mesh = Mesh(4);
+				mesh.set_positions({
+					positions[i],
+					positions[j],
+					positions[j] + Vect3(0.0, 1.0, 0.0),
+					positions[i] + Vect3(0.0, 1.0, 0.0)
+				}, !real_normals);
+				if (real_normals) {
+					mesh.set_normals({
+						positions[i],
+						positions[j],
+						positions[j],
+						positions[i]
+					});
+				}
+				cylinder.meshes.insert(mesh);
+			}
+
+			cylinder.meshes.compress();
+			return cylinder;
+		}
+
+		static GraphObject sphere(size_t count_points, bool real_normals, size_t max_count_models) {
+			if (count_points < 3) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "sphere, the number of points is less than three.\n\n");
+			}
+
+			GraphObject sphere(max_count_models);
+			std::vector<Vect3> last_positions(2 * count_points, Vect3(0.0, 1.0, 0.0));
+			for (size_t i = 0; i < count_points; ++i) {
+				std::vector<Vect3> current_positions(2 * count_points);
+
+				double vertical_coefficient = (PI / count_points) * (i + 1);
+				for (size_t j = 0; j < 2 * count_points; ++j) {
+					double horizontal_coefficient = (PI / count_points) * j;
+					current_positions[j] = Vect3(cos(horizontal_coefficient) * sin(vertical_coefficient), cos(vertical_coefficient), sin(horizontal_coefficient) * sin(vertical_coefficient));
+				}
+
+				for (size_t j = 0; j < 2 * count_points; ++j) {
+					size_t next = (j + 1) % (2 * count_points);
+
+					std::vector<Vect3> positions;
+					if (i == 0) {
+						positions = { Vect3(0.0, 1.0, 0.0), current_positions[j], current_positions[next] };
+					} else if (i == count_points - 1) {
+						positions = { last_positions[j], Vect3(0.0, -1.0, 0.0), last_positions[next] };
+					} else {
+						positions = { last_positions[next], last_positions[j], current_positions[j], current_positions[next] };
+					}
+
+					Mesh mesh(positions.size());
+					mesh.set_positions(positions, !real_normals);
+					if (real_normals) {
+						mesh.set_normals(positions);
+					}
+					sphere.meshes.insert(mesh);
+				}
+				last_positions = current_positions;
+			}
+
+			sphere.meshes.compress();
+			return sphere;
+		}
 	};
 }
-
-#include "Cube.h"
-#include "Cylinder.h"
-#include "Sphere.h"

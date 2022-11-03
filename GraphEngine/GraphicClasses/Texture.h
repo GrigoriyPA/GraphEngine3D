@@ -102,6 +102,14 @@ namespace eng {
 			return *this;
 		}
 
+		bool operator==(const Texture& other) const noexcept {
+			return texture_id_ == other.texture_id_;
+		}
+
+		bool operator!=(const Texture& other) const noexcept {
+			return !(*this == other);
+		}
+
 		Texture& set_wrapping(GLint wrapping) {
 			if (wrapping != GL_REPEAT && wrapping != GL_MIRRORED_REPEAT && wrapping != GL_CLAMP_TO_EDGE && wrapping != GL_CLAMP_TO_BORDER) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_wrapping, invalid wrapping type.\n\n");

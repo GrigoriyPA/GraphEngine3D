@@ -11,7 +11,7 @@ const double MAX_DIST = 25;
 
 const double POINT_RADIUS = 0.05;
 const double BORDER_WIDTH = 0.1;
-const int MAX_COUNT_MODELS = 1000;
+const int MAX_COUNT_MODELS = 1;
 
 const sf::Color INTERFACE_MAIN_COLOR = sf::Color(0, 0, 0, 150);
 const sf::Color INTERFACE_BORDER_COLOR = sf::Color(0, 0, 215);

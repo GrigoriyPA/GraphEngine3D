@@ -1,8 +1,7 @@
 #pragma once
 
+#include "Material.h"
 #include "../CommonClasses/Vect2.h"
-#include "../GraphicClasses/Shader.h"
-#include "../GraphicClasses/Texture.h"
 
 
 namespace eng {
@@ -72,109 +71,6 @@ namespace eng {
 		}
 
 	public:
-		class Material {
-			friend class Mesh;
-
-			double shininess_ = 1.0;
-			double alpha_ = 1.0;
-			Vect3 ambient_ = Vect3(0.0, 0.0, 0.0);
-			Vect3 diffuse_ = Vect3(0.0, 0.0, 0.0);
-			Vect3 specular_ = Vect3(0.0, 0.0, 0.0);
-			Vect3 emission_ = Vect3(0.0, 0.0, 0.0);
-
-			void set_uniforms(const Shader<size_t>& shader) const {
-				if (shader.description != eng::ShaderType::MAIN) {
-					throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-				}
-
-				shader.set_uniform_i("use_diffuse_map", diffuse_map.get_id() != 0);
-				shader.set_uniform_i("use_specular_map", specular_map.get_id() != 0);
-				shader.set_uniform_i("use_emission_map", emission_map.get_id() != 0);
-
-				if (diffuse_map.get_id() == 0) {
-					shader.set_uniform_f("object_material.ambient", static_cast<GLfloat>(ambient_.x), static_cast<GLfloat>(ambient_.y), static_cast<GLfloat>(ambient_.z));
-					shader.set_uniform_f("object_material.diffuse", static_cast<GLfloat>(diffuse_.x), static_cast<GLfloat>(diffuse_.y), static_cast<GLfloat>(diffuse_.z));
-					shader.set_uniform_f("object_material.alpha", static_cast<GLfloat>(alpha_));
-				}
-
-				if (specular_map.get_id() == 0) {
-					shader.set_uniform_f("object_material.specular", static_cast<GLfloat>(specular_.x), static_cast<GLfloat>(specular_.y), static_cast<GLfloat>(specular_.z));
-				}
-				shader.set_uniform_f("object_material.shininess", static_cast<GLfloat>(shininess_));
-
-				if (emission_map.get_id() == 0) {
-					shader.set_uniform_f("object_material.emission", static_cast<GLfloat>(emission_.x), static_cast<GLfloat>(emission_.y), static_cast<GLfloat>(emission_.z));
-				}
-
-				shader.set_uniform_i("object_material.use_vertex_color", use_vertex_color);
-				shader.set_uniform_i("object_material.shadow", shadow);
-
-				diffuse_map.activate(0);
-				specular_map.activate(1);
-				emission_map.activate(2);
-			}
-
-			void delete_uniforms(const Shader<size_t>& shader) const {
-				if (shader.description != eng::ShaderType::MAIN) {
-					throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-				}
-
-				diffuse_map.deactive(0);
-				specular_map.deactive(1);
-				emission_map.deactive(2);
-			}
-
-		public:
-			bool shadow = true;
-			bool use_vertex_color = false;
-
-			Texture diffuse_map;
-			Texture specular_map;
-			Texture emission_map;
-
-			Material() {
-				if (!glew_is_ok()) {
-					throw EngRuntimeError(__FILE__, __LINE__, "Material, failed to initialize GLEW.\n\n");
-				}
-			}
-
-			void set_shininess(double shininess) {
-				if (shininess < 0.0) {
-					throw EngInvalidArgument(__FILE__, __LINE__, "set_shininess, invalid shininess value.\n\n");
-				}
-
-				shininess_ = shininess;
-			}
-
-			void set_alpha(double alpha) {
-				if (alpha < 0.0 || 1.0 < alpha) {
-					throw EngInvalidArgument(__FILE__, __LINE__, "set_alpha, invalid alpha value.\n\n");
-				}
-
-				alpha_ = alpha;
-			}
-
-			void set_ambient(const Vect3& ambient) {
-				check_color_value(__FILE__, __LINE__, __func__, ambient);
-				ambient_ = ambient;
-			}
-
-			void set_diffuse(const Vect3& diffuse) {
-				check_color_value(__FILE__, __LINE__, __func__, diffuse);
-				diffuse_ = diffuse;
-			}
-
-			void set_specular(const Vect3& specular) {
-				check_color_value(__FILE__, __LINE__, __func__, specular);
-				specular_ = specular;
-			}
-
-			void set_emission(const Vect3& emission) {
-				check_color_value(__FILE__, __LINE__, __func__, emission);
-				emission_ = emission;
-			}
-		};
-
 		bool frame = false;
 
 		Material material;
@@ -254,6 +150,14 @@ namespace eng {
 			deallocate();
 			swap(other);
 			return *this;
+		}
+
+		bool operator==(const Mesh& other) const noexcept {
+			return frame == other.frame && material == other.material;
+		}
+
+		bool operator!=(const Mesh& other) const noexcept {
+			return !(*this == other);
 		}
 
 		Mesh& set_border_width(GLfloat border_width) {
@@ -426,8 +330,8 @@ namespace eng {
 		std::vector<GLuint> get_indices() const {
 			GLuint* buffer = new GLuint[count_indices_];
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_);
-			glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLuint) * count_indices_, reinterpret_cast<GLvoid*>(buffer));
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLuint) * count_indices_, reinterpret_cast<GLvoid*>(buffer));
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
 

@@ -3,7 +3,7 @@
 
 class Cut : public RenderObject {
     void init() {
-        eng::GraphObject cut = get_cylinder(12, true, MAX_COUNT_MODELS);
+        eng::GraphObject cut = eng::GraphObject::cylinder(12, true, MAX_COUNT_MODELS);
 
         cut.meshes.apply_func([](auto& mesh) {
             mesh.material.set_ambient(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);

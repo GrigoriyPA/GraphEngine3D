@@ -3,7 +3,7 @@
 
 class Line : public RenderObject {
     void init() {
-        eng::GraphObject line = get_cylinder(12, true, MAX_COUNT_MODELS);
+        eng::GraphObject line = eng::GraphObject::cylinder(12, true, MAX_COUNT_MODELS);
 
         line.meshes.apply_func([](auto& mesh) {
             mesh.material.set_ambient(eng::Vect3(INTERFACE_BORDER_COLOR) / 255);

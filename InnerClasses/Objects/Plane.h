@@ -337,7 +337,7 @@ public:
     }
 
     void switch_hide() {
-        eng::Mesh::Material material = (*scene)[scene_id.first].meshes[0].material;
+        eng::Material material = (*scene)[scene_id.first].meshes[0].material;
         if (!hide)
             material.set_alpha(0.1);
         else

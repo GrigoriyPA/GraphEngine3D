@@ -89,7 +89,7 @@ public:
     }
 
     eng::GraphObject get_shadow_box() {
-        eng::GraphObject shadow_box = get_cube();
+        eng::GraphObject shadow_box = eng::GraphObject::cube(1);
         shadow_box.transparent = true;
 
         shadow_box.meshes.apply_func([](auto& mesh) {

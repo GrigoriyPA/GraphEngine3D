@@ -37,6 +37,14 @@ namespace eng {
 			return kernel_[index];
 		}
 
+		bool operator==(const Kernel& other) const noexcept {
+			return kernel_ == other.kernel_;
+		}
+
+		bool operator!=(const Kernel& other) const noexcept {
+			return !(*this == other);
+		}
+
 		friend std::ostream& operator<<(std::ostream& fout, const Kernel& kernel) noexcept;
 
 		template <typename T>
