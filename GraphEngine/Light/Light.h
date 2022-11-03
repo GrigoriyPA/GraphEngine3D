@@ -1,48 +1,72 @@
 #pragma once
 
-#include <math.h>
-#include <cassert>
-#include <iostream>
-#include <string>
+#include "../GraphicClasses/Shader.h"
 
 
-class Light {
-protected:
-    double eps = 0.00001;
+namespace eng {
+    class Light {
+    protected:
+        inline static double eps_ = 1e-5;
 
-public:
-    eng::Vect3 ambient = eng::Vect3(0, 0, 0), diffuse = eng::Vect3(0, 0, 0), specular = eng::Vect3(0, 0, 0);
-    bool shadow = false;
+        Vect3 ambient_ = Vect3(0.0, 0.0, 0.0);
+        Vect3 diffuse_ = Vect3(0.0, 0.0, 0.0);
+        Vect3 specular_ = Vect3(0.0, 0.0, 0.0);
 
-    Light() {
-    }
+        void set_light_uniforms(size_t id, const Shader<size_t>& shader) const {
+            if (shader.description != ShaderType::MAIN) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_light_uniforms, invalid shader type.\n\n");
+            }
 
-    virtual eng::Matrix get_light_space_matrix() = 0;
+            std::string name = "lights[" + std::to_string(id) + "].";
+            shader.set_uniform_i((name + "exist").c_str(), 1);
+            shader.set_uniform_f((name + "ambient").c_str(), ambient_.x, ambient_.y, ambient_.z);
+            shader.set_uniform_f((name + "diffuse").c_str(), diffuse_.x, diffuse_.y, diffuse_.z);
+            shader.set_uniform_f((name + "specular").c_str(), specular_.x, specular_.y, specular_.z);
+            shader.set_uniform_i((name + "shadow").c_str(), shadow);
+        }
 
-    virtual void set_uniforms(int draw_id, eng::Shader<size_t>* shader_program) = 0;
-};
+    public:
+        bool shadow = false;
 
-void set_default_light_uniforms(int draw_id, eng::Shader<size_t>* shader_program) {
-    if (draw_id < 0) {
-        std::cout << "ERROR::SET_DEFAULT_LIGHT_UNIFORMS\n" << "Invalid draw id.\n";
-        assert(0);
-    }
+        Light() {
+            if (!glew_is_ok()) {
+                throw EngRuntimeError(__FILE__, __LINE__, "Light, failed to initialize GLEW.\n\n");
+            }
+        }
 
-    try {
-        std::string name = "lights[" + std::to_string(draw_id) + "].";
-        shader_program->set_uniform_i((name + "shadow").c_str(), 0);
-        shader_program->set_uniform_i((name + "type").c_str(), 0);
-        shader_program->set_uniform_f((name + "direction").c_str(), 1, 0, 0);
-        shader_program->set_uniform_f((name + "ambient").c_str(), 0, 0, 0);
-        shader_program->set_uniform_f((name + "diffuse").c_str(), 0, 0, 0);
-        shader_program->set_uniform_f((name + "specular").c_str(), 0, 0, 0);
-    }
-    catch (const std::exception& error) {
-        std::cout << "ERROR::SET_DEFAULT_LIGHT_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
-        assert(0);
-    }
+        void set_ambient(const Vect3& ambient) {
+            check_color_value(__FILE__, __LINE__, __func__, ambient);
+            ambient_ = ambient;
+        }
+
+        void set_diffuse(const Vect3& diffuse) {
+            check_color_value(__FILE__, __LINE__, __func__, diffuse);
+            diffuse_ = diffuse;
+        }
+
+        void set_specular(const Vect3& specular) {
+            check_color_value(__FILE__, __LINE__, __func__, specular);
+            specular_ = specular;
+        }
+
+        virtual void set_uniforms(size_t id, const Shader<size_t>& shader) const = 0;
+
+        virtual Matrix get_light_space_matrix() const = 0;
+
+        static void set_epsilon(double eps) {
+            if (eps <= 0) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+            }
+
+            eps_ = eps;
+        }
+
+        static void set_exist(size_t id, const Shader<size_t>& shader) {
+            if (shader.description != ShaderType::MAIN) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+            }
+
+            shader.set_uniform_i(("lights[" + std::to_string(id) + "].exist").c_str(), 0);
+        }
+    };
 }
-
-#include "DirLight.h"
-#include "PointLight.h"
-#include "SpotLight.h"

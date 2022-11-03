@@ -74,8 +74,8 @@ signed main() {
         double ratio = scene.cam.get_screen_ratio();
         double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
         SpotLight spot_light(eng::Vect3(0, 0, 0), eng::Vect3(0, 0, 1), angle, 1.1 * angle);
-        spot_light.diffuse = eng::Vect3(0.6, 0.6, 0.6);
-        spot_light.specular = eng::Vect3(0.8, 0.8, 0.8);
+        spot_light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
+        spot_light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
         spot_light.quadratic = 0.1;
         scene.set_light(0, &spot_light);
 
@@ -104,9 +104,9 @@ signed main() {
         scene[obj_id].meshes.insert(mesh);
 
         DirLight light(eng::Vect3(-1, -1, 1));
-        light.ambient = eng::Vect3(0.3, 0.3, 0.3);
-        light.diffuse = eng::Vect3(0.6, 0.6, 0.6);
-        light.specular = eng::Vect3(0.8, 0.8, 0.8);
+        light.set_ambient(eng::Vect3(0.3, 0.3, 0.3));
+        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
+        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
         light.shadow_position = eng::Vect3(3, 1, 1);
         light.shadow = true;
         scene.set_light(1, &light);

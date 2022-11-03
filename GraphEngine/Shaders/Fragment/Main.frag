@@ -1,10 +1,10 @@
 #version 460 core
 
-const int NR_LIGHTS = 3;
+const int NR_LIGHTS = 2;
 
 
 struct Light {
-    bool shadow;
+    bool exist, shadow;
     int type;
     float constant, linear, quadratic, cut_in, cut_out;
     vec3 position, direction, ambient, diffuse, specular;
@@ -172,6 +172,9 @@ void main() {
 
     vec3 result_color = vec3(0.0);
     for(int i = 0; i < NR_LIGHTS; i++) {
+        if (!lights[i].exist)
+            continue;
+
         if (lights[i].type == 0)
   	        result_color += calc_dir_light(lights[i], normal, view_dir, material, i);
         else if (lights[i].type == 1)

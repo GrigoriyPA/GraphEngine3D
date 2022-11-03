@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Light/Light.h"
 #include "GraphObjects/GraphObject.h"
 #include "GraphicClasses/Kernel.h"
 #include "GraphicClasses/Shader.h"
@@ -17,7 +18,9 @@
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
 #include "Camera.h"
-#include "Light/Light.h"
+#include "Light/DirLight.h"
+#include "Light/PointLight.h"
+#include "Light/SpotLight.h"
 
 
 struct TransparentObject {
@@ -44,7 +47,7 @@ class GraphEngine {
 	double eps = 0.00001, gamma = 2.2;
 
 	unsigned int primary_fbo, depth_map_fbo, center_object_ssbo, screen_tex, depth_stencil_tex, depth_map_tex, screen_coord;
-	std::vector < Light* > lights;
+	std::vector < eng::Light* > lights;
 	std::unordered_map < int, eng::GraphObject > objects;
 	sf::Vector2i mouse_position;
 	sf::RenderWindow* window;
@@ -90,11 +93,11 @@ class GraphEngine {
 	void set_light_uniforms() {
 		for (int i = 0; i < lights.size(); i++) {
 			if (lights[i] == nullptr) {
-				set_default_light_uniforms(i, &main_shader);
+				eng::Light::set_exist(i, main_shader);
 				continue;
 			}
 
-			lights[i]->set_uniforms(i, &main_shader);
+			lights[i]->set_uniforms(i, main_shader);
 		}
 	}
 
@@ -371,7 +374,7 @@ public:
 		glClearColor(color.x, color.y, color.z, 1.0);
 	}
 
-	void set_light(int light_id, Light* new_light) {
+	void set_light(int light_id, eng::Light* new_light) {
 		if (light_id < 0 || lights.size() <= light_id) {
 			std::cout << "ERROR::GRAPH_ENGINE::SET_LIGHT\n" << "Invalid light id.\n";
 			assert(0);
@@ -425,7 +428,7 @@ public:
 		post_shader.set_uniform_f("border_color", color.x, color.y, color.z);
 	}
 
-	Light* get_light(int light_id) {
+	eng::Light* get_light(int light_id) {
 		if (light_id < 0 || lights.size() <= light_id) {
 			std::cout << "ERROR::GRAPH_ENGINE::GET_LIGHT\n" << "Invalid light id.\n";
 			assert(0);

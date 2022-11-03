@@ -1,7 +1,7 @@
 #pragma once
 
 
-class PointLight : public Light {
+class PointLight : public eng::Light {
 public:
     double constant = 1, linear = 0, quadratic = 0;
 
@@ -11,24 +11,25 @@ public:
         this->position = position;
     }
 
-    void set_uniforms(int draw_id, eng::Shader<size_t>* shader_program) {
+    void set_uniforms(size_t draw_id, const eng::Shader<size_t>& shader_program) const {
         if (draw_id < 0) {
             std::cout << "ERROR::POINT_LIGHT::SET_UNIFORMS\n" << "Invalid draw id.\n";
             assert(0);
         }
 
         try {
+            shader_program.set_uniform_i(("lights[" + std::to_string(draw_id) + "].exist").c_str(), 1);
             std::string name = "lights[" + std::to_string(draw_id) + "].";
-            shader_program->set_uniform_i((name + "shadow").c_str(), 0);
-            shader_program->set_uniform_i((name + "shadow").c_str(), 0);
-            shader_program->set_uniform_i((name + "type").c_str(), 1);
-            shader_program->set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
-            shader_program->set_uniform_f((name + "constant").c_str(), constant);
-            shader_program->set_uniform_f((name + "linear").c_str(), linear);
-            shader_program->set_uniform_f((name + "quadratic").c_str(), quadratic);
-            shader_program->set_uniform_f((name + "ambient").c_str(), ambient.x, ambient.y, ambient.z);
-            shader_program->set_uniform_f((name + "diffuse").c_str(), diffuse.x, diffuse.y, diffuse.z);
-            shader_program->set_uniform_f((name + "specular").c_str(), specular.x, specular.y, specular.z);
+            shader_program.set_uniform_i((name + "shadow").c_str(), 0);
+            shader_program.set_uniform_i((name + "shadow").c_str(), 0);
+            shader_program.set_uniform_i((name + "type").c_str(), 1);
+            shader_program.set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
+            shader_program.set_uniform_f((name + "constant").c_str(), constant);
+            shader_program.set_uniform_f((name + "linear").c_str(), linear);
+            shader_program.set_uniform_f((name + "quadratic").c_str(), quadratic);
+            shader_program.set_uniform_f((name + "ambient").c_str(), ambient_.x, ambient_.y, ambient_.z);
+            shader_program.set_uniform_f((name + "diffuse").c_str(), diffuse_.x, diffuse_.y, diffuse_.z);
+            shader_program.set_uniform_f((name + "specular").c_str(), specular_.x, specular_.y, specular_.z);
         }
         catch (const std::exception& error) {
             std::cout << "ERROR::POINT_LIGHT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
@@ -36,7 +37,7 @@ public:
         }
     }
 
-    eng::Matrix get_light_space_matrix() {
+    eng::Matrix get_light_space_matrix() const {
         return eng::Matrix::one_matrix(4);
     }
 

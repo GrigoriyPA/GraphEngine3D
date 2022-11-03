@@ -1,7 +1,7 @@
 #pragma once
 
 
-class SpotLight : public Light {
+class SpotLight : public eng::Light {
     double shadow_min_distance = 1, shadow_max_distance = 10;
 
     double cut_in, cut_out;
@@ -15,7 +15,7 @@ class SpotLight : public Light {
         projection[3][2] = 1;
     }
 
-    eng::Matrix get_view_matrix() {
+    eng::Matrix get_view_matrix() const {
         eng::Vect3 horizont = direction.horizont();
 
         return eng::Matrix(horizont, direction ^ horizont, direction).transpose() * eng::Matrix::translation_matrix(-position);
@@ -27,12 +27,12 @@ public:
     eng::Vect3 position;
 
     SpotLight(eng::Vect3 position, eng::Vect3 direction, double cut_in, double cut_out) : projection(eng::Matrix::one_matrix(4)) {
-        if (direction.length() < eps) {
+        if (direction.length() < eps_) {
             std::cout << "ERROR::SPOT_LIGHT::BUILDER\n" << "The direction vector has zero length.\n";
             assert(0);
         }
 
-        if (cut_in < eps || cut_in > cut_out || cut_out >= eng::PI / 2 - eps || abs(cut_in - cut_out) < eps) {
+        if (cut_in < eps_ || cut_in > cut_out || cut_out >= eng::PI / 2 - eps_ || abs(cut_in - cut_out) < eps_) {
             std::cout << "ERROR::SPOT_LIGHT::BUILDER\n" << "Invalid values of the external and internal angles of the spotlight.\n";
             assert(0);
         }
@@ -45,28 +45,29 @@ public:
         set_projection_matrix();
     }
 
-    void set_uniforms(int draw_id, eng::Shader<size_t>* shader_program) {
+    void set_uniforms(size_t draw_id, const eng::Shader<size_t>& shader_program) const {
         if (draw_id < 0) {
             std::cout << "ERROR::SPOT_LIGHT::SET_UNIFORMS\n" << "Invalid draw id.\n";
             assert(0);
         }
 
         try {
+            shader_program.set_uniform_i(("lights[" + std::to_string(draw_id) + "].exist").c_str(), 1);
             std::string name = "lights[" + std::to_string(draw_id) + "].";
-            shader_program->set_uniform_i((name + "shadow").c_str(), shadow);
-            shader_program->set_uniform_i((name + "type").c_str(), 2);
-            shader_program->set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
-            shader_program->set_uniform_f((name + "direction").c_str(), direction.x, direction.y, direction.z);
-            shader_program->set_uniform_f((name + "cut_in").c_str(), cos(cut_in));
-            shader_program->set_uniform_f((name + "cut_out").c_str(), cos(cut_out));
-            shader_program->set_uniform_f((name + "constant").c_str(), constant);
-            shader_program->set_uniform_f((name + "linear").c_str(), linear);
-            shader_program->set_uniform_f((name + "quadratic").c_str(), quadratic);
-            shader_program->set_uniform_f((name + "ambient").c_str(), ambient.x, ambient.y, ambient.z);
-            shader_program->set_uniform_f((name + "diffuse").c_str(), diffuse.x, diffuse.y, diffuse.z);
-            shader_program->set_uniform_f((name + "specular").c_str(), specular.x, specular.y, specular.z);
+            shader_program.set_uniform_i((name + "shadow").c_str(), shadow);
+            shader_program.set_uniform_i((name + "type").c_str(), 2);
+            shader_program.set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
+            shader_program.set_uniform_f((name + "direction").c_str(), direction.x, direction.y, direction.z);
+            shader_program.set_uniform_f((name + "cut_in").c_str(), cos(cut_in));
+            shader_program.set_uniform_f((name + "cut_out").c_str(), cos(cut_out));
+            shader_program.set_uniform_f((name + "constant").c_str(), constant);
+            shader_program.set_uniform_f((name + "linear").c_str(), linear);
+            shader_program.set_uniform_f((name + "quadratic").c_str(), quadratic);
+            shader_program.set_uniform_f((name + "ambient").c_str(), ambient_.x, ambient_.y, ambient_.z);
+            shader_program.set_uniform_f((name + "diffuse").c_str(), diffuse_.x, diffuse_.y, diffuse_.z);
+            shader_program.set_uniform_f((name + "specular").c_str(), specular_.x, specular_.y, specular_.z);
             if (shadow)
-                shader_program->set_uniform_matrix((name + "light_space").c_str(), this->get_light_space_matrix());
+                shader_program.set_uniform_matrix((name + "light_space").c_str(), this->get_light_space_matrix());
         }
         catch (const std::exception& error) {
             std::cout << "ERROR::SPOT_LIGHT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
@@ -75,7 +76,7 @@ public:
     }
 
     void set_shadow_distance(double shadow_min_distance, double shadow_max_distance) {
-        if (shadow_min_distance < eps || shadow_min_distance > shadow_max_distance || abs(shadow_min_distance - shadow_max_distance) < eps) {
+        if (shadow_min_distance < eps_ || shadow_min_distance > shadow_max_distance || abs(shadow_min_distance - shadow_max_distance) < eps_) {
             std::cout << "ERROR::SPOT_LIGHT::SET_SHADOW_DISTANCE\n" << "Invalid shadow distance.\n";
             assert(0);
         }
@@ -86,7 +87,7 @@ public:
     }
 
     void set_direction(eng::Vect3 direction) {
-        if (direction.length() < eps) {
+        if (direction.length() < eps_) {
             std::cout << "ERROR::SPOT_LIGHT::SET_DIRECTION\n" << "The direction vector has zero length.\n";
             assert(0);
         }
@@ -94,7 +95,7 @@ public:
         this->direction = direction.normalize();
     }
 
-    eng::Matrix get_light_space_matrix() {
+    eng::Matrix get_light_space_matrix() const {
         return projection * get_view_matrix();
     }
 
@@ -139,7 +140,7 @@ public:
         mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
         shadow_box.meshes.insert(mesh);
 
-        int model_id = shadow_box.models.insert(eng::Matrix::scale_matrix((1 - eps) * shadow_max_distance * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
+        int model_id = shadow_box.models.insert(eng::Matrix::scale_matrix((1 - eps_) * shadow_max_distance * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
         shadow_box.models.change_left(model_id, get_view_matrix().inverse());
 
         return shadow_box;
