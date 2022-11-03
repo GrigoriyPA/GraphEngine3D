@@ -34,7 +34,7 @@ namespace eng {
 
         DirLight(const Vect3& direction) : projection_(4, 4) {
             if (!glew_is_ok()) {
-                throw EngRuntimeError(__FILE__, __LINE__, "Light, failed to initialize GLEW.\n\n");
+                throw EngRuntimeError(__FILE__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
             }
 
             try {

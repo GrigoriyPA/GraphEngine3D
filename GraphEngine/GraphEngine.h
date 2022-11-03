@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Light/PointLight.h"
 #include "Light/DirLight.h"
 #include "Light/Light.h"
 #include "GraphObjects/GraphObject.h"
@@ -19,7 +20,6 @@
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
 #include "Camera.h"
-#include "Light/PointLight.h"
 #include "Light/SpotLight.h"
 
 

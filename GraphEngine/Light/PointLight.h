@@ -1,56 +1,87 @@
 #pragma once
 
+#include "Light.h"
+#include "../GraphObjects/GraphObject.h"
 
-class PointLight : public eng::Light {
-public:
-    double constant = 1, linear = 0, quadratic = 0;
 
-    eng::Vect3 position;
+namespace eng {
+    class PointLight : public Light {
+        static const uint8_t LIGHT_TYPE = 1;
 
-    PointLight(eng::Vect3 position) {
-        this->position = position;
-    }
+        double constant_ = 1.0;
+        double linear_ = 0.0;
+        double quadratic_ = 0.0;
 
-    void set_uniforms(size_t draw_id, const eng::Shader<size_t>& shader_program) const {
-        if (draw_id < 0) {
-            std::cout << "ERROR::POINT_LIGHT::SET_UNIFORMS\n" << "Invalid draw id.\n";
-            assert(0);
+    public:
+        Vect3 position;
+
+        PointLight(const Vect3& position) {
+            if (!glew_is_ok()) {
+                throw EngRuntimeError(__FILE__, __LINE__, "PointLight, failed to initialize GLEW.\n\n");
+            }
+
+            this->position = position;
         }
 
-        try {
-            shader_program.set_uniform_i(("lights[" + std::to_string(draw_id) + "].exist").c_str(), 1);
-            std::string name = "lights[" + std::to_string(draw_id) + "].";
-            shader_program.set_uniform_i((name + "shadow").c_str(), 0);
-            shader_program.set_uniform_i((name + "shadow").c_str(), 0);
-            shader_program.set_uniform_i((name + "type").c_str(), 1);
-            shader_program.set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
-            shader_program.set_uniform_f((name + "constant").c_str(), constant);
-            shader_program.set_uniform_f((name + "linear").c_str(), linear);
-            shader_program.set_uniform_f((name + "quadratic").c_str(), quadratic);
-            shader_program.set_uniform_f((name + "ambient").c_str(), ambient_.x, ambient_.y, ambient_.z);
-            shader_program.set_uniform_f((name + "diffuse").c_str(), diffuse_.x, diffuse_.y, diffuse_.z);
-            shader_program.set_uniform_f((name + "specular").c_str(), specular_.x, specular_.y, specular_.z);
+        void set_uniforms(size_t id, const Shader<size_t>& shader) const {
+            if (shader.description != ShaderType::MAIN) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+            }
+
+            std::string name = "lights[" + std::to_string(id) + "].";
+            set_light_uniforms(name, shader);
+
+            shader.set_uniform_i((name + "type").c_str(), LIGHT_TYPE);
+            shader.set_uniform_f((name + "constant").c_str(), constant_);
+            shader.set_uniform_f((name + "linear").c_str(), linear_);
+            shader.set_uniform_f((name + "quadratic").c_str(), quadratic_);
+            shader.set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
         }
-        catch (const std::exception& error) {
-            std::cout << "ERROR::POINT_LIGHT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
-            assert(0);
+
+        PointLight& set_constant(double coefficient) {
+            if (coefficient < 0.0) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_constant, negative coefficient value.\n\n");
+            }
+
+            constant_ = coefficient;
+            return *this;
         }
-    }
 
-    eng::Matrix get_light_space_matrix() const {
-        return eng::Matrix::one_matrix(4);
-    }
+        PointLight& set_linear(double coefficient) {
+            if (coefficient < 0.0) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_linear, negative coefficient value.\n\n");
+            }
 
-    eng::GraphObject get_light_object() {
-        eng::GraphObject light_object = eng::GraphObject::cube(1);
+            linear_ = coefficient;
+            return *this;
+        }
 
-        light_object.meshes.apply_func([](auto& mesh) {
-            mesh.material.set_emission(eng::Vect3(1, 1, 1));
-        });
+        PointLight& set_quadratic(double coefficient) {
+            if (coefficient < 0.0) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_quadratic, negative coefficient value.\n\n");
+            }
 
-        int model_id = light_object.models.insert(eng::Matrix::scale_matrix(0.25));
-        light_object.models.change_left(model_id, eng::Matrix::translation_matrix(position));
+            quadratic_ = coefficient;
+            return *this;
+        }
 
-        return light_object;
-    }
-};
+        Matrix get_light_space_matrix() const noexcept {
+            return Matrix(4, 4);
+        }
+
+        GraphObject get_light_object() const {
+            GraphObject light_object = GraphObject::sphere(6, true, 1);
+
+            light_object.meshes.apply_func([](auto& mesh) {
+                mesh.material.set_emission(Vect3(1, 1, 1));
+                mesh.material.shadow = false;
+            });
+
+            Matrix model = Matrix::scale_matrix(0.15);
+            model = Matrix::translation_matrix(position) * model;
+
+            light_object.models.insert(model);
+            return light_object;
+        }
+    };
+}
