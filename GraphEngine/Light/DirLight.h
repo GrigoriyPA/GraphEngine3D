@@ -1,107 +1,116 @@
 #pragma once
 
+#include "Light.h"
+#include "../GraphObjects/GraphObject.h"
 
-class DirLight : public eng::Light {
-    double shadow_width = 10, shadow_height = 10, shadow_depth = 10;
 
-    eng::Vect3 direction;
-    eng::Matrix projection;
+namespace eng {
+    class DirLight : public Light {
+        static const uint8_t LIGHT_TYPE = 0;
 
-    void set_projection_matrix() {
-        projection = eng::Matrix::scale_matrix(eng::Vect3(2.0 / shadow_width, 2.0 / shadow_height, 2.0 / shadow_depth)) * eng::Matrix::translation_matrix(eng::Vect3(0, 0, -shadow_depth / 2));
-    }
+        double shadow_width_ = 1.0;
+        double shadow_height_ = 1.0;
+        double shadow_depth_ = 1.0;
 
-    eng::Matrix get_view_matrix() const {
-        eng::Vect3 horizont = direction.horizont();
+        Vect3 direction_;
+        Matrix projection_;
 
-        return eng::Matrix(horizont, direction ^ horizont, direction).transpose() * eng::Matrix::translation_matrix(-shadow_position);
-    }
+        void set_projection_matrix() {
+            if (equality(shadow_width_, 0.0, eps_) || equality(shadow_height_, 0.0, eps_) || equality(shadow_depth_, 0.0, eps_)) {
+                throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
+            }
 
-public:
-    eng::Vect3 shadow_position = eng::Vect3(0, 0, 0);
-
-    DirLight(eng::Vect3 direction) : projection(eng::Matrix::one_matrix(4)) {
-        if (direction.length() < eps_) {
-            std::cout << "ERROR::DIR_LIGHT::BUILDER\n" << "The direction vector has zero length.\n";
-            assert(0);
+            projection_ = Matrix::scale_matrix(Vect3(2.0 / shadow_width_, 2.0 / shadow_height_, 2.0 / shadow_depth_));
+            projection_ *= Matrix::translation_matrix(Vect3(0, 0, -shadow_depth_ / 2));
         }
 
-        this->direction = direction.normalize();
-
-        set_projection_matrix();
-    }
-
-    void set_uniforms(size_t draw_id, const eng::Shader<size_t>& shader_program) const {
-        if (draw_id < 0) {
-            std::cout << "ERROR::DIR_LIGHT::SET_UNIFORMS\n" << "Invalid draw id.\n";
-            assert(0);
+        Matrix get_view_matrix() const noexcept {
+            const Vect3& horizont = direction_.horizont();
+            return Matrix(horizont, direction_ ^ horizont, direction_).transpose() * Matrix::translation_matrix(-shadow_position);
         }
 
-        try {
-            shader_program.set_uniform_i(("lights[" + std::to_string(draw_id) + "].exist").c_str(), 1);
-            std::string name = "lights[" + std::to_string(draw_id) + "].";
-            shader_program.set_uniform_i((name + "shadow").c_str(), shadow);
-            shader_program.set_uniform_i((name + "type").c_str(), 0);
-            shader_program.set_uniform_f((name + "direction").c_str(), direction.x, direction.y, direction.z);
-            shader_program.set_uniform_f((name + "ambient").c_str(), ambient_.x, ambient_.y, ambient_.z);
-            shader_program.set_uniform_f((name + "diffuse").c_str(), diffuse_.x, diffuse_.y, diffuse_.z);
-            shader_program.set_uniform_f((name + "specular").c_str(), specular_.x, specular_.y, specular_.z);
-            if (shadow)
-                shader_program.set_uniform_matrix((name + "light_space").c_str(), this->get_light_space_matrix());
-        }
-        catch (const std::exception& error) {
-            std::cout << "ERROR::DIR_LIGHT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
-            assert(0);
-        }
-    }
+    public:
+        Vect3 shadow_position = Vect3(0.0, 0.0, 0.0);
 
-    void set_shadow_width(double shadow_width) {
-        if (shadow_width < eps_) {
-            std::cout << "ERROR::DIR_LIGHT::SET_SHADOW_WIDTH\n" << "Not a positive shadow width.\n";
-            assert(0);
+        DirLight(const Vect3& direction) : projection_(4, 4) {
+            if (!glew_is_ok()) {
+                throw EngRuntimeError(__FILE__, __LINE__, "Light, failed to initialize GLEW.\n\n");
+            }
+
+            try {
+                direction_ = direction.normalize();
+            }
+            catch (EngDomainError) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "DirLight, the direction vector has zero length.\n\n");
+            }
+            
+            set_projection_matrix();
         }
 
-        this->shadow_width = shadow_width;
-        set_projection_matrix();
-    }
+        void set_uniforms(size_t id, const Shader<size_t>& shader) const {
+            if (shader.description != ShaderType::MAIN) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+            }
 
-    void set_shadow_height(double shadow_height) {
-        if (shadow_height < eps_) {
-            std::cout << "ERROR::DIR_LIGHT::SET_SHADOW_HEIGHT\n" << "Not a positive shadow height.\n";
-            assert(0);
+            std::string name = "lights[" + std::to_string(id) + "].";
+            set_light_uniforms(name, shader);
+
+            shader.set_uniform_i((name + "type").c_str(), LIGHT_TYPE);
+            shader.set_uniform_f((name + "direction").c_str(), direction_.x, direction_.y, direction_.z);
+            if (shadow) {
+                shader.set_uniform_matrix((name + "light_space").c_str(), get_light_space_matrix());
+            }
         }
 
-        this->shadow_height = shadow_height;
-        set_projection_matrix();
-    }
+        DirLight& set_shadow_width(double shadow_width) {
+            if (shadow_width < 0.0 || equality(shadow_width, 0.0, eps_)) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_width, not a positive shadow width.\n\n");
+            }
 
-    void set_shadow_depth(double shadow_depth) {
-        if (shadow_depth < eps_) {
-            std::cout << "ERROR::DIR_LIGHT::SET_SHADOW_DEPTH\n" << "Not a positive shadow depth.\n";
-            assert(0);
+            shadow_width_ = shadow_width;
+            set_projection_matrix();
+            return *this;
         }
 
-        this->shadow_depth = shadow_depth;
-        set_projection_matrix();
-    }
+        DirLight& set_shadow_height(double shadow_height) {
+            if (shadow_height < 0.0 || equality(shadow_height, 0.0, eps_)) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_height, not a positive shadow height.\n\n");
+            }
 
-    eng::Matrix get_light_space_matrix() const {
-        return projection * get_view_matrix();
-    }
+            shadow_height_ = shadow_height;
+            set_projection_matrix();
+            return *this;
+        }
 
-    eng::GraphObject get_shadow_box() {
-        eng::GraphObject shadow_box = eng::GraphObject::cube(1);
-        shadow_box.transparent = true;
+        DirLight& set_shadow_depth(double shadow_depth) {
+            if (shadow_depth < 0.0 || equality(shadow_depth, 0.0, eps_)) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_depth, not a positive shadow depth.\n\n");
+            }
 
-        shadow_box.meshes.apply_func([](auto& mesh) {
-            mesh.material.set_diffuse(eng::Vect3(1, 1, 1));
-            mesh.material.set_alpha(0.3);
-        });
+            shadow_depth_ = shadow_depth;
+            set_projection_matrix();
+            return *this;
+        }
 
-        int model_id = shadow_box.models.insert(eng::Matrix::scale_matrix(eng::Vect3(shadow_width, shadow_height, shadow_depth)));
-        shadow_box.models.change_left(model_id, eng::Matrix::translation_matrix(eng::Vect3(0, 0, (1 - eps_) * shadow_depth / 2)));
-        shadow_box.models.change_left(model_id, get_view_matrix().inverse());
+        Matrix get_light_space_matrix() const noexcept {
+            return projection_ * get_view_matrix();
+        }
 
-        return shadow_box;
-    }
-};
+        GraphObject get_shadow_box() const {
+            GraphObject shadow_box = GraphObject::cube(1);
+            shadow_box.transparent = true;
+
+            shadow_box.meshes.apply_func([](auto& mesh) {
+                mesh.material.set_diffuse(Vect3(1, 1, 1));
+                mesh.material.set_alpha(0.3);
+            });
+
+            Matrix model = Matrix::scale_matrix(Vect3(shadow_width_, shadow_height_, shadow_depth_));
+            model = Matrix::translation_matrix(Vect3(0, 0, (1 - eps_) * shadow_depth_ / 2)) * model;
+            model = get_view_matrix().inverse() * model;
+
+            shadow_box.models.insert(model);
+            return shadow_box;
+        }
+    };
+}

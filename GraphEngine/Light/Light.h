@@ -12,12 +12,11 @@ namespace eng {
         Vect3 diffuse_ = Vect3(0.0, 0.0, 0.0);
         Vect3 specular_ = Vect3(0.0, 0.0, 0.0);
 
-        void set_light_uniforms(size_t id, const Shader<size_t>& shader) const {
+        void set_light_uniforms(const std::string& name, const Shader<size_t>& shader) const {
             if (shader.description != ShaderType::MAIN) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_light_uniforms, invalid shader type.\n\n");
             }
 
-            std::string name = "lights[" + std::to_string(id) + "].";
             shader.set_uniform_i((name + "exist").c_str(), 1);
             shader.set_uniform_f((name + "ambient").c_str(), ambient_.x, ambient_.y, ambient_.z);
             shader.set_uniform_f((name + "diffuse").c_str(), diffuse_.x, diffuse_.y, diffuse_.z);

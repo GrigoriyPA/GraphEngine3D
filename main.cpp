@@ -103,13 +103,17 @@ signed main() {
         scene[obj_id].models.insert(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
         scene[obj_id].meshes.insert(mesh);
 
-        DirLight light(eng::Vect3(-1, -1, 1));
+        eng::DirLight light(eng::Vect3(-1, -1, 1));
         light.set_ambient(eng::Vect3(0.3, 0.3, 0.3));
         light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
         light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
+        light.set_shadow_width(10);
+        light.set_shadow_height(10);
+        light.set_shadow_depth(10);
         light.shadow_position = eng::Vect3(3, 1, 1);
         light.shadow = true;
         scene.set_light(1, &light);
+        scene.add_object(light.get_shadow_box());
 
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {
