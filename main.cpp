@@ -1,4 +1,4 @@
-#include "GraphEngine/GraphEngine.h"
+#include "GraphEngine/Engine/GraphEngine.h"
 #include <chrono>
 #include <iostream>
 #include <stdio.h>
@@ -68,6 +68,10 @@ signed main() {
         GraphEngine scene(&window, FOV, MIN_DIST, MAX_DIST);
         scene.set_clear_color(eng::Vect3(INTERFACE_MAIN_COLOR) / 255.0);
         scene.set_border_color(eng::Vect3(INTERFACE_ADD_COLOR) / 255.0);
+        scene.cam.sensitivity = SENSITIVITY;
+        scene.cam.speed = SPEED;
+        scene.cam.rotation_speed = ROTATION_SPEED;
+        scene.cam.speed_delt = SPEED_DELT;
 
         double ratio = scene.cam.get_screen_ratio();
         double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
@@ -101,7 +105,7 @@ signed main() {
         scene[obj_id].models.insert(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
         scene[obj_id].meshes.insert(mesh);
 
-        /*eng::DirLight light(eng::Vect3(-1, -1, 1));
+        eng::DirLight light(eng::Vect3(-1, -1, 1));
         light.set_ambient(eng::Vect3(0.3, 0.3, 0.3));
         light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
         light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
@@ -111,25 +115,6 @@ signed main() {
         light.shadow_position = eng::Vect3(3, 1, 1);
         light.shadow = true;
         scene.set_light(1, &light);
-        scene.add_object(light.get_shadow_box());*/
-
-        /*eng::PointLight light(eng::Vect3(0, -1.5, 3));
-        light.set_ambient(eng::Vect3(0.3, 0.3, 0.3));
-        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
-        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
-        light.set_quadratic(1);
-        scene.set_light(1, &light);
-        scene.add_object(light.get_light_object());*/
-
-        eng::SpotLight light(eng::Vect3(0, 2, 0), eng::Vect3(0, -1, 1), eng::PI / 4.0, 1.1 * eng::PI / 4.0);
-        light.set_ambient(eng::Vect3(0.2, 0.2, 0.2));
-        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
-        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
-        light.set_quadratic(1);
-        light.shadow = true;
-        light.set_shadow_distance(3, 15);
-        scene.set_light(1, &light);
-        scene.add_object(light.get_light_object()); 
         //scene.add_object(light.get_shadow_box());
 
         for (; window_interface.running;) {
@@ -164,8 +149,8 @@ signed main() {
             }
 
             double delta_time = window_interface.update();
-            scene.update(delta_time);
             render.update(window_interface.get_active_button());
+            scene.update(delta_time);
 
             spot_light.position = scene.cam.position;
             spot_light.set_direction(scene.cam.get_direction());

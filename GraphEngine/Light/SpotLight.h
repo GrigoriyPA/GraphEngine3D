@@ -20,7 +20,7 @@ namespace eng {
         Matrix projection_;
 
         void set_projection_matrix() {
-            if (equality(tan(border_out_), 0.0, eps_) || equality(shadow_max_distance_ - shadow_min_distance_, 0.0, eps_) || equality(shadow_max_distance_ + shadow_min_distance_, 0.0, eps_)) {
+            if (equality(tan(border_out_), 0.0, eps_) || equality(shadow_max_distance_, shadow_min_distance_, eps_) || equality(shadow_max_distance_ + shadow_min_distance_, 0.0, eps_)) {
                 throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
@@ -38,11 +38,11 @@ namespace eng {
     public:
         Vect3 position;
 
-        SpotLight(Vect3 position, Vect3 direction, double border_in, double border_out) : projection_(4, 4) {
+        SpotLight(const Vect3& position, const Vect3& direction, double border_in, double border_out) : projection_(4, 4) {
             if (!glew_is_ok()) {
                 throw EngRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
             }
-            if (border_in < 0.0 || border_out > PI / 2.0 || equality(border_out, PI / 2.0, eps_) || border_in > border_out || equality(border_in, border_out, eps_)) {
+            if (border_in < 0.0 || less_equality(PI / 2.0, border_out, eps_) || less_equality(border_out, border_in, eps_)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "SpotLight, invalid values of the external and internal angles of the spotlight.\n\n");
             }
 
@@ -82,7 +82,7 @@ namespace eng {
         }
 
         SpotLight& set_shadow_distance(double shadow_min_distance, double shadow_max_distance) {
-            if (shadow_min_distance < 0.0 || equality(shadow_min_distance, 0.0, eps_) || shadow_min_distance > shadow_max_distance || equality(shadow_min_distance, shadow_max_distance, eps_)) {
+            if (less_equality(shadow_min_distance, 0.0, eps_) || less_equality(shadow_max_distance, shadow_min_distance, eps_)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_distance, invalid shadow distance.\n\n");
             }
 
@@ -120,7 +120,7 @@ namespace eng {
         }
 
         SpotLight& set_angle(double border_in, double border_out) {
-            if (border_in < 0.0 || border_out > PI / 2.0 || equality(border_out, PI / 2.0, eps_) || border_in > border_out || equality(border_in, border_out, eps_)) {
+            if (border_in < 0.0 || less_equality(PI / 2.0, border_out, eps_) || less_equality(border_out, border_in, eps_)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_angle, invalid values of the external and internal angles of the spotlight.\n\n");
             }
 

@@ -27,6 +27,11 @@ namespace eng {
         return std::abs(left - right) < eps;
     }
 
+    template <typename T>  // T - numeric type
+    bool less_equality(const T& left, const T& right, const T& eps = T(EPS)) {
+        return left < right || equality(left, right, eps);
+    }
+
     std::vector<std::string> split(const std::string& str, std::function<bool(char)> pred) {
         std::vector<std::string> split_str(1);
         for (char character : str) {

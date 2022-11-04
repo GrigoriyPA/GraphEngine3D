@@ -2,6 +2,10 @@
 
 
 const double SCROLL_SENSITIVITY = 1.2;
+const double SENSITIVITY = 0.001;
+const double SPEED = 3;
+const double ROTATION_SPEED = 2;
+const double SPEED_DELT = 2;
 
 const double GAMMA = 2.2;
 
