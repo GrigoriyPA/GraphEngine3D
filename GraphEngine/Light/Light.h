@@ -18,9 +18,9 @@ namespace eng {
             }
 
             shader.set_uniform_i((name + "exist").c_str(), 1);
-            shader.set_uniform_f((name + "ambient").c_str(), ambient_.x, ambient_.y, ambient_.z);
-            shader.set_uniform_f((name + "diffuse").c_str(), diffuse_.x, diffuse_.y, diffuse_.z);
-            shader.set_uniform_f((name + "specular").c_str(), specular_.x, specular_.y, specular_.z);
+            shader.set_uniform_f((name + "ambient").c_str(), static_cast<GLfloat>(ambient_.x), static_cast<GLfloat>(ambient_.y), static_cast<GLfloat>(ambient_.z));
+            shader.set_uniform_f((name + "diffuse").c_str(), static_cast<GLfloat>(diffuse_.x), static_cast<GLfloat>(diffuse_.y), static_cast<GLfloat>(diffuse_.z));
+            shader.set_uniform_f((name + "specular").c_str(), static_cast<GLfloat>(specular_.x), static_cast<GLfloat>(specular_.y), static_cast<GLfloat>(specular_.z));
             shader.set_uniform_i((name + "shadow").c_str(), shadow);
         }
 

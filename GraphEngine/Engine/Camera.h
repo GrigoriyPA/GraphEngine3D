@@ -30,6 +30,7 @@ namespace eng {
 		}
 
 	public:
+		// ...
 		double sensitivity = 0.0;
 		double speed = 0.0;
 		double rotation_speed = 0.0;

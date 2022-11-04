@@ -32,10 +32,10 @@ namespace eng {
             set_light_uniforms(name, shader);
 
             shader.set_uniform_i((name + "type").c_str(), LIGHT_TYPE);
-            shader.set_uniform_f((name + "constant").c_str(), constant_);
-            shader.set_uniform_f((name + "linear").c_str(), linear_);
-            shader.set_uniform_f((name + "quadratic").c_str(), quadratic_);
-            shader.set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
+            shader.set_uniform_f((name + "constant").c_str(), static_cast<GLfloat>(constant_));
+            shader.set_uniform_f((name + "linear").c_str(), static_cast<GLfloat>(linear_));
+            shader.set_uniform_f((name + "quadratic").c_str(), static_cast<GLfloat>(quadratic_));
+            shader.set_uniform_f((name + "position").c_str(), static_cast<GLfloat>(position.x), static_cast<GLfloat>(position.y), static_cast<GLfloat>(position.z));
         }
 
         PointLight& set_constant(double coefficient) {

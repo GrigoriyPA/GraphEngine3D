@@ -56,7 +56,7 @@ namespace eng {
             set_light_uniforms(name, shader);
 
             shader.set_uniform_i((name + "type").c_str(), LIGHT_TYPE);
-            shader.set_uniform_f((name + "direction").c_str(), direction_.x, direction_.y, direction_.z);
+            shader.set_uniform_f((name + "direction").c_str(), static_cast<GLfloat>(direction_.x), static_cast<GLfloat>(direction_.y), static_cast<GLfloat>(direction_.z));
             if (shadow) {
                 shader.set_uniform_matrix((name + "light_space").c_str(), get_light_space_matrix());
             }

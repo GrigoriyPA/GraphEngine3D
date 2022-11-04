@@ -69,13 +69,13 @@ namespace eng {
             set_light_uniforms(name, shader);
 
             shader.set_uniform_i((name + "type").c_str(), LIGHT_TYPE);
-            shader.set_uniform_f((name + "constant").c_str(), constant_);
-            shader.set_uniform_f((name + "linear").c_str(), linear_);
-            shader.set_uniform_f((name + "quadratic").c_str(), quadratic_);
-            shader.set_uniform_f((name + "cut_in").c_str(), cos(border_in_));
-            shader.set_uniform_f((name + "cut_out").c_str(), cos(border_out_));
-            shader.set_uniform_f((name + "direction").c_str(), direction_.x, direction_.y, direction_.z);
-            shader.set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
+            shader.set_uniform_f((name + "constant").c_str(), static_cast<GLfloat>(constant_));
+            shader.set_uniform_f((name + "linear").c_str(), static_cast<GLfloat>(linear_));
+            shader.set_uniform_f((name + "quadratic").c_str(), static_cast<GLfloat>(quadratic_));
+            shader.set_uniform_f((name + "cut_in").c_str(), static_cast<GLfloat>(cos(border_in_)));
+            shader.set_uniform_f((name + "cut_out").c_str(), static_cast<GLfloat>(cos(border_out_)));
+            shader.set_uniform_f((name + "direction").c_str(), static_cast<GLfloat>(direction_.x), static_cast<GLfloat>(direction_.y), static_cast<GLfloat>(direction_.z));
+            shader.set_uniform_f((name + "position").c_str(), static_cast<GLfloat>(position.x), static_cast<GLfloat>(position.y), static_cast<GLfloat>(position.z));
             if (shadow) {
                 shader.set_uniform_matrix((name + "light_space").c_str(), get_light_space_matrix());
             }
