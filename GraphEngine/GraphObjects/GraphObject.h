@@ -10,6 +10,8 @@
 
 namespace eng {
 	class GraphObject {
+		inline static double eps_ = 1e-5;
+
 		// ...
 		std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
 			std::vector<Texture> textures;
@@ -386,6 +388,14 @@ namespace eng {
 			}
 		}
 
+		static void set_epsilon(double eps) {
+			if (eps <= 0) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
+			}
+
+			eps_ = eps;
+		}
+
 		static GraphObject cube(size_t max_count_models) {
 			GraphObject cube(max_count_models);
 
@@ -404,16 +414,16 @@ namespace eng {
 			});
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2));
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2.0));
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2));
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2.0));
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2));
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 1.0, 0.0), PI / 2.0));
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2));
+			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2.0));
 			cube.meshes.insert(mesh);
 
 			mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI));
@@ -437,28 +447,28 @@ namespace eng {
 
 			Mesh mesh(count_points);
 			mesh.set_positions(positions, true);
-			mesh.invert_points_order();
+			mesh.invert_points_order(true);
 			cylinder.meshes.insert(mesh);
 
 			mesh.apply_matrix(Matrix::translation_matrix(Vect3(0.0, 1.0, 0.0)));
-			mesh.invert_points_order();
+			mesh.invert_points_order(true);
 			cylinder.meshes.insert(mesh);
 
 			for (size_t i = 0; i < count_points; ++i) {
-				size_t j = (i + 1) % count_points;
+				size_t next = (i + 1) % count_points;
 
 				mesh = Mesh(4);
 				mesh.set_positions({
 					positions[i],
-					positions[j],
-					positions[j] + Vect3(0.0, 1.0, 0.0),
+					positions[next],
+					positions[next] + Vect3(0.0, 1.0, 0.0),
 					positions[i] + Vect3(0.0, 1.0, 0.0)
 				}, !real_normals);
 				if (real_normals) {
 					mesh.set_normals({
 						positions[i],
-						positions[j],
-						positions[j],
+						positions[next],
+						positions[next],
 						positions[i]
 					});
 				}
@@ -467,6 +477,48 @@ namespace eng {
 
 			cylinder.meshes.compress();
 			return cylinder;
+		}
+
+		static GraphObject cone(size_t count_points, bool real_normals, size_t max_count_models) {
+			if (count_points < 3) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "cone, the number of points is less than three.\n\n");
+			}
+
+			GraphObject cone(max_count_models);
+
+			std::vector<Vect3> positions;
+			std::vector<Vect3> normals;
+			for (size_t i = 0; i < count_points; ++i) {
+				positions.push_back(Vect3(cos((2.0 * PI / count_points) * i), 0.0, sin((2.0 * PI / count_points) * i)));
+				normals.push_back((positions.back().horizont() ^ (Vect3(0.0, 1.0, 0.0) - positions.back())).normalize());
+			}
+
+			Mesh mesh(count_points);
+			mesh.set_positions(positions, true);
+			mesh.invert_points_order(true);
+			cone.meshes.insert(mesh);
+
+			for (size_t i = 0; i < count_points; ++i) {
+				size_t next = (i + 1) % count_points;
+
+				mesh = Mesh(3);
+				mesh.set_positions({
+					positions[i],
+					positions[next],
+					Vect3(0.0, 1.0, 0.0)
+				}, !real_normals);
+				if (real_normals) {
+					mesh.set_normals({
+						normals[i],
+						normals[next],
+						(normals[next] + normals[i]).normalize()
+					});
+				}
+				cone.meshes.insert(mesh);
+			}
+
+			cone.meshes.compress();
+			return cone;
 		}
 
 		static GraphObject sphere(size_t count_points, bool real_normals, size_t max_count_models) {

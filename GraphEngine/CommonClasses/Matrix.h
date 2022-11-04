@@ -639,8 +639,17 @@ namespace eng {
 			});
 		}
 
-		static Matrix normal_transform(const Matrix& transform) noexcept {
-			return transform.inverse().transpose();
+		static Matrix normal_transform(const Matrix& transform) {
+			if (transform.count_strings() != 4 || transform.count_columns() != 4) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "normal_transform, invalid matrix size.\n\n");
+			}
+
+			try {
+				return transform.inverse().transpose();
+			}
+			catch (EngDomainError) {
+				throw EngDomainError(__FILE__, __LINE__, "normal_transform, the matrix is not invertible.\n\n");
+			}
 		}
 	};
 

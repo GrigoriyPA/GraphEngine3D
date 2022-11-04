@@ -43,8 +43,6 @@ signed main() {
         }
         //window.setVerticalSyncEnabled(true);
 
-        eng::Shader test;
-
         int window_width = window.getSize().x, window_height = window.getSize().y;
 
         sf::Texture cross_tex;
@@ -73,10 +71,10 @@ signed main() {
 
         double ratio = scene.cam.get_screen_ratio();
         double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
-        SpotLight spot_light(eng::Vect3(0, 0, 0), eng::Vect3(0, 0, 1), angle, 1.1 * angle);
+        eng::SpotLight spot_light(eng::Vect3(0, 0, 0), eng::Vect3(0, 0, 1), angle, 1.1 * angle);
         spot_light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
         spot_light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
-        spot_light.quadratic = 0.1;
+        spot_light.set_quadratic(0.1);
         scene.set_light(0, &spot_light);
 
         RenderingSequence render(&scene);
@@ -115,13 +113,24 @@ signed main() {
         scene.set_light(1, &light);
         scene.add_object(light.get_shadow_box());*/
 
-        eng::PointLight light(eng::Vect3(0, -1.5, 3));
+        /*eng::PointLight light(eng::Vect3(0, -1.5, 3));
         light.set_ambient(eng::Vect3(0.3, 0.3, 0.3));
         light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
         light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
         light.set_quadratic(1);
         scene.set_light(1, &light);
-        scene.add_object(light.get_light_object());
+        scene.add_object(light.get_light_object());*/
+
+        eng::SpotLight light(eng::Vect3(0, 2, 0), eng::Vect3(0, -1, 1), eng::PI / 4.0, 1.1 * eng::PI / 4.0);
+        light.set_ambient(eng::Vect3(0.2, 0.2, 0.2));
+        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
+        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
+        light.set_quadratic(1);
+        light.shadow = true;
+        light.set_shadow_distance(3, 15);
+        scene.set_light(1, &light);
+        scene.add_object(light.get_light_object()); 
+        //scene.add_object(light.get_shadow_box());
 
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {

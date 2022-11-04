@@ -47,7 +47,7 @@ namespace eng {
             set_projection_matrix();
         }
 
-        void set_uniforms(size_t id, const Shader<size_t>& shader) const {
+        void set_uniforms(size_t id, const Shader<size_t>& shader) const override {
             if (shader.description != ShaderType::MAIN) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
             }
@@ -92,7 +92,17 @@ namespace eng {
             return *this;
         }
 
-        Matrix get_light_space_matrix() const noexcept {
+        DirLight& set_direction(const Vect3& direction) {
+            try {
+                direction_ = direction.normalize();
+            }
+            catch (EngDomainError) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
+            }
+            return *this;
+        }
+
+        Matrix get_light_space_matrix() const noexcept override {
             return projection_ * get_view_matrix();
         }
 
@@ -101,12 +111,12 @@ namespace eng {
             shadow_box.transparent = true;
 
             shadow_box.meshes.apply_func([](auto& mesh) {
-                mesh.material.set_diffuse(Vect3(1, 1, 1));
+                mesh.material.set_diffuse(Vect3(1.0, 1.0, 1.0));
                 mesh.material.set_alpha(0.3);
             });
 
             Matrix model = Matrix::scale_matrix(Vect3(shadow_width_, shadow_height_, shadow_depth_));
-            model = Matrix::translation_matrix(Vect3(0, 0, (1 - eps_) * shadow_depth_ / 2)) * model;
+            model = Matrix::translation_matrix(Vect3(0.0, 0.0, (1.0 - eps_) * shadow_depth_ / 2.0)) * model;
             model = get_view_matrix().inverse() * model;
 
             shadow_box.models.insert(model);

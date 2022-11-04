@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Light/SpotLight.h"
 #include "Light/PointLight.h"
 #include "Light/DirLight.h"
 #include "Light/Light.h"
@@ -20,7 +21,6 @@
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
 #include "Camera.h"
-#include "Light/SpotLight.h"
 
 
 struct TransparentObject {

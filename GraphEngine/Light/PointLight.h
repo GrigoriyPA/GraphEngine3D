@@ -23,7 +23,7 @@ namespace eng {
             this->position = position;
         }
 
-        void set_uniforms(size_t id, const Shader<size_t>& shader) const {
+        void set_uniforms(size_t id, const Shader<size_t>& shader) const override {
             if (shader.description != ShaderType::MAIN) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
             }
@@ -65,7 +65,7 @@ namespace eng {
             return *this;
         }
 
-        Matrix get_light_space_matrix() const noexcept {
+        Matrix get_light_space_matrix() const noexcept override {
             return Matrix(4, 4);
         }
 
@@ -73,7 +73,7 @@ namespace eng {
             GraphObject light_object = GraphObject::sphere(6, true, 1);
 
             light_object.meshes.apply_func([](auto& mesh) {
-                mesh.material.set_emission(Vect3(1, 1, 1));
+                mesh.material.set_emission(Vect3(1.0, 1.0, 1.0));
                 mesh.material.shadow = false;
             });
 

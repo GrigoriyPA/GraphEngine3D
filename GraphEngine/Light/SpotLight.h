@@ -1,187 +1,214 @@
 #pragma once
 
+#include "Light.h"
+#include "../GraphObjects/GraphObject.h"
 
-class SpotLight : public eng::Light {
-    double shadow_min_distance = 1, shadow_max_distance = 10;
 
-    double cut_in, cut_out;
-    eng::Vect3 direction;
-    eng::Matrix projection;
+namespace eng {
+    class SpotLight : public Light {
+        static const uint8_t LIGHT_TYPE = 2;
 
-    void set_projection_matrix() {
-        projection = eng::Matrix::scale_matrix(eng::Vect3(1.0 / tan(cut_out), 1.0 / tan(cut_out), (shadow_max_distance + shadow_min_distance) / (shadow_max_distance - shadow_min_distance)));
-        projection *= eng::Matrix::translation_matrix(eng::Vect3(0, 0, -2 * shadow_min_distance * shadow_max_distance / (shadow_min_distance + shadow_max_distance)));
-        projection[3][3] = 0;
-        projection[3][2] = 1;
-    }
+        double shadow_min_distance_ = 1.0;
+        double shadow_max_distance_ = 2.0;
+        double constant_ = 1.0;
+        double linear_ = 0.0;
+        double quadratic_ = 0.0;
 
-    eng::Matrix get_view_matrix() const {
-        eng::Vect3 horizont = direction.horizont();
+        double border_in_;
+        double border_out_;
+        Vect3 direction_;
+        Matrix projection_;
 
-        return eng::Matrix(horizont, direction ^ horizont, direction).transpose() * eng::Matrix::translation_matrix(-position);
-    }
+        void set_projection_matrix() {
+            if (equality(tan(border_out_), 0.0, eps_) || equality(shadow_max_distance_ - shadow_min_distance_, 0.0, eps_) || equality(shadow_max_distance_ + shadow_min_distance_, 0.0, eps_)) {
+                throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
+            }
 
-public:
-    double constant = 1, linear = 0, quadratic = 0;
-
-    eng::Vect3 position;
-
-    SpotLight(eng::Vect3 position, eng::Vect3 direction, double cut_in, double cut_out) : projection(eng::Matrix::one_matrix(4)) {
-        if (direction.length() < eps_) {
-            std::cout << "ERROR::SPOT_LIGHT::BUILDER\n" << "The direction vector has zero length.\n";
-            assert(0);
+            projection_ = Matrix::scale_matrix(Vect3(1.0 / tan(border_out_), 1.0 / tan(border_out_), (shadow_max_distance_ + shadow_min_distance_) / (shadow_max_distance_ - shadow_min_distance_)));
+            projection_ *= Matrix::translation_matrix(Vect3(0.0, 0.0, -2.0 * shadow_max_distance_ * shadow_min_distance_ / (shadow_max_distance_ + shadow_min_distance_)));
+            projection_[3][3] = 0.0;
+            projection_[3][2] = 1.0;
         }
 
-        if (cut_in < eps_ || cut_in > cut_out || cut_out >= eng::PI / 2 - eps_ || abs(cut_in - cut_out) < eps_) {
-            std::cout << "ERROR::SPOT_LIGHT::BUILDER\n" << "Invalid values of the external and internal angles of the spotlight.\n";
-            assert(0);
+        Matrix get_view_matrix() const noexcept {
+            const Vect3& horizont = direction_.horizont();
+            return Matrix(horizont, direction_ ^ horizont, direction_).transpose() * Matrix::translation_matrix(-position);
         }
 
-        this->position = position;
-        this->direction = direction.normalize();
-        this->cut_in = cut_in;
-        this->cut_out = cut_out;
+    public:
+        Vect3 position;
 
-        set_projection_matrix();
-    }
+        SpotLight(Vect3 position, Vect3 direction, double border_in, double border_out) : projection_(4, 4) {
+            if (!glew_is_ok()) {
+                throw EngRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
+            }
+            if (border_in < 0.0 || border_out > PI / 2.0 || equality(border_out, PI / 2.0, eps_) || border_in > border_out || equality(border_in, border_out, eps_)) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "SpotLight, invalid values of the external and internal angles of the spotlight.\n\n");
+            }
 
-    void set_uniforms(size_t draw_id, const eng::Shader<size_t>& shader_program) const {
-        if (draw_id < 0) {
-            std::cout << "ERROR::SPOT_LIGHT::SET_UNIFORMS\n" << "Invalid draw id.\n";
-            assert(0);
+            try {
+                direction_ = direction.normalize();
+            }
+            catch (EngDomainError) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "SpotLight, the direction vector has zero length.\n\n");
+            }
+
+            border_in_ = border_in;
+            border_out_ = border_out;
+            this->position = position;
+
+            set_projection_matrix();
         }
 
-        try {
-            shader_program.set_uniform_i(("lights[" + std::to_string(draw_id) + "].exist").c_str(), 1);
-            std::string name = "lights[" + std::to_string(draw_id) + "].";
-            shader_program.set_uniform_i((name + "shadow").c_str(), shadow);
-            shader_program.set_uniform_i((name + "type").c_str(), 2);
-            shader_program.set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
-            shader_program.set_uniform_f((name + "direction").c_str(), direction.x, direction.y, direction.z);
-            shader_program.set_uniform_f((name + "cut_in").c_str(), cos(cut_in));
-            shader_program.set_uniform_f((name + "cut_out").c_str(), cos(cut_out));
-            shader_program.set_uniform_f((name + "constant").c_str(), constant);
-            shader_program.set_uniform_f((name + "linear").c_str(), linear);
-            shader_program.set_uniform_f((name + "quadratic").c_str(), quadratic);
-            shader_program.set_uniform_f((name + "ambient").c_str(), ambient_.x, ambient_.y, ambient_.z);
-            shader_program.set_uniform_f((name + "diffuse").c_str(), diffuse_.x, diffuse_.y, diffuse_.z);
-            shader_program.set_uniform_f((name + "specular").c_str(), specular_.x, specular_.y, specular_.z);
-            if (shadow)
-                shader_program.set_uniform_matrix((name + "light_space").c_str(), this->get_light_space_matrix());
-        }
-        catch (const std::exception& error) {
-            std::cout << "ERROR::SPOT_LIGHT::SET_UNIFORMS\n" << "Unknown error, description:\n" << error.what() << "\n";
-            assert(0);
-        }
-    }
+        void set_uniforms(size_t id, const Shader<size_t>& shader) const override {
+            if (shader.description != ShaderType::MAIN) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+            }
 
-    void set_shadow_distance(double shadow_min_distance, double shadow_max_distance) {
-        if (shadow_min_distance < eps_ || shadow_min_distance > shadow_max_distance || abs(shadow_min_distance - shadow_max_distance) < eps_) {
-            std::cout << "ERROR::SPOT_LIGHT::SET_SHADOW_DISTANCE\n" << "Invalid shadow distance.\n";
-            assert(0);
+            std::string name = "lights[" + std::to_string(id) + "].";
+            set_light_uniforms(name, shader);
+
+            shader.set_uniform_i((name + "type").c_str(), LIGHT_TYPE);
+            shader.set_uniform_f((name + "constant").c_str(), constant_);
+            shader.set_uniform_f((name + "linear").c_str(), linear_);
+            shader.set_uniform_f((name + "quadratic").c_str(), quadratic_);
+            shader.set_uniform_f((name + "cut_in").c_str(), cos(border_in_));
+            shader.set_uniform_f((name + "cut_out").c_str(), cos(border_out_));
+            shader.set_uniform_f((name + "direction").c_str(), direction_.x, direction_.y, direction_.z);
+            shader.set_uniform_f((name + "position").c_str(), position.x, position.y, position.z);
+            if (shadow) {
+                shader.set_uniform_matrix((name + "light_space").c_str(), get_light_space_matrix());
+            }
         }
 
-        this->shadow_min_distance = shadow_min_distance;
-        this->shadow_max_distance = shadow_max_distance;
-        set_projection_matrix();
-    }
+        SpotLight& set_shadow_distance(double shadow_min_distance, double shadow_max_distance) {
+            if (shadow_min_distance < 0.0 || equality(shadow_min_distance, 0.0, eps_) || shadow_min_distance > shadow_max_distance || equality(shadow_min_distance, shadow_max_distance, eps_)) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_distance, invalid shadow distance.\n\n");
+            }
 
-    void set_direction(eng::Vect3 direction) {
-        if (direction.length() < eps_) {
-            std::cout << "ERROR::SPOT_LIGHT::SET_DIRECTION\n" << "The direction vector has zero length.\n";
-            assert(0);
+            shadow_min_distance_ = shadow_min_distance;
+            shadow_max_distance_ = shadow_max_distance;
+            set_projection_matrix();
+            return *this;
         }
 
-        this->direction = direction.normalize();
-    }
+        SpotLight& set_constant(double coefficient) {
+            if (coefficient < 0.0) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_constant, negative coefficient value.\n\n");
+            }
 
-    eng::Matrix get_light_space_matrix() const {
-        return projection * get_view_matrix();
-    }
+            constant_ = coefficient;
+            return *this;
+        }
 
-    eng::GraphObject get_shadow_box() {
-        double delt = shadow_min_distance / shadow_max_distance;
+        SpotLight& set_linear(double coefficient) {
+            if (coefficient < 0.0) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_linear, negative coefficient value.\n\n");
+            }
 
-        eng::GraphObject shadow_box(1);
-        shadow_box.transparent = true;
+            linear_ = coefficient;
+            return *this;
+        }
 
-        eng::Mesh mesh(4);
-        mesh.set_positions({
-        eng::Vect3(1, 1, 1),
-        eng::Vect3(1, -1, 1),
-        eng::Vect3(-1, -1, 1),
-        eng::Vect3(-1, 1, 1)
-        });
-        mesh.material.set_diffuse(eng::Vect3(1, 1, 1));
-        mesh.material.set_alpha(0.3);
-        shadow_box.meshes.insert(mesh);
+        SpotLight& set_quadratic(double coefficient) {
+            if (coefficient < 0.0) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_quadratic, negative coefficient value.\n\n");
+            }
 
-        mesh.apply_matrix(eng::Matrix::scale_matrix(delt));
-        mesh.invert_points_order();
-        shadow_box.meshes.insert(mesh);
+            quadratic_ = coefficient;
+            return *this;
+        }
 
-        mesh = eng::Mesh(4);
-        mesh.set_positions({
-        eng::Vect3(1, -1, 1),
-        eng::Vect3(1, 1, 1),
-        eng::Vect3(delt, delt, delt),
-        eng::Vect3(delt, -delt, delt)
-        });
-        mesh.material.set_diffuse(eng::Vect3(1, 1, 1));
-        mesh.material.set_alpha(0.3);
-        shadow_box.meshes.insert(mesh);
+        SpotLight& set_angle(double border_in, double border_out) {
+            if (border_in < 0.0 || border_out > PI / 2.0 || equality(border_out, PI / 2.0, eps_) || border_in > border_out || equality(border_in, border_out, eps_)) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_angle, invalid values of the external and internal angles of the spotlight.\n\n");
+            }
 
-        mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
-        shadow_box.meshes.insert(mesh);
+            border_in_ = border_in;
+            border_out_ = border_out;
+            return *this;
+        }
 
-        mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
-        shadow_box.meshes.insert(mesh);
+        SpotLight& set_direction(const Vect3& direction) {
+            try {
+                direction_ = direction.normalize();
+            }
+            catch (EngDomainError) {
+                throw EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
+            }
+            return *this;
+        }
 
-        mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
-        shadow_box.meshes.insert(mesh);
+        Matrix get_light_space_matrix() const noexcept override {
+            return projection_ * get_view_matrix();
+        }
 
-        int model_id = shadow_box.models.insert(eng::Matrix::scale_matrix((1 - eps_) * shadow_max_distance * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
-        shadow_box.models.change_left(model_id, get_view_matrix().inverse());
+        GraphObject get_shadow_box() const {
+            if (equality(shadow_max_distance_, 0.0, eps_)) {
+                throw EngDomainError(__FILE__, __LINE__, "get_shadow_box, invalid matrix settings.\n\n");
+            }
 
-        return shadow_box;
-    }
+            GraphObject shadow_box(1);
+            shadow_box.transparent = true;
 
-    eng::GraphObject get_light_object() {
-        eng::GraphObject light_object(1);
+            Mesh mesh(4);
+            mesh.set_positions({
+                Vect3(1.0, 1.0, 1.0),
+                Vect3(1.0, -1.0, 1.0),
+                Vect3(-1.0, -1.0, 1.0),
+                Vect3(-1.0, 1.0, 1.0)
+            }, true);
+            shadow_box.meshes.insert(mesh);
 
-        eng::Mesh mesh(4);
-        mesh.set_positions({
-        eng::Vect3(1, 1, 1),
-        eng::Vect3(1, -1, 1),
-        eng::Vect3(-1, -1, 1),
-        eng::Vect3(-1, 1, 1)
-        });
-        mesh.material.set_emission(eng::Vect3(1, 1, 1));
-        mesh.material.shadow = true;
-        light_object.meshes.insert(mesh);
+            double delt = shadow_min_distance_ / shadow_max_distance_;
+            mesh.apply_matrix(Matrix::scale_matrix(delt));
+            mesh.invert_points_order(true);
+            shadow_box.meshes.insert(mesh);
 
-        mesh = eng::Mesh(3);
-        mesh.set_positions({
-        eng::Vect3(1, -1, 1),
-        eng::Vect3(1, 1, 1),
-        eng::Vect3(0, 0, 0)
-        });
-        mesh.material.set_emission(eng::Vect3(1, 1, 1));
-        mesh.material.shadow = true;
-        light_object.meshes.insert(mesh);
+            mesh = Mesh(4);
+            mesh.set_positions({
+                Vect3(1.0, -1.0, 1.0),
+                Vect3(1.0, 1.0, 1.0),
+                Vect3(delt, delt, delt),
+                Vect3(delt, -delt, delt)
+            }, true);
+            shadow_box.meshes.insert(mesh);
 
-        mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
-        light_object.meshes.insert(mesh);
+            mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2.0));
+            shadow_box.meshes.insert(mesh);
 
-        mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
-        light_object.meshes.insert(mesh);
+            mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2.0));
+            shadow_box.meshes.insert(mesh);
 
-        mesh.apply_matrix(eng::Matrix::rotation_matrix(eng::Vect3(0, 0, 1), eng::PI / 2));
-        light_object.meshes.insert(mesh);
+            mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2.0));
+            shadow_box.meshes.insert(mesh);
 
-        int model_id = light_object.models.insert(eng::Matrix::scale_matrix(0.25 * eng::Vect3(tan(cut_out), tan(cut_out), 1)));
-        light_object.models.change_left(model_id, get_view_matrix().inverse());
+            shadow_box.meshes.apply_func([](auto& mesh) {
+                mesh.material.set_diffuse(Vect3(1.0, 1.0, 1.0));
+                mesh.material.set_alpha(0.3);
+            });
 
-        return light_object;
-    }
-};
+            Matrix model = Matrix::scale_matrix((1.0 - eps_) * shadow_max_distance_ * Vect3(tan(border_out_), tan(border_out_), 1.0));
+            model = get_view_matrix().inverse() * model;
+
+            shadow_box.models.insert(model);
+            return shadow_box;
+        }
+
+        GraphObject get_light_object() const {
+            GraphObject light_object = GraphObject::cone(20, true, 1);
+
+            light_object.meshes.apply_func([](auto& mesh) {
+                mesh.material.set_emission(Vect3(1.0, 1.0, 1.0));
+                mesh.material.shadow = false;
+            });
+
+            Matrix model = Matrix::scale_matrix(0.25 * Vect3(tan(border_out_), tan(border_out_), 1.0));
+            model = Matrix::rotation_matrix(Vect3(1.0, 0.0, 0.0), -PI / 2.0) * model;
+            model = get_view_matrix().inverse() * model;
+
+            light_object.models.insert(model);
+            return light_object;
+        }
+    };
+}
