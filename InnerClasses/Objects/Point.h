@@ -151,7 +151,7 @@ class Point : public RenderObject {
     }
 
 public:
-    Point(eng::Vect3 position, GraphEngine* scene, double radius = POINT_RADIUS) {
+    Point(eng::Vect3 position, eng::GraphEngine* scene, double radius = POINT_RADIUS) {
         type = 0;
         action = 0;
         this->scene = scene;
@@ -161,7 +161,7 @@ public:
         (*scene)[scene_id.first].models.change_left(scene_id.second, eng::Matrix::translation_matrix(position));
     }
 
-    Point(std::pair < int, int > button, std::vector < RenderObject* > init_obj, GraphEngine* scene) {
+    Point(std::pair < int, int > button, std::vector < RenderObject* > init_obj, eng::GraphEngine* scene) {
         type = 0;
         this->scene = scene;
         this->init_obj = init_obj;

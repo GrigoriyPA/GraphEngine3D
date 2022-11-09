@@ -3,6 +3,7 @@
 #include <fstream>
 #include "GraphicFunctions.h"
 #include "../CommonClasses/Matrix.h"
+#include "../CommonClasses/Vect2.h"
 
 
 namespace eng {
@@ -125,6 +126,20 @@ namespace eng {
 			throw EngInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
 		}
 
+		static uint64_t find_version(const std::string& code) {
+			std::vector<std::string> split_code = split(code, [](const char c) { return c == ' ' || c == '\n'; });
+			if (split_code.size() < 2) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "find_version, version not found.\n\n");
+			}
+
+			for (size_t i = 0; i < split_code.size() - 1; ++i) {
+				if (split_code[i] == "#version") {
+					return std::stoull(split_code[i + 1]);
+				}
+			}
+			throw EngInvalidArgument(__FILE__, __LINE__, "find_version, version not found.\n\n");
+		}
+
 		static std::string load_shader_info_log(GLuint shader) {
 			GLint info_log_size = 0;
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_size);
@@ -179,6 +194,10 @@ namespace eng {
 			glDeleteShader(fragment_shader);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			if (find_version(*vertex_shader_code_) != find_version(*fragment_shader_code_)) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
+			}
 		}
 
 		Shader(const Shader<T>& other) noexcept {
@@ -224,11 +243,27 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
+		void set_uniform_f(const GLchar* uniform_name, const Vect2& v) const {
+			if (get_current_program() != program_id_) {
+				use();
+			}
+			glUniform2f(get_uniform_location(uniform_name), static_cast<GLfloat>(v.x), static_cast<GLfloat>(v.y));
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
 		void set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2) const {
 			if (get_current_program() != program_id_) {
 				use();
 			}
 			glUniform3f(get_uniform_location(uniform_name), v0, v1, v2);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		void set_uniform_f(const GLchar* uniform_name, const Vect3& v) const {
+			if (get_current_program() != program_id_) {
+				use();
+			}
+			glUniform3f(get_uniform_location(uniform_name), static_cast<GLfloat>(v.x), static_cast<GLfloat>(v.y), static_cast<GLfloat>(v.z));
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
@@ -461,6 +496,23 @@ namespace eng {
 		GLuint get_program_id() const noexcept {
 			return program_id_;
 		}
+
+		
+
+		//bool check_window_settings(const sf::ContextSettings& settings) const noexcept {
+		//	std::vector<std::string> split_code = split(code, [](const char c) { return c == ' ' || c == '\n'; });
+		//	if (split_code.size() < 3) {
+		//		throw EngInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
+		//	}
+
+		//	for (size_t i = 0; i < split_code.size() - 2; ++i) {
+		//		if (split_code[i] == variable_name && split_code[i + 1] == "=") {
+		//			split_code[i + 2].pop_back();
+		//			return split_code[i + 2];
+		//		}
+		//	}
+		//	throw EngInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
+		//}
 
 		void use() const {
 			glUseProgram(program_id_);

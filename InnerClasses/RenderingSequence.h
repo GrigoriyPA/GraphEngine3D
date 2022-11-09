@@ -13,7 +13,7 @@ class RenderingSequence {
 	std::vector < RenderObject* > objects;
 	std::map < std::pair < int, int >, int > object_id;
 	eng::Vect3 stable_point, temp_point, intersect_point;
-	GraphEngine* scene;
+	eng::GraphEngine* scene;
 
 	bool can_switch_to_point() {
 		return is_available(active_button, 0, selected_objects) && (active_button.first != 2 || active_button.second > 1);
@@ -204,12 +204,12 @@ class RenderingSequence {
 	}
 
 public:
-	RenderingSequence(GraphEngine* scene) {
+	RenderingSequence(eng::GraphEngine* scene) {
 		this->scene = scene;
 
 		object_id[std::make_pair(-1, -1)] = -1;
 
-		temp_point = scene->cam.position + scene->cam.get_direction() * point_distance;
+		temp_point = scene->camera.position + scene->camera.get_direction() * point_distance;
 		add_object(new Point(temp_point, scene));
 		objects[0]->switch_visibility();
 	}
@@ -382,11 +382,12 @@ public:
 		check_active_button(cur_active_button);
 		active_object = object_id[scene->get_center_object_id(intersect_point)];
 
-		eng::Matrix trans = eng::Matrix::translation_matrix(scene->cam.get_change_vector(stable_point));
+		eng::Matrix trans = eng::Matrix::translation_matrix(scene->camera.get_change_vector(stable_point));
 		stable_point = trans * stable_point;
+		scene->camera.update();
 
 		double delt = pow(SCROLL_SENSITIVITY, scroll);
-		eng::Vect3 new_point = (stable_point - scene->cam.position) * delt + scene->cam.position;
+		eng::Vect3 new_point = (stable_point - scene->camera.position) * delt + scene->camera.position;
 		trans = trans * eng::Matrix::translation_matrix(new_point - stable_point);
 		stable_point = new_point;
 		scroll = 0;
@@ -399,7 +400,7 @@ public:
 		}
 
 		if (input_state == 1) {
-			eng::Vect3 new_temp_point = scene->cam.position + scene->cam.get_direction() * point_distance;
+			eng::Vect3 new_temp_point = scene->camera.position + scene->camera.get_direction() * point_distance;
 			if ((new_temp_point - temp_point).length() > eps)
 				objects[0]->move(eng::Matrix::translation_matrix(new_temp_point - temp_point));
 			temp_point = new_temp_point;

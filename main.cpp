@@ -1,5 +1,6 @@
-#include "GraphEngine/Engine/GraphEngine.h"
+#include "GraphEngine/Engine.h"
 #include <chrono>
+#include <cassert>
 #include <iostream>
 #include <stdio.h>
 #include <string>
@@ -33,14 +34,7 @@ void screenshot(sf::RenderWindow& window) {
 
 signed main() {
     try {
-        sf::ContextSettings settings;
-        settings.majorVersion = 3;
-        settings.minorVersion = 0;
-        sf::RenderWindow window(sf::VideoMode::getFullscreenModes()[0], "Editor", sf::Style::None, settings);
-        if (window.getSettings().majorVersion < settings.majorVersion || window.getSettings().minorVersion < settings.minorVersion) {
-            std::cout << "ERROR\n" << "Invalid OpenGL version.";
-            assert(false);
-        }
+        sf::RenderWindow window(sf::VideoMode::getFullscreenModes()[0], "Editor", sf::Style::None);
         //window.setVerticalSyncEnabled(true);
 
         int window_width = window.getSize().x, window_height = window.getSize().y;
@@ -65,15 +59,17 @@ signed main() {
 
         Interface window_interface(&window);
 
-        GraphEngine scene(&window, FOV, MIN_DIST, MAX_DIST);
+        eng::GraphEngine scene(&window);
         scene.set_clear_color(eng::Vect3(INTERFACE_MAIN_COLOR) / 255.0);
         scene.set_border_color(eng::Vect3(INTERFACE_ADD_COLOR) / 255.0);
-        scene.cam.sensitivity = SENSITIVITY;
-        scene.cam.speed = SPEED;
-        scene.cam.rotation_speed = ROTATION_SPEED;
-        scene.cam.speed_delt = SPEED_DELT;
+        scene.camera.set_fov(FOV);
+        scene.camera.set_distance(MIN_DIST, MAX_DIST);
+        scene.camera.sensitivity = SENSITIVITY;
+        scene.camera.speed = SPEED;
+        scene.camera.rotation_speed = ROTATION_SPEED;
+        scene.camera.speed_delt = SPEED_DELT;
 
-        double ratio = scene.cam.get_screen_ratio();
+        double ratio = scene.camera.get_screen_ratio();
         double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
         eng::SpotLight spot_light(eng::Vect3(0, 0, 0), eng::Vect3(0, 0, 1), angle, 1.1 * angle);
         spot_light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
@@ -84,15 +80,6 @@ signed main() {
         RenderingSequence render(&scene);
 
         int obj_id = scene.add_object(eng::GraphObject(1));
-        scene[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
-        scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
-        //scene[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
-        //scene[obj_id].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1) * 0.01));
-        /*for (size_t i = 0; i < scene[obj_id].get_count_polygons(); ++i) {
-            scene[obj_id][i].material.use_vertex_color = true;
-        }*/
-
-        obj_id = scene.add_object(eng::GraphObject(1));
         eng::Mesh mesh(4);
         mesh.set_positions({
             eng::Vect3(-1, 0, 1),
@@ -116,6 +103,13 @@ signed main() {
         light.shadow = true;
         scene.set_light(1, &light);
         //scene.add_object(light.get_shadow_box());
+
+        int obj_id1 = scene.add_object(eng::GraphObject(1));
+        scene[obj_id1].importFromFile("Resources/Objects/ships/mjolnir.glb");
+        int model_id1 = scene[obj_id1].models.insert(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
+        render.add_object(new Object({ obj_id1, model_id1 }, &scene));
+        //scene[obj_id1].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
+        //scene[obj_id1].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1) * 0.01));
 
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {
@@ -149,11 +143,11 @@ signed main() {
             }
 
             double delta_time = window_interface.update();
-            render.update(window_interface.get_active_button());
             scene.update(delta_time);
+            render.update(window_interface.get_active_button());
 
-            spot_light.position = scene.cam.position;
-            spot_light.set_direction(scene.cam.get_direction());
+            spot_light.position = scene.camera.position;
+            spot_light.set_direction(scene.camera.get_direction());
 
             scene.draw();
 

@@ -74,8 +74,8 @@ namespace eng {
             shader.set_uniform_f((name + "quadratic").c_str(), static_cast<GLfloat>(quadratic_));
             shader.set_uniform_f((name + "cut_in").c_str(), static_cast<GLfloat>(cos(border_in_)));
             shader.set_uniform_f((name + "cut_out").c_str(), static_cast<GLfloat>(cos(border_out_)));
-            shader.set_uniform_f((name + "direction").c_str(), static_cast<GLfloat>(direction_.x), static_cast<GLfloat>(direction_.y), static_cast<GLfloat>(direction_.z));
-            shader.set_uniform_f((name + "position").c_str(), static_cast<GLfloat>(position.x), static_cast<GLfloat>(position.y), static_cast<GLfloat>(position.z));
+            shader.set_uniform_f((name + "direction").c_str(), direction_);
+            shader.set_uniform_f((name + "position").c_str(), position);
             if (shadow) {
                 shader.set_uniform_matrix((name + "light_space").c_str(), get_light_space_matrix());
             }

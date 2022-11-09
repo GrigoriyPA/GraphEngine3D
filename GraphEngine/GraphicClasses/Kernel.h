@@ -5,6 +5,7 @@
 
 namespace eng {
 	class Kernel {
+		GLuint offset_ = 0;
 		Matrix kernel_ = Matrix(3, 3, 0.0);
 
 	public:
@@ -13,11 +14,12 @@ namespace eng {
 		}
 
 		template <typename T>  // Casts required: double(T)
-		Kernel(const std::initializer_list<std::initializer_list<T>>& init) {
+		Kernel(GLuint offset, const std::initializer_list<std::initializer_list<T>>& init) {
 			if (init.size() != 3 || init.begin()->size() != 3) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Kernel, invalid kernel size.\n\n");
 			}
 
+			offset_ = offset;
 			kernel_ = Matrix(init);
 		}
 
@@ -45,15 +47,31 @@ namespace eng {
 			return !(*this == other);
 		}
 
+		friend std::istream& operator>>(std::istream& fin, Kernel& kernel) noexcept;
+
 		friend std::ostream& operator<<(std::ostream& fout, const Kernel& kernel) noexcept;
 
-		template <typename T>
-		void use(const std::string& uniform_name, const Shader<T>& shader) const {
-			shader.set_uniform_fv<1>(uniform_name.c_str(), 9, &std::vector<float>(kernel_)[0]);
+		void set_uniforms(const Shader<size_t>& shader) const {
+			if (shader.description != ShaderType::POST) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+			}
+
+			shader.set_uniform_i("offset", offset_);
+			shader.set_uniform_fv<1>("kernel", 9, &std::vector<GLfloat>(kernel_)[0]);
+		}
+
+		Kernel& set_offset(GLuint offset) noexcept {
+			offset_ = offset;
+			return *this;
+		}
+
+		GLuint get_offset() const noexcept {
+			return offset_;
 		}
 	};
 
 	std::istream& operator>>(std::istream& fin, Kernel& kernel) noexcept {
+		fin >> kernel.offset_;
 		for (size_t i = 0; i < 3; ++i) {
 			for (size_t j = 0; j < 3; ++j) {
 				fin >> kernel[i][j];
@@ -63,7 +81,7 @@ namespace eng {
 	}
 
 	std::ostream& operator<<(std::ostream& fout, const Kernel& kernel) noexcept {
-		fout << kernel.kernel_;
+		fout << kernel.offset_ << "\n" << kernel.kernel_;
 		return fout;
 	}
 }

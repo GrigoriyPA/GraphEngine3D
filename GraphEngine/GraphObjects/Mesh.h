@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Material.h"
-#include "../CommonClasses/Vect2.h"
 
 
 namespace eng {

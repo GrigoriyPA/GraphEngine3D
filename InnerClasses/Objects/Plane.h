@@ -326,7 +326,7 @@ class Plane : public RenderObject {
     }
     
 public:
-    Plane(std::pair < int, int > button, std::vector < RenderObject* > init_obj, GraphEngine* scene) {
+    Plane(std::pair < int, int > button, std::vector < RenderObject* > init_obj, eng::GraphEngine* scene) {
         type = 3;
         this->scene = scene;
         this->init_obj = init_obj;

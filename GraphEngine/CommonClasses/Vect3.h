@@ -1,7 +1,8 @@
 #pragma once
 
 #include <initializer_list>
-#include <SFML/Graphics/Color.hpp>
+#include <iostream>
+#include <SFML/Graphics.hpp>
 #include "Functions.h"
 
 

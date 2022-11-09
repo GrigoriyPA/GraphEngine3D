@@ -35,7 +35,7 @@ namespace eng {
             shader.set_uniform_f((name + "constant").c_str(), static_cast<GLfloat>(constant_));
             shader.set_uniform_f((name + "linear").c_str(), static_cast<GLfloat>(linear_));
             shader.set_uniform_f((name + "quadratic").c_str(), static_cast<GLfloat>(quadratic_));
-            shader.set_uniform_f((name + "position").c_str(), static_cast<GLfloat>(position.x), static_cast<GLfloat>(position.y), static_cast<GLfloat>(position.z));
+            shader.set_uniform_f((name + "position").c_str(), position);
         }
 
         PointLight& set_constant(double coefficient) {

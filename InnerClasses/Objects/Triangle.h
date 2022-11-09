@@ -207,7 +207,7 @@ class Triangle : public RenderObject {
     }
 
 public:
-    Triangle(std::pair < int, int > button, std::vector < RenderObject* > init_obj, GraphEngine* scene) {
+    Triangle(std::pair < int, int > button, std::vector < RenderObject* > init_obj, eng::GraphEngine* scene) {
         type = 4;
         this->scene = scene;
         this->init_obj = init_obj;

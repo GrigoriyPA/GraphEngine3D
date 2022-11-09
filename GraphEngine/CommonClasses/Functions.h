@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <math.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -81,7 +82,7 @@ namespace eng {
 
     class EngDomainError : public std::domain_error {
     public:
-        EngDomainError(const char* filename, uint32_t line, std::string message) : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) +  "\nDescription: " + message) {
+        EngDomainError(const char* filename, uint32_t line, std::string message) : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 

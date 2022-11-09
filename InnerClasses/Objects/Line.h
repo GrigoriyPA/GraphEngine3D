@@ -301,7 +301,7 @@ class Line : public RenderObject {
     }
 
 public:
-    Line(eng::Vect3 point1, eng::Vect3 point2, GraphEngine* scene) {
+    Line(eng::Vect3 point1, eng::Vect3 point2, eng::GraphEngine* scene) {
         action = -1;
         type = 2;
         this->scene = scene;
@@ -310,7 +310,7 @@ public:
         update_line(point1, point2);
     }
 
-    Line(std::pair < int, int > button, std::vector < RenderObject* > init_obj, GraphEngine* scene) {
+    Line(std::pair < int, int > button, std::vector < RenderObject* > init_obj, eng::GraphEngine* scene) {
         type = 2;
         this->scene = scene;
         this->init_obj = init_obj;

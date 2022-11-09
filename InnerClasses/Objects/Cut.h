@@ -124,7 +124,7 @@ class Cut : public RenderObject {
     }
 
 public:
-    Cut(eng::Vect3 point1, eng::Vect3 point2, GraphEngine* scene) {
+    Cut(eng::Vect3 point1, eng::Vect3 point2, eng::GraphEngine* scene) {
         action = -1;
         type = 1;
         this->scene = scene;
@@ -133,7 +133,7 @@ public:
         update_cut(point1, point2);
     }
 
-    Cut(std::pair < int, int > button, std::vector < RenderObject* > init_obj, GraphEngine* scene) {
+    Cut(std::pair < int, int > button, std::vector < RenderObject* > init_obj, eng::GraphEngine* scene) {
         type = 1;
         this->scene = scene;
         this->init_obj = init_obj;

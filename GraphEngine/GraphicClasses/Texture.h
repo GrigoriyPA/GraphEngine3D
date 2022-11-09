@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SFML/Graphics/Image.hpp>
 #include "GraphicFunctions.h"
 
 

@@ -11,6 +11,7 @@ namespace eng {
 	enum ShaderType : size_t { NONE = 0, MAIN = 1, DEPTH = 2, POST = 3 };
 
     bool glew_is_ok() noexcept {
+		glewExperimental = GL_TRUE;
 		return GLEW_IS_OK = GLEW_IS_OK ? true : glewInit() == GLEW_OK;
 	}
 	

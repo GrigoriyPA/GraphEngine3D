@@ -25,18 +25,18 @@ namespace eng {
 			shader.set_uniform_i("use_emission_map", emission_map.get_id() != 0);
 
 			if (diffuse_map.get_id() == 0) {
-				shader.set_uniform_f("object_material.ambient", static_cast<GLfloat>(ambient_.x), static_cast<GLfloat>(ambient_.y), static_cast<GLfloat>(ambient_.z));
-				shader.set_uniform_f("object_material.diffuse", static_cast<GLfloat>(diffuse_.x), static_cast<GLfloat>(diffuse_.y), static_cast<GLfloat>(diffuse_.z));
+				shader.set_uniform_f("object_material.ambient", ambient_);
+				shader.set_uniform_f("object_material.diffuse", diffuse_);
 				shader.set_uniform_f("object_material.alpha", static_cast<GLfloat>(alpha_));
 			}
 
 			if (specular_map.get_id() == 0) {
-				shader.set_uniform_f("object_material.specular", static_cast<GLfloat>(specular_.x), static_cast<GLfloat>(specular_.y), static_cast<GLfloat>(specular_.z));
+				shader.set_uniform_f("object_material.specular", specular_);
 			}
 			shader.set_uniform_f("object_material.shininess", static_cast<GLfloat>(shininess_));
 
 			if (emission_map.get_id() == 0) {
-				shader.set_uniform_f("object_material.emission", static_cast<GLfloat>(emission_.x), static_cast<GLfloat>(emission_.y), static_cast<GLfloat>(emission_.z));
+				shader.set_uniform_f("object_material.emission", emission_);
 			}
 
 			shader.set_uniform_i("object_material.use_vertex_color", use_vertex_color);
@@ -52,6 +52,7 @@ namespace eng {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
 
+			shader.use();
 			diffuse_map.deactive(0);
 			specular_map.deactive(1);
 			emission_map.deactive(2);

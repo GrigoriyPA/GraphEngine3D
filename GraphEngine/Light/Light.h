@@ -18,9 +18,9 @@ namespace eng {
             }
 
             shader.set_uniform_i((name + "exist").c_str(), 1);
-            shader.set_uniform_f((name + "ambient").c_str(), static_cast<GLfloat>(ambient_.x), static_cast<GLfloat>(ambient_.y), static_cast<GLfloat>(ambient_.z));
-            shader.set_uniform_f((name + "diffuse").c_str(), static_cast<GLfloat>(diffuse_.x), static_cast<GLfloat>(diffuse_.y), static_cast<GLfloat>(diffuse_.z));
-            shader.set_uniform_f((name + "specular").c_str(), static_cast<GLfloat>(specular_.x), static_cast<GLfloat>(specular_.y), static_cast<GLfloat>(specular_.z));
+            shader.set_uniform_f((name + "ambient").c_str(), ambient_);
+            shader.set_uniform_f((name + "diffuse").c_str(), diffuse_);
+            shader.set_uniform_f((name + "specular").c_str(), specular_);
             shader.set_uniform_i((name + "shadow").c_str(), shadow);
         }
 
@@ -60,12 +60,12 @@ namespace eng {
             eps_ = eps;
         }
 
-        static void set_exist(size_t id, const Shader<size_t>& shader) {
+        static void set_exist(bool value, size_t id, const Shader<size_t>& shader) {
             if (shader.description != ShaderType::MAIN) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
             }
 
-            shader.set_uniform_i(("lights[" + std::to_string(id) + "].exist").c_str(), 0);
+            shader.set_uniform_i(("lights[" + std::to_string(id) + "].exist").c_str(), value);
         }
     };
 }

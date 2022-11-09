@@ -8,7 +8,7 @@ protected:
 	eng::Matrix save_matrix = eng::Matrix(4, 4, 0);
 
 	int type;
-	GraphEngine* scene;
+	eng::GraphEngine* scene;
 
 	void change_matrix(eng::Matrix trans) {
 		if (visibility)
@@ -95,6 +95,7 @@ public:
 };
 
 
+#include "Object.h"
 #include "Point.h"
 #include "Cut.h"
 #include "Line.h"

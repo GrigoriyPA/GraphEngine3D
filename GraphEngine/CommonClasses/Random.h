@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <random>
-#include "Vect3.h"
 
 
 namespace eng {
@@ -28,7 +27,7 @@ namespace eng {
 				throw EngInvalidArgument(__FILE__, __LINE__, "rand_int, invalid range.\n\n");
 			}
 
-			return static_cast<int64_t>(generator()) % (right - left + 1) + left;
+			return static_cast<int64_t>(generator() % static_cast<uint64_t>(right - left + 1)) + left;
 		}
 
 		double rand_float(double left, double right) {
@@ -39,12 +38,14 @@ namespace eng {
 			return (right - left) * rand() + left;
 		}
 
-		Vect3 rand_vect3(Vect3 left, Vect3 right) {
-			if (Vect3::zip_map(left, right, [](auto left, auto right) { return std::max(left, right); }) != right) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "rand_vect3, invalid range.\n\n");
-			}
+		template <typename T>  // Casts required: int64_t(T::value)
+		T rand_int_struct(T left, T right) {
+			return T::zip_map(left, right, [&](auto left, auto right) { return rand_int(static_cast<int64_t>(left), static_cast<int64_t>(right)); });
+		}
 
-			return Vect3(rand_float(left.x, right.x), rand_float(left.y, right.y), rand_float(left.z, right.z));
+		template <typename T>  // Casts required: double(T::value)
+		T rand_float_struct(T left, T right) {
+			return T::zip_map(left, right, [&](auto left, auto right) { return rand_float(static_cast<double>(left), static_cast<double>(right)); });
 		}
 	};
 }

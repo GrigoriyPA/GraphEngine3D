@@ -1,4 +1,4 @@
-#version 460 core
+#version 430 core
 
 const int NR_LIGHTS = 2;
 
