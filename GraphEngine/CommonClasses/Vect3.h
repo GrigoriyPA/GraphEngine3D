@@ -1,9 +1,7 @@
 #pragma once
 
-#include <initializer_list>
-#include <iostream>
 #include <SFML/Graphics.hpp>
-#include "Functions.h"
+#include "Vect2.h"
 
 
 namespace eng {
@@ -15,10 +13,31 @@ namespace eng {
 		double y = 0;
 		double z = 0;
 
+		Vect3() noexcept {
+		}
+
+		explicit Vect3(double value) noexcept {
+			x = value;
+			y = value;
+			z = value;
+		}
+
 		Vect3(double x, double y, double z) noexcept {
 			this->x = x;
 			this->y = y;
 			this->z = z;
+		}
+
+		Vect3(const Vect2& xy, double z) noexcept {
+			x = xy.x;
+			y = xy.y;
+			this->z = z;
+		}
+
+		Vect3(double x, const Vect2& yz) noexcept {
+			this->x = x;
+			y = yz.x;
+			z = yz.y;
 		}
 
 		template <typename T>  // Casts required: double(T)
@@ -44,9 +63,6 @@ namespace eng {
 			x = color.r;
 			y = color.g;
 			z = color.b;
-		}
-
-		Vect3() noexcept {
 		}
 
 		template <typename T>  // Constructors required: T(T)

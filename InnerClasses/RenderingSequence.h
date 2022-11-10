@@ -380,7 +380,11 @@ public:
 
 	void update(std::pair < int, int > cur_active_button) {
 		check_active_button(cur_active_button);
-		active_object = object_id[scene->get_center_object_id(intersect_point)];
+		auto obj_id = scene->get_check_object(intersect_point);
+		active_object = object_id[{-1, -1}];
+		if (obj_id.exist) {
+			active_object = object_id[{obj_id.object_id, obj_id.model_id}];
+		}
 
 		eng::Matrix trans = eng::Matrix::translation_matrix(scene->camera.get_change_vector(stable_point));
 		stable_point = trans * stable_point;

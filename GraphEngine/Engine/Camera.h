@@ -7,6 +7,7 @@ namespace eng {
 	class Camera {
 		inline static double eps_ = 1e-5;
 
+		uint8_t active_state_ = 0;
 		Matrix change_matrix_ = Matrix::one_matrix(4);
 
 		double fov_;
@@ -17,6 +18,8 @@ namespace eng {
 		Vect3 horizont_;
 		Vect3 last_position_;
 		Matrix projection_;
+		sf::Vector2i mouse_position_;
+		sf::RenderWindow* window_;
 
 		void set_projection_matrix() {
 			if (equality(tan(fov_ / 2.0), 0.0, eps_) || equality(max_distance_, min_distance_, eps_) || equality(max_distance_ + min_distance_, 0.0, eps_)) {
@@ -38,7 +41,7 @@ namespace eng {
 
 		Vect3 position;
 
-		Camera() : projection_(4, 4) {
+		explicit Camera(sf::RenderWindow* window) : projection_(4, 4) {
 			fov_ = PI / 2.0;
 			min_distance_ = 1.0;
 			max_distance_ = 2.0;
@@ -46,6 +49,7 @@ namespace eng {
 
 			direction_ = Vect3(0, 0, 1);
 			last_position_ = Vect3(0.0, 0.0, 0.0);
+			window_ = window;
 
 			horizont_ = direction_.horizont();
 			position = last_position_;
@@ -54,7 +58,7 @@ namespace eng {
 		}
 
 		// screen_ratio = screen_width / screen_height
-		Camera(const Vect3& position, const Vect3& direction, double fov, double min_distance, double max_distance, double screen_ratio) : projection_(4, 4) {
+		Camera(sf::RenderWindow* window, const Vect3& position, const Vect3& direction, double fov, double min_distance, double max_distance, double screen_ratio) : projection_(4, 4) {
 			if (less_equality(fov, 0.0, eps_) || less_equality(PI, fov, eps_)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid FOV value.\n\n");
 			}
@@ -76,6 +80,7 @@ namespace eng {
 			min_distance_ = min_distance;
 			max_distance_ = max_distance;
 			screen_ratio_ = screen_ratio;
+			window_ = window;
 			this->position = position;
 
 			horizont_ = direction.horizont();
@@ -197,6 +202,92 @@ namespace eng {
 				throw EngInvalidArgument(__FILE__, __LINE__, "rotate, the axis vector has zero length.\n\n");
 			}
 			return *this;
+		}
+
+		// ...
+		void switch_active() noexcept {
+			if (active_state_ == 0) {
+				window_->setMouseCursorVisible(false);
+				mouse_position_ = sf::Mouse::getPosition();
+				sf::Mouse::setPosition(sf::Vector2i(window_->getSize().x / 2 + window_->getPosition().x, window_->getSize().y / 2 + window_->getPosition().y));
+				active_state_ = 1;
+			} else {
+				window_->setMouseCursorVisible(true);
+				sf::Mouse::setPosition(mouse_position_);
+				active_state_ = 0;
+			}
+		}
+
+		// ...
+		void compute_event(const sf::Event& event) {
+			if (active_state_ == 0) {
+				return;
+			}
+
+			switch (event.type) {
+				case sf::Event::MouseMoved:
+					if (active_state_ == 2) {
+						rotate(get_vertical(), (event.mouseMove.x - window_->getSize().x / 2.0) * sensitivity);
+						rotate(horizont_, (event.mouseMove.y - window_->getSize().y / 2.0) * sensitivity);
+						sf::Mouse::setPosition(sf::Vector2i(window_->getSize().x / 2 + window_->getPosition().x, window_->getSize().y / 2 + window_->getPosition().y));
+					} else if (active_state_ == 1) {
+						active_state_ = 2;
+					}
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		// ...
+		void update(double delta_time) {
+			if (active_state_ == 0) {
+				return;
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+				rotate(direction_, -rotation_speed * delta_time);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
+				rotate(direction_, rotation_speed * delta_time);
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
+				delta_time *= speed_delt;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+				position += speed * delta_time * horizont_;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+				position -= speed * delta_time * horizont_;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+				position += speed * delta_time * direction_;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+				position -= speed * delta_time * direction_;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+				position += speed * delta_time * get_vertical();
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt)) {
+				position -= speed * delta_time * get_vertical();
+			}
+		}
+
+		Vect3 convert_point(const Vect3& point) const {
+			double divisor = max_distance_ - point.z * (max_distance_ - min_distance_);
+			if (equality(divisor, 0.0, eps_)) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "convert_point, invalid point coordinate.\n\n");
+			}
+
+			if (equality(screen_ratio_, 0.0, eps_)) {
+				throw EngDomainError(__FILE__, __LINE__, "convert_point, invalid matrix settings.\n\n");
+			}
+
+			double tg = tan(fov_ / 2.0);
+			return Matrix(horizont_, get_vertical(), direction_) * Vect3(tg * point.x, (tg / screen_ratio_) * point.y, max_distance_ * min_distance_ / divisor) + position;
 		}
 
 		static void set_epsilon(double eps) {

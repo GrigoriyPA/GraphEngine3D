@@ -30,44 +30,52 @@ namespace eng {
 		};
 
 		inline static double eps_ = 1e-5;
+		inline static GLuint screen_vertex_array_ = 0;
 
-		GLuint screen_vertex_array_ = 0;
 		GLuint screen_texture_id_ = 0;
 		GLuint depth_stencil_texture_id_ = 0;
 		GLuint primary_frame_buffer_ = 0;
 		GLuint depth_map_texture_id_ = 0;
 		GLuint depth_map_frame_buffer_ = 0;
 		GLuint shader_storage_buffer_ = 0;
-		GLuint border_width_ = 7;
+
+		bool grayscale_ = false;
+		uint32_t border_width_ = 7; 
+		double gamma_ = 2.2;
+		Vect2 check_point_ = Vect2(0.0);
+		Vect3 border_color_ = Vect3(0.0);
+		Vect3 clear_color_ = Vect3(0.0);
+		Kernel kernel_ = Kernel();
+
 		size_t shadow_width_ = 1024;
 		size_t shadow_height_ = 1024;
-		uint8_t active_state_ = 0;
-		double gamma_ = 2.2;
-		Vect2 check_point_ = Vect2(0.0, 0.0);
-		Vect3 border_color_ = Vect3(0.0, 0.0, 0.0);
 
-		std::vector < Light* > lights_;
-		std::unordered_map < int, GraphObject > objects_;
-		sf::Vector2i mouse_position_;
-		sf::RenderWindow* window_;
+		std::vector<Light*> lights_;
+		std::unordered_map<size_t, GraphObject> objects_;
 		Shader<size_t> main_shader_;
 		Shader<size_t> depth_shader_;
 		Shader<size_t> post_shader_;
+		sf::RenderWindow* window_;
+		
+		void set_active() const {
+			if (!window_->setActive(true)) {
+				throw EngRuntimeError(__FILE__, __LINE__, "set_active, failed to activate window.\n\n");
+			}
+		}
 
 		void set_uniforms() const {
 			main_shader_.set_uniform_i("diffuse_map", 0);
 			main_shader_.set_uniform_i("specular_map", 1);
 			main_shader_.set_uniform_i("emission_map", 2);
-			main_shader_.set_uniform_f("gamma", gamma_);
-			main_shader_.set_uniform_f("check_point", check_point_);
-			main_shader_.set_uniform_matrix("projection", camera.get_projection_matrix());
+			main_shader_.set_uniform_f("gamma", static_cast<GLfloat>(gamma_));
+			main_shader_.set_uniform_f("check_point", static_cast<GLfloat>(check_point_.x * window_->getSize().x), static_cast<GLfloat>(check_point_.y * window_->getSize().y));
 
 			post_shader_.set_uniform_i("screen_texture", 0);
 			post_shader_.set_uniform_i("stencil_texture", 1);
-			post_shader_.set_uniform_i("grayscale", 0);
+			post_shader_.set_uniform_i("grayscale", grayscale_);
 			post_shader_.set_uniform_i("border_width", border_width_);
 			post_shader_.set_uniform_f("border_color", border_color_);
-			Kernel().set_uniforms(post_shader_);
+			kernel_.set_uniforms(post_shader_);
 		}
 
 		void set_light_uniforms() const {
@@ -82,44 +90,13 @@ namespace eng {
 		}
 
 		void init_gl() const {
-			glClearColor(0.0, 0.0, 0.0, 1.0);
+			glClearColor(static_cast<GLclampf>(clear_color_.x), static_cast<GLclampf>(clear_color_.y), static_cast<GLclampf>(clear_color_.z), static_cast<GLclampf>(1.0));
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_STENCIL_TEST);
 			glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_CULL_FACE);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void create_screen_vertex_array() {
-			glGenVertexArrays(1, &screen_vertex_array_);
-			glBindVertexArray(screen_vertex_array_);
-
-			GLuint vertex_buffer;
-			glGenBuffers(1, &vertex_buffer);
-			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-
-			GLfloat vertices[] = {
-				 1.0,  1.0, 1.0, 1.0,
-				-1.0,  1.0, 0.0, 1.0,
-				-1.0, -1.0, 0.0, 0.0,
-				-1.0, -1.0, 0.0, 0.0,
-				 1.0, -1.0, 1.0, 0.0,
-				 1.0,  1.0, 1.0, 1.0
-			};
-			glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(0));
-			glEnableVertexAttribArray(0);
-
-			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(2 * sizeof(GLfloat)));
-			glEnableVertexAttribArray(1);
-
-			glBindVertexArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-			glDeleteBuffers(1, &vertex_buffer);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
@@ -164,7 +141,7 @@ namespace eng {
 
 			glGenTextures(1, &depth_map_texture_id_);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, shadow_width_, shadow_height_, lights_.size(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(shadow_width_), static_cast<GLsizei>(shadow_height_), static_cast<GLsizei>(lights_.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -194,8 +171,7 @@ namespace eng {
 
 			GLint init_int[2] = { -1, -1 };
 			GLfloat init_float = 1;
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
-			glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) + sizeof(GLfloat), &init_int, GL_DYNAMIC_DRAW);
+			glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) + sizeof(GLfloat), &init_int, GL_DYNAMIC_READ);
 			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint), sizeof(GLfloat), &init_float);
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -219,20 +195,20 @@ namespace eng {
 					continue;
 				}
 
-				main_shader_.set_uniform_i("object_id", object_id);
+				main_shader_.set_uniform_i("object_id", static_cast<GLint>(object_id));
 				object.draw(main_shader_);
 			}
 
 			std::sort(transparent_objects.rbegin(), transparent_objects.rend());
 			for (const TransparentObject& object : transparent_objects) {
-				main_shader_.set_uniform_i("object_id", object.object_id);
+				main_shader_.set_uniform_i("object_id", static_cast<GLint>(object.object_id));
 				object.object->draw(object.model_id, main_shader_);
 			}
 		}
 
 		void draw_depth_map() const {
 			glBindFramebuffer(GL_FRAMEBUFFER, depth_map_frame_buffer_);
-			glViewport(0, 0, shadow_width_, shadow_height_);
+			glViewport(0, 0, static_cast<GLsizei>(shadow_width_), static_cast<GLsizei>(shadow_height_));
 
 			glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -242,7 +218,7 @@ namespace eng {
 				}
 
 				depth_shader_.set_uniform_matrix("light_space", lights_[i]->get_light_space_matrix());
-				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_map_texture_id_, 0, i);
+				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, static_cast<GLint>(depth_map_texture_id_), 0, static_cast<GLint>(i));
 				for (const auto& [id, object] : objects_) {
 					object.draw_depth_map();
 				}
@@ -254,7 +230,7 @@ namespace eng {
 
 		void draw_primary_frame_buffer() const {
 			glBindFramebuffer(GL_FRAMEBUFFER, primary_frame_buffer_);
-			glViewport(0, 0, window_->getSize().x, window_->getSize().y);
+			glViewport(0, 0, static_cast<GLsizei>(window_->getSize().x), static_cast<GLsizei>(window_->getSize().y));
 
 			glStencilMask(0xFF);
 			glStencilFunc(GL_ALWAYS, 0, 0xFF);
@@ -274,7 +250,7 @@ namespace eng {
 
 		void draw_mainbuffer() const {
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glViewport(0, 0, window_->getSize().x, window_->getSize().y);
+			glViewport(0, 0, static_cast<GLsizei>(window_->getSize().x), static_cast<GLsizei>(window_->getSize().y));
 
 			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
@@ -301,7 +277,6 @@ namespace eng {
 		}
 
 		void deallocate() {
-			glDeleteVertexArrays(1, &screen_vertex_array_);
 			glDeleteFramebuffers(1, &primary_frame_buffer_);
 			glDeleteFramebuffers(1, &depth_map_frame_buffer_);
 			glDeleteBuffers(1, &shader_storage_buffer_);
@@ -310,7 +285,6 @@ namespace eng {
 			glDeleteTextures(1, &depth_map_texture_id_);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			screen_vertex_array_ = 0;
 			primary_frame_buffer_ = 0;
 			depth_map_frame_buffer_ = 0;
 			shader_storage_buffer_ = 0;
@@ -319,278 +293,378 @@ namespace eng {
 			depth_map_texture_id_ = 0;
 		}
 
+		static void create_screen_vertex_array() {
+			if (screen_vertex_array_ != 0) {
+				return;
+			}
+
+			glGenVertexArrays(1, &screen_vertex_array_);
+			glBindVertexArray(screen_vertex_array_);
+
+			GLuint vertex_buffer;
+			glGenBuffers(1, &vertex_buffer);
+			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+
+			GLfloat vertices[] = {
+				 1.0,  1.0, 1.0, 1.0,
+				-1.0,  1.0, 0.0, 1.0,
+				-1.0, -1.0, 0.0, 0.0,
+				-1.0, -1.0, 0.0, 0.0,
+				 1.0, -1.0, 1.0, 0.0,
+				 1.0,  1.0, 1.0, 1.0
+			};
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
+
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(0));
+			glEnableVertexAttribArray(0);
+
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), reinterpret_cast<GLvoid*>(2 * sizeof(GLfloat)));
+			glEnableVertexAttribArray(1);
+
+			glBindVertexArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			glDeleteBuffers(1, &vertex_buffer);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
 	public:
+		struct ObjectDesc {
+			bool exist = false;
+			size_t object_id = 0;
+			size_t model_id = 0;
+		};
+
 		Camera camera;
 
-		GraphEngine(sf::RenderWindow* window) {
+		explicit GraphEngine(sf::RenderWindow* window) : camera(window) {
+			window_ = window;
+			set_active();
+
 			if (!glew_is_ok()) {
 				throw EngRuntimeError(__FILE__, __LINE__, "GraphEngine, failed to initialize GLEW.\n\n");
 			}
-			depth_shader_ = Shader<size_t>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth", ShaderType::DEPTH);
-			main_shader_ = Shader<size_t>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main", ShaderType::MAIN);
-			post_shader_ = Shader<size_t>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post", ShaderType::POST);
 
+			depth_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth", eng::ShaderType::DEPTH);
+			post_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post", eng::ShaderType::POST);
+			main_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main", eng::ShaderType::MAIN);
+			set_uniforms();
+			
+			const sf::ContextSettings& settings = window->getSettings();
+			if (!depth_shader_.check_window_settings(settings) || !post_shader_.check_window_settings(settings) || !main_shader_.check_window_settings(settings)) {
+				throw EngRuntimeError(__FILE__, __LINE__, "GraphEngine, invalid OpenGL version.\n\n");
+			}
 
-			border_color_ = Vect3(1.0, 0.0, 0.0);
-			this->window_ = window;
-			window->setActive(true);
-
-			init_gl();
-
-			check_point_ = Vect2(window->getSize().x, window->getSize().y) / 2.0;
-			camera.set_screen_ratio(((double)window->getSize().x) / ((double)window->getSize().y));
 			lights_.resize(std::stoi(main_shader_.get_value_frag("NR_LIGHTS")), nullptr);
 
+			camera.set_screen_ratio(static_cast<double>(window->getSize().x) / static_cast<double>(window->getSize().y));
+
+			init_gl();
 			create_buffers();
-			set_uniforms();
 		}
 
-		GraphEngine(const GraphEngine& object) {
-			*this = object;
-		}
-
-		GraphEngine& operator=(const GraphEngine& other) {
-			deallocate();
+		GraphEngine(const GraphEngine& other) : camera(other.window_) {
+			window_ = other.window_;
+			set_active();
 
 			shadow_width_ = other.shadow_width_;
 			shadow_height_ = other.shadow_height_;
-			active_state_ = other.active_state_;
+			grayscale_ = other.grayscale_;
+			border_width_ = other.border_width_;
+			gamma_ = other.gamma_;
+			check_point_ = other.check_point_;
+			border_color_ = other.border_color_;
+			clear_color_ = other.clear_color_;
 			lights_ = other.lights_;
 			objects_ = other.objects_;
-			window_ = other.window_;
-			main_shader_ = other.main_shader_;
-			post_shader_ = other.post_shader_;
-			depth_shader_ = other.depth_shader_;
+			kernel_ = other.kernel_;
 			camera = other.camera;
 
-			create_buffers();
+			main_shader_ = other.main_shader_;
+			depth_shader_ = other.depth_shader_;
+			post_shader_ = other.post_shader_;
 			set_uniforms();
 
+			init_gl();
+			create_buffers();
+		}
+
+		GraphEngine(GraphEngine&& other) : camera(other.window_) {
+			swap(other);
+		}
+
+		GraphEngine& operator=(const GraphEngine& other)& {
+			GraphEngine object(other);
+			swap(object);
 			return *this;
 		}
 
-		GraphObject& operator[](int object_id) {
-			if (!objects_.count(object_id)) {
-				//std::cout << "ERROR::GRAPH_ENGINE::OPERATOR[]\n" << "Invalid object id.\n";
-				//assert(0);
+		GraphEngine& operator=(GraphEngine&& other)& {
+			deallocate();
+			swap(other);
+			return *this;
+		}
+
+		GraphObject& operator[](size_t object_id) {
+			if (objects_.count(object_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
 			}
 
 			return objects_[object_id];
 		}
 
-		void set_clear_color(Vect3 color) {
-			glClearColor(color.x, color.y, color.z, 1.0);
+		const GraphObject& operator[](size_t object_id) const {
+			if (objects_.count(object_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
+			}
+
+			return objects_.at(object_id);
 		}
 
-		void set_light(int light_id, Light* new_light) {
-			if (light_id < 0 || lights_.size() <= light_id) {
-				//std::cout << "ERROR::GRAPH_ENGINE::SET_LIGHT\n" << "Invalid light id.\n";
-				//assert(0);
+		GraphEngine& set_grayscale(bool grayscale) {
+			set_active();
+			post_shader_.set_uniform_i("grayscale", grayscale);
+			grayscale_ = grayscale;
+			return *this;
+		}
+
+		GraphEngine& set_border_width(uint32_t border_width) {
+			set_active();
+			post_shader_.set_uniform_i("border_width", border_width);
+			border_width_ = border_width;
+			return *this;
+		}
+
+		GraphEngine& set_gamma(double gamma) {
+			if (less_equality(gamma, 0.0, eps_)) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_gamma, not positive gamma.\n\n");
+			}
+
+			set_active();
+			post_shader_.set_uniform_f("gamma", static_cast<GLfloat>(gamma));
+			gamma_ = gamma;
+			return *this;
+		}
+
+		GraphEngine& set_check_point(const Vect2& point) {
+			if (point.x < 0.0 || 1.0 < point.x || point.y < 0.0 || 1.0 < point.y) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_check_point, invalid point coordinate.\n\n");
+			}
+
+			set_active();
+			check_point_ = Vect2(point.x, 1.0 - point.y);
+			main_shader_.set_uniform_f("check_point", static_cast<GLfloat>(check_point_.x * window_->getSize().x), static_cast<GLfloat>(check_point_.y * window_->getSize().y));
+			return *this;
+		}
+
+		GraphEngine& set_border_color(const Vect3& color) {
+			check_color_value(__FILE__, __LINE__, __func__, color);
+
+			set_active();
+			post_shader_.set_uniform_f("border_color", color);
+			border_color_ = color;
+			return *this;
+		}
+
+		GraphEngine& set_clear_color(const Vect3& color) {
+			check_color_value(__FILE__, __LINE__, __func__, color);
+
+			set_active();
+			glClearColor(static_cast<GLclampf>(color.x), static_cast<GLclampf>(color.y), static_cast<GLclampf>(color.z), static_cast<GLclampf>(1.0));
+			clear_color_ = color;
+			return *this;
+		}
+
+		GraphEngine& set_kernel(const Kernel& kernel) {
+			set_active();
+			kernel.set_uniforms(post_shader_);
+			kernel_ = kernel;
+			return *this;
+		}
+
+		GraphEngine& set_shadow_size(size_t shadow_width, size_t shadow_height) {
+			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
+			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(shadow_width), static_cast<GLsizei>(shadow_height), static_cast<GLsizei>(lights_.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			shadow_width_ = shadow_width;
+			shadow_height_ = shadow_height;
+			return *this;
+		}
+
+		GraphEngine& set_light(size_t light_id, Light* new_light) {
+			if (lights_.size() <= light_id) {
+				throw EngOutOfRange(__FILE__, __LINE__, "set_light, invalid light id.\n\n");
 			}
 
 			lights_[light_id] = new_light;
+			return *this;
 		}
 
-		void set_kernel(Kernel new_kernel) {
-			post_shader_.use();
-			new_kernel.set_uniforms(post_shader_);
+		bool get_grayscale() const noexcept {
+			return grayscale_;
 		}
 
-		void set_grayscale(bool grayscale) {
-			post_shader_.use();
-			post_shader_.set_uniform_i("grayscale", grayscale);
+		uint32_t get_border_width() const noexcept {
+			return border_width_;
 		}
 
-		void set_kernel_offset(double kernel_offset) {
-			if (kernel_offset < eps_) {
-				//std::cout << "ERROR::GRAPH_ENGINE::SET_KERNEL_OFFSET\n" << "Not positive kernel offset.\n";
-				//assert(0);
-			}
-
-			post_shader_.use();
-			post_shader_.set_uniform_f("offset", kernel_offset);
+		double get_gamma() const noexcept {
+			return gamma_;
 		}
 
-		void set_gamma(double gamma) {
-			if (gamma < eps_) {
-				//std::cout << "ERROR::GRAPH_ENGINE::SET_GAMMA\n" << "Not positive gamma.\n";
-				//assert(0);
-			}
-
-			this->gamma_ = gamma;
-
-			post_shader_.use();
-			post_shader_.set_uniform_f("gamma", gamma);
+		Vect2 get_check_point() const noexcept {
+			return check_point_;
 		}
 
-		void set_border_width(int border_width) {
-			if (border_width < 0) {
-				//std::cout << "ERROR::GRAPH_ENGINE::SET_BORDER_WIDTH\n" << "Negative border width.\n";
-				//assert(0);
-			}
-
-			post_shader_.set_uniform_i("border_width", border_width);
+		Vect3 get_border_color() const noexcept {
+			return border_color_;
 		}
 
-		void set_border_color(Vect3 color) {
-			post_shader_.set_uniform_f("border_color", color);
+		Vect3 get_clear_color() const noexcept {
+			return clear_color_;
 		}
 
-		Light* get_light(int light_id) {
-			if (light_id < 0 || lights_.size() <= light_id) {
-				//std::cout << "ERROR::GRAPH_ENGINE::GET_LIGHT\n" << "Invalid light id.\n";
-				//assert(0);
+		Kernel get_kernel() const noexcept {
+			return kernel_;
+		}
+
+		Light* get_light(size_t light_id) {
+			if (lights_.size() <= light_id) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_light, invalid light id.\n\n");
 			}
 
 			return lights_[light_id];
 		}
 
-		int get_count_lights() {
+		const Light* get_light(size_t light_id) const {
+			if (lights_.size() <= light_id) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_light, invalid light id.\n\n");
+			}
+
+			return lights_[light_id];
+		}
+
+		size_t get_count_lights() const noexcept {
 			return lights_.size();
 		}
 
-		std::pair < int, int > get_center_object_id(Vect3& intersect_point) {
-			int temp_int[2] = { -1, -1 };
-			float temp_float = 1, distance = 0;
-			std::pair < int, int > center_object_id(-1, -1);
-
+		ObjectDesc get_check_object(Vect3& intersect_point) const {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
 
-			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int), &center_object_id.first);
-			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(int), sizeof(int), &center_object_id.second);
-			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(int), sizeof(float), &distance);
-
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(int), &temp_int);
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(int), sizeof(float), &temp_float);
+			GLint data_int[2] = { -1, -1 };
+			GLfloat distance = 0.0;
+			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint), data_int);
+			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint), sizeof(GLfloat), &distance);
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			if (center_object_id.first != -1) {
-				if (!objects_.count(center_object_id.first) || center_object_id.second == -1 || center_object_id.second >= objects_[center_object_id.first].models.size())
-					center_object_id = std::make_pair(-1, -1);
-				else
-					center_object_id.second = objects_[center_object_id.first].models.get_id(center_object_id.second);
+			intersect_point = camera.convert_point(Vect3(2.0 * check_point_ - Vect2(1.0), distance));
+
+			if (data_int[0] < 0 || data_int[1] < 0 || objects_.count(data_int[0]) == 0 || !objects_.at(data_int[0]).models.contains_memory(data_int[1])) {
+				return ObjectDesc();
 			}
-
-			distance = 2.0 * distance - 1;
-			double min_dist = camera.get_min_distance(), max_dist = camera.get_max_distance();
-			double intersect_z = 2.0 * max_dist * min_dist / ((max_dist + min_dist) * (1.0 - distance * (max_dist - min_dist) / (max_dist + min_dist)));
-			intersect_point = Matrix(camera.get_horizont(), camera.get_vertical(), camera.get_direction()) * Vect3(0, 0, intersect_z) + camera.position;
-
-			return center_object_id;
+			return { true, static_cast<size_t>(data_int[0]), static_cast<size_t>(data_int[1]) };
 		}
 
-		double get_gamma() {
-			return gamma_;
+		ObjectDesc get_check_object() const {
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
+
+			GLint data_int[2] = { -1, -1 };
+			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint), data_int);
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			if (data_int[0] < 0 || data_int[1] < 0 || objects_.count(data_int[0]) == 0 || !objects_.at(data_int[0]).models.contains_memory(data_int[1])) {
+				return ObjectDesc();
+			}
+			return { true, static_cast<size_t>(data_int[0]), static_cast<size_t>(data_int[1]) };
 		}
 
-		void swap(GraphEngine& other) noexcept {
-			/*std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);
-			std::swap(, other.);*/
+		void swap(GraphEngine& other) {
+			std::swap(window_, other.window_);
+			set_active();
+
+			std::swap(shadow_width_, other.shadow_width_);
+			std::swap(shadow_height_, other.shadow_height_);
+			std::swap(grayscale_, other.grayscale_);
+			std::swap(border_width_, other.border_width_);
+			std::swap(gamma_, other.gamma_);
+			std::swap(check_point_, other.check_point_);
+			std::swap(border_color_, other.border_color_);
+			std::swap(clear_color_, other.clear_color_);
+			std::swap(lights_, other.lights_);
+			std::swap(objects_, other.objects_);
+			std::swap(kernel_, other.kernel_);
+			std::swap(camera, other.camera);
+
+			main_shader_.swap(other.main_shader_);
+			depth_shader_.swap(other.depth_shader_);
+			post_shader_.swap(other.post_shader_);
+			set_uniforms();
+
+			std::swap(screen_texture_id_, other.screen_texture_id_);
+			std::swap(depth_stencil_texture_id_, other.depth_stencil_texture_id_);
+			std::swap(primary_frame_buffer_, other.primary_frame_buffer_);
+			std::swap(depth_map_texture_id_, other.depth_map_texture_id_);
+			std::swap(depth_map_frame_buffer_, other.depth_map_frame_buffer_);
+			std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
+			init_gl();
 		}
 
-		int add_object(GraphObject object) {
-			int free_object_id = 0;
-			for (; objects_.count(free_object_id); free_object_id++) {}
+		size_t add_object(const GraphObject& object) {
+			size_t free_object_id = 0;
+			for (; objects_.count(free_object_id) == 1; ++free_object_id) {}
 
 			objects_[free_object_id] = object;
-
 			return free_object_id;
 		}
 
-		bool delete_object(int object_id, int model_id = -1) {
-			if (!objects_.count(object_id)) {
-				//std::cout << "ERROR::GRAPH_ENGINE::DELETE_OBJECT\n" << "Invalid object id.\n";
-				//assert(0);
+		bool delete_object(size_t object_id, size_t model_id) {
+			if (objects_.count(object_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "delete_object, invalid object id.\n\n");
+			}
+			if (!objects_[object_id].models.contains(model_id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "delete_object, invalid model id.\n\n");
 			}
 
-			if (model_id != -1)
-				objects_[object_id].models.erase(model_id);
-
-			if (model_id == -1 || objects_[object_id].models.size() == 0) {
+			objects_[object_id].models.erase(model_id);
+			if (objects_[object_id].models.empty()) {
 				objects_.erase(object_id);
 				return true;
 			}
-
 			return false;
 		}
 
-		void switch_active() {
-			if (active_state_ == 0) {
-				window_->setMouseCursorVisible(false);
-				mouse_position_ = sf::Mouse::getPosition();
-				sf::Mouse::setPosition(sf::Vector2i(window_->getSize().x / 2 + window_->getPosition().x, window_->getSize().y / 2 + window_->getPosition().y));
-				active_state_ = 1;
-			} else {
-				window_->setMouseCursorVisible(true);
-				sf::Mouse::setPosition(mouse_position_);
-				active_state_ = 0;
+		GraphEngine& delete_object(size_t object_id) {
+			if (objects_.count(object_id) == 0) {
+				throw EngOutOfRange(__FILE__, __LINE__, "delete_object, invalid object id.\n\n");
 			}
+
+			objects_.erase(object_id);
+			return *this;
 		}
 
-		void compute_event(sf::Event event) {
-			switch (event.type) {
-			case sf::Event::MouseMoved: {
-				if (active_state_ == 2) {
-					camera.rotate(camera.get_vertical(), (event.mouseMove.x - int(window_->getSize().x / 2)) * camera.sensitivity);
-					camera.rotate(camera.get_horizont(), (event.mouseMove.y - int(window_->getSize().y / 2)) * camera.sensitivity);
-					sf::Mouse::setPosition(sf::Vector2i(window_->getSize().x / 2 + window_->getPosition().x, window_->getSize().y / 2 + window_->getPosition().y));
-				} else if (active_state_ == 1) {
-					active_state_ = 2;
-				}
-				break;
-			}
+		void draw() const {
+			set_active();
 
-			default:
-				break;
-			}
-		}
+			main_shader_.set_uniform_matrix("projection", camera.get_projection_matrix());
 
-		void update(double delta_time) {
-			if (active_state_) {
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
-					camera.rotate(camera.get_direction(), -camera.rotation_speed * delta_time);
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-					camera.rotate(camera.get_direction(), camera.rotation_speed * delta_time);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
 
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
-					delta_time *= camera.speed_delt;
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-					camera.position += camera.speed * delta_time * camera.get_horizont();
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-					camera.position -= camera.speed * delta_time * camera.get_horizont();
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-					camera.position += camera.speed * delta_time * camera.get_direction();
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-					camera.position -= camera.speed * delta_time * camera.get_direction();
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-					camera.position += camera.speed * delta_time * camera.get_vertical();
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt))
-					camera.position -= camera.speed * delta_time * camera.get_vertical();
-			}
-		}
+			GLint init_int = -1;
+			GLfloat init_float = 1;
 
-		void draw() {
-			window_->setActive(true);
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLint), &init_int);
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint), sizeof(GLfloat), &init_float);
 
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+			
 			draw_depth_map();
 			draw_primary_frame_buffer();
 			draw_mainbuffer();

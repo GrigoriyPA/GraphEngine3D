@@ -14,6 +14,14 @@ namespace eng {
         double x = 0;
         double y = 0;
 
+        Vect2() noexcept {
+        }
+
+        explicit Vect2(double value) noexcept {
+            x = value;
+            y = value;
+        }
+
         Vect2(double x, double y) noexcept {
             this->x = x;
             this->y = y;
@@ -41,9 +49,6 @@ namespace eng {
         explicit Vect2(const sf::Vector2f& init) noexcept {
             x = init.x;
             y = init.y;
-        }
-
-        Vect2() noexcept {
         }
 
         template <typename T>  // Constructors required: T(T)

@@ -145,6 +145,10 @@ namespace eng {
 			return id < models_index_.size() && models_index_[id] < std::numeric_limits<size_t>::max();
 		}
 
+		bool contains_memory(size_t memory_id) const noexcept {
+			return memory_id < models_.size();
+		}
+
 		size_t size() const noexcept {
 			return models_.size();
 		}

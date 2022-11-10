@@ -1,9 +1,7 @@
 #include "GraphEngine/Engine.h"
 #include <chrono>
 #include <cassert>
-#include <iostream>
 #include <stdio.h>
-#include <string>
 #include "config.h"
 #include "Interface/Interface.h"
 #include "InnerClasses/RenderingSequence.h"
@@ -47,14 +45,15 @@ signed main() {
         circle_tex.loadFromFile("Interface/Resources/Textures/circle.png");
         circle_tex.setSmooth(true);
 
+        eng::Vect2 cross_position(0.5, 0.5);
         sf::Sprite cross(cross_tex);
         cross.setScale(sf::Vector2f(INTERFACE_SIZE * eng::FI / cross_tex.getSize().x, INTERFACE_SIZE * eng::FI / cross_tex.getSize().y));
-        cross.setPosition(sf::Vector2f(window_width / 2 - INTERFACE_SIZE * eng::FI / 2, window_height / 2 - INTERFACE_SIZE * eng::FI / 2));
+        cross.setPosition(sf::Vector2f(window_width * cross_position.x - INTERFACE_SIZE * eng::FI / 2, window_height * cross_position.y - INTERFACE_SIZE * eng::FI / 2));
         cross.setColor(INTERFACE_BORDER_COLOR);
 
         sf::Sprite circle(circle_tex);
         circle.setScale(sf::Vector2f(INTERFACE_SIZE * eng::FI / cross_tex.getSize().x, INTERFACE_SIZE * eng::FI / cross_tex.getSize().y));
-        circle.setPosition(sf::Vector2f(window_width / 2 - INTERFACE_SIZE * eng::FI / 2, window_height / 2 - INTERFACE_SIZE * eng::FI / 2));
+        circle.setPosition(sf::Vector2f(window_width * cross_position.x - INTERFACE_SIZE * eng::FI / 2, window_height * cross_position.y - INTERFACE_SIZE * eng::FI / 2));
         circle.setColor(INTERFACE_ADD_COLOR);
 
         Interface window_interface(&window);
@@ -62,6 +61,7 @@ signed main() {
         eng::GraphEngine scene(&window);
         scene.set_clear_color(eng::Vect3(INTERFACE_MAIN_COLOR) / 255.0);
         scene.set_border_color(eng::Vect3(INTERFACE_ADD_COLOR) / 255.0);
+        scene.set_check_point(cross_position);
         scene.camera.set_fov(FOV);
         scene.camera.set_distance(MIN_DIST, MAX_DIST);
         scene.camera.sensitivity = SENSITIVITY;
@@ -77,39 +77,46 @@ signed main() {
         spot_light.set_quadratic(0.1);
         scene.set_light(0, &spot_light);
 
+        /*eng::DirLight light(eng::Vect3(1, -1, 1));
+        light.set_ambient(eng::Vect3(0.2, 0.2, 0.2));
+        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
+        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
+        scene.set_light(1, &light);*/
+
+        eng::SpotLight light(eng::Vect3(0, 5, 5), eng::Vect3(0, -1, 0), eng::PI / 4.0, 1.1 * eng::PI / 4.0);
+        light.set_ambient(eng::Vect3(0.2, 0.2, 0.2));
+        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
+        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
+        light.set_linear(0.1);
+        light.set_quadratic(0.1);
+        light.set_shadow_distance(1, 6.5);
+        light.shadow = true;
+        scene.set_light(1, &light);
+        //scene.add_object(light.get_shadow_box());
+        scene.add_object(light.get_light_object());
+
         RenderingSequence render(&scene);
 
         int obj_id = scene.add_object(eng::GraphObject(1));
+        scene[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
+        int model_id = scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
+        render.add_object(new Object({ obj_id, model_id }, &scene));
+        //scene[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
+        //scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1) * 0.03));
+
         eng::Mesh mesh(4);
         mesh.set_positions({
             eng::Vect3(-1, 0, 1),
             eng::Vect3(-1, 0, -1),
             eng::Vect3(1, 0, -1),
             eng::Vect3(1, 0, 1)
-            }, true);
+        }, true);
         mesh.material.set_ambient(eng::Vect3(0.5, 0.5, 0.5));
         mesh.material.set_diffuse(eng::Vect3(0.5, 0.5, 0.5));
-        scene[obj_id].models.insert(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
-        scene[obj_id].meshes.insert(mesh);
-
-        eng::DirLight light(eng::Vect3(-1, -1, 1));
-        light.set_ambient(eng::Vect3(0.3, 0.3, 0.3));
-        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
-        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
-        light.set_shadow_width(10);
-        light.set_shadow_height(10);
-        light.set_shadow_depth(10);
-        light.shadow_position = eng::Vect3(3, 1, 1);
-        light.shadow = true;
-        scene.set_light(1, &light);
-        //scene.add_object(light.get_shadow_box());
-
-        int obj_id1 = scene.add_object(eng::GraphObject(1));
-        scene[obj_id1].importFromFile("Resources/Objects/ships/mjolnir.glb");
-        int model_id1 = scene[obj_id1].models.insert(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
-        render.add_object(new Object({ obj_id1, model_id1 }, &scene));
-        //scene[obj_id1].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
-        //scene[obj_id1].add_model(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1) * 0.01));
+        eng::GraphObject obj(1);
+        obj.meshes.insert(mesh);
+        obj.models.insert(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
+        scene.add_object(obj);
 
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {
@@ -121,7 +128,7 @@ signed main() {
 
                 case sf::Event::KeyReleased: {
                     if (event.key.code == sf::Keyboard::Escape) {
-                        scene.switch_active();
+                        scene.camera.switch_active();
                     } else if (event.key.code == sf::Keyboard::F11) {
                         screenshot(window);
                     } else if (event.key.code == sf::Keyboard::F) {
@@ -136,14 +143,14 @@ signed main() {
                 default:
                     break;
                 }
-                scene.compute_event(event);
+                scene.camera.compute_event(event);
                 window_interface.compute_event(event);
                 if (window_interface.view_state == 1)
                     render.compute_event(event, window_interface.get_active_button());
             }
 
             double delta_time = window_interface.update();
-            scene.update(delta_time);
+            scene.camera.update(delta_time);
             render.update(window_interface.get_active_button());
 
             spot_light.position = scene.camera.position;

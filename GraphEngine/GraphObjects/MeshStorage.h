@@ -88,6 +88,10 @@ namespace eng {
 			return id < meshes_index_.size() && meshes_index_[id] < std::numeric_limits<size_t>::max();
 		}
 
+		bool contains_memory(size_t memory_id) const noexcept {
+			return memory_id < meshes_.size();
+		}
+
 		size_t size() const noexcept {
 			return meshes_.size();
 		}

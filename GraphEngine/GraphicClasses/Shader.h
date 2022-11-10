@@ -3,7 +3,6 @@
 #include <fstream>
 #include "GraphicFunctions.h"
 #include "../CommonClasses/Matrix.h"
-#include "../CommonClasses/Vect2.h"
 
 
 namespace eng {
@@ -17,7 +16,7 @@ namespace eng {
 		std::string* fragment_shader_code_ = nullptr;
 		GLuint program_id_ = 0;
 
-		GLuint load_vertex_shader(const std::string& vertex_shader_path) {
+		void load_vertex_shader(const std::string& vertex_shader_path) {
 			std::ifstream vertex_shader_file(vertex_shader_path + VERTEX_SHADER_EXTENSION);
 			if (vertex_shader_file.fail()) {
 				throw EngRuntimeError(__FILE__, __LINE__, "load_vertex_shader, the vertex shader file does not exist.\n\n");
@@ -27,23 +26,9 @@ namespace eng {
 			for (std::string line; std::getline(vertex_shader_file, line);) {
 				*vertex_shader_code_ += line + "\n";
 			}
-
-			const char* vertex_shader_code_c = vertex_shader_code_->c_str();
-			GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-			glShaderSource(vertex_shader, 1, &vertex_shader_code_c, NULL);
-			glCompileShader(vertex_shader);
-
-			GLint success;
-			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-			if (success == GL_FALSE) {
-				throw EngRuntimeError(__FILE__, __LINE__, "load_vertex_shader, compilation failed, description \\/\n" + load_shader_info_log(vertex_shader) + "\n\n");
-			}
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-			return vertex_shader;
 		}
 
-		GLuint load_fragment_shader(const std::string& fragment_shader_path) {
+		void load_fragment_shader(const std::string& fragment_shader_path) {
 			std::ifstream fragment_shader_file(fragment_shader_path + FRAGMENT_SHADER_EXTENSION);
 			if (fragment_shader_file.fail()) {
 				throw EngRuntimeError(__FILE__, __LINE__, "load_fragment_shader, the fragment shader file does not exist.\n\n");
@@ -53,20 +38,6 @@ namespace eng {
 			for (std::string line; std::getline(fragment_shader_file, line);) {
 				*fragment_shader_code_ += line + "\n";
 			}
-
-			const char* fragment_shader_code_c = fragment_shader_code_->c_str();
-			GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-			glShaderSource(fragment_shader, 1, &fragment_shader_code_c, NULL);
-			glCompileShader(fragment_shader);
-
-			GLint success;
-			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-			if (success == GL_FALSE) {
-				throw EngRuntimeError(__FILE__, __LINE__, "load_fragment_shader, compilation failed, description \\/\n" + load_shader_info_log(fragment_shader) + "\n\n");
-			}
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-			return fragment_shader;
 		}
 
 		void deallocate() {
@@ -76,26 +47,54 @@ namespace eng {
 					delete count_links_;
 					delete vertex_shader_code_;
 					delete fragment_shader_code_;
-
-					glDeleteProgram(program_id_);
-					check_gl_errors(__FILE__, __LINE__, __func__);
 				}
 			}
 			count_links_ = nullptr;
 			vertex_shader_code_ = nullptr;
 			fragment_shader_code_ = nullptr;
+
+			glDeleteProgram(program_id_);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
 			program_id_ = 0;
 		}
 
-		void swap(Shader<T>& other) noexcept {
-			std::swap(description, other.description);
-			std::swap(count_links_, other.count_links_);
-			std::swap(program_id_, other.program_id_);
-			std::swap(vertex_shader_code_, other.vertex_shader_code_);
-			std::swap(fragment_shader_code_, other.fragment_shader_code_);
+		static GLuint create_vertex_shader(const std::string& code) {
+			const char* vertex_shader_code_c = code.c_str();
+			GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+			glShaderSource(vertex_shader, 1, &vertex_shader_code_c, NULL);
+			glCompileShader(vertex_shader);
+
+			GLint success;
+			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+			if (success == GL_FALSE) {
+				throw EngRuntimeError(__FILE__, __LINE__, "create_vertex_shader, compilation failed, description \\/\n" + load_shader_info_log(vertex_shader) + "\n\n");
+			}
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
+			return vertex_shader;
 		}
 
-		static GLuint link_shaders(GLuint vertex_shader, GLuint fragment_shader) {
+		static GLuint create_fragment_shader(const std::string& code) {
+			const char* fragment_shader_code_c = code.c_str();
+			GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+			glShaderSource(fragment_shader, 1, &fragment_shader_code_c, NULL);
+			glCompileShader(fragment_shader);
+
+			GLint success;
+			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+			if (success == GL_FALSE) {
+				throw EngRuntimeError(__FILE__, __LINE__, "create_fragment_shader, compilation failed, description \\/\n" + load_shader_info_log(fragment_shader) + "\n\n");
+			}
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
+			return fragment_shader;
+		}
+
+		static GLuint link_shaders(const std::string& vertex_shader_code, const std::string& fragment_shader_code) {
+			GLuint vertex_shader = create_vertex_shader(vertex_shader_code);
+			GLuint fragment_shader = create_fragment_shader(fragment_shader_code);
+
 			GLuint program = glCreateProgram();
 			glAttachShader(program, vertex_shader);
 			glAttachShader(program, fragment_shader);
@@ -107,6 +106,8 @@ namespace eng {
 				throw EngRuntimeError(__FILE__, __LINE__, "link_shaders, linking failed, description \\/\n" + load_program_info_log(program) + "\n\n");
 			}
 
+			glDeleteShader(vertex_shader);
+			glDeleteShader(fragment_shader);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 			return program;
 		}
@@ -182,21 +183,13 @@ namespace eng {
 				throw EngRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
 			}
 
+			load_vertex_shader(vertex_shader_path);
+			load_fragment_shader(fragment_shader_path);
+
 			count_links_ = new size_t(1);
 			description = desc_value;
-
-			GLuint vertex_shader = load_vertex_shader(vertex_shader_path);
-			GLuint fragment_shader = load_fragment_shader(fragment_shader_path);
-
-			program_id_ = link_shaders(vertex_shader, fragment_shader);
-
-			glDeleteShader(vertex_shader);
-			glDeleteShader(fragment_shader);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-
-			if (find_version(*vertex_shader_code_) != find_version(*fragment_shader_code_)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
+			if (vertex_shader_code_ != nullptr && fragment_shader_code_ != nullptr) {
+				program_id_ = link_shaders(*vertex_shader_code_, *fragment_shader_code_);
 			}
 		}
 
@@ -204,11 +197,12 @@ namespace eng {
 			description = other.description;
 			vertex_shader_code_ = other.vertex_shader_code_;
 			fragment_shader_code_ = other.fragment_shader_code_;
-			program_id_ = other.program_id_;
 			count_links_ = other.count_links_;
 			if (count_links_ != nullptr) {
 				++(*count_links_);
 			}
+
+			program_id_ = link_shaders(*vertex_shader_code_, *fragment_shader_code_);
 		}
 
 		Shader(Shader<T>&& other) noexcept {
@@ -497,22 +491,22 @@ namespace eng {
 			return program_id_;
 		}
 
-		
+		void swap(Shader<T>& other) noexcept {
+			std::swap(description, other.description);
+			std::swap(count_links_, other.count_links_);
+			std::swap(program_id_, other.program_id_);
+			std::swap(vertex_shader_code_, other.vertex_shader_code_);
+			std::swap(fragment_shader_code_, other.fragment_shader_code_);
+		}
 
-		//bool check_window_settings(const sf::ContextSettings& settings) const noexcept {
-		//	std::vector<std::string> split_code = split(code, [](const char c) { return c == ' ' || c == '\n'; });
-		//	if (split_code.size() < 3) {
-		//		throw EngInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
-		//	}
-
-		//	for (size_t i = 0; i < split_code.size() - 2; ++i) {
-		//		if (split_code[i] == variable_name && split_code[i + 1] == "=") {
-		//			split_code[i + 2].pop_back();
-		//			return split_code[i + 2];
-		//		}
-		//	}
-		//	throw EngInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
-		//}
+		bool check_window_settings(const sf::ContextSettings& settings) const noexcept {
+			uint64_t vert_version = find_version(*vertex_shader_code_);
+			uint64_t frag_version = find_version(*fragment_shader_code_);
+			if (vert_version / 100 > settings.majorVersion || (vert_version / 100 == settings.majorVersion && (vert_version % 100) / 10 > settings.minorVersion)) {
+				return false;
+			}
+			return vert_version / 100 < settings.majorVersion || (vert_version / 100 == settings.majorVersion && (vert_version % 100) / 10 <= settings.minorVersion);
+		}
 
 		void use() const {
 			glUseProgram(program_id_);

@@ -10,10 +10,10 @@ namespace eng {
 
 		double shininess_ = 1.0;
 		double alpha_ = 1.0;
-		Vect3 ambient_ = Vect3(0.0, 0.0, 0.0);
-		Vect3 diffuse_ = Vect3(0.0, 0.0, 0.0);
-		Vect3 specular_ = Vect3(0.0, 0.0, 0.0);
-		Vect3 emission_ = Vect3(0.0, 0.0, 0.0);
+		Vect3 ambient_ = Vect3(0.0);
+		Vect3 diffuse_ = Vect3(0.0);
+		Vect3 specular_ = Vect3(0.0);
+		Vect3 emission_ = Vect3(0.0);
 
 		void set_uniforms(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
