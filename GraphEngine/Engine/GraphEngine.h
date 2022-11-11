@@ -482,14 +482,14 @@ namespace eng {
 			return *this;
 		}
 
-		GraphEngine& set_shadow_size(size_t shadow_width, size_t shadow_height) {
+		GraphEngine& set_shadow_resolution(size_t width, size_t height) {
 			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(shadow_width), static_cast<GLsizei>(shadow_height), static_cast<GLsizei>(lights_.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width), static_cast<GLsizei>(height), static_cast<GLsizei>(lights_.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			shadow_width_ = shadow_width;
-			shadow_height_ = shadow_height;
+			shadow_width_ = width;
+			shadow_height_ = height;
 			return *this;
 		}
 
