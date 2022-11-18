@@ -12,7 +12,7 @@ namespace eng {
         double shadow_height_ = 1.0;
         double shadow_depth_ = 1.0;
 
-        Vect3 direction_;
+        Vec3 direction_;
         Matrix projection_;
 
         void set_projection_matrix() {
@@ -20,19 +20,19 @@ namespace eng {
                 throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
-            projection_ = Matrix::scale_matrix(Vect3(2.0 / shadow_width_, 2.0 / shadow_height_, 2.0 / shadow_depth_));
-            projection_ *= Matrix::translation_matrix(Vect3(0, 0, -shadow_depth_ / 2));
+            projection_ = Matrix::scale_matrix(Vec3(2.0 / shadow_width_, 2.0 / shadow_height_, 2.0 / shadow_depth_));
+            projection_ *= Matrix::translation_matrix(Vec3(0, 0, -shadow_depth_ / 2));
         }
 
         Matrix get_view_matrix() const noexcept {
-            const Vect3& horizont = direction_.horizont();
+            const Vec3& horizont = direction_.horizont();
             return Matrix(horizont, direction_ ^ horizont, direction_).transpose() * Matrix::translation_matrix(-shadow_position);
         }
 
     public:
-        Vect3 shadow_position = Vect3(0.0, 0.0, 0.0);
+        Vec3 shadow_position = Vec3(0.0, 0.0, 0.0);
 
-        DirLight(const Vect3& direction) : projection_(4, 4) {
+        DirLight(const Vec3& direction) : projection_(4, 4) {
             if (!glew_is_ok()) {
                 throw EngRuntimeError(__FILE__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
             }
@@ -92,7 +92,7 @@ namespace eng {
             return *this;
         }
 
-        DirLight& set_direction(const Vect3& direction) {
+        DirLight& set_direction(const Vec3& direction) {
             try {
                 direction_ = direction.normalize();
             }
@@ -111,12 +111,12 @@ namespace eng {
             shadow_box.transparent = true;
 
             shadow_box.meshes.apply_func([](auto& mesh) {
-                mesh.material.set_diffuse(Vect3(1.0, 1.0, 1.0));
+                mesh.material.set_diffuse(Vec3(1.0, 1.0, 1.0));
                 mesh.material.set_alpha(0.3);
             });
 
-            Matrix model = Matrix::scale_matrix(Vect3(shadow_width_, shadow_height_, shadow_depth_));
-            model = Matrix::translation_matrix(Vect3(0.0, 0.0, (1.0 - eps_) * shadow_depth_ / 2.0)) * model;
+            Matrix model = Matrix::scale_matrix(Vec3(shadow_width_, shadow_height_, shadow_depth_));
+            model = Matrix::translation_matrix(Vec3(0.0, 0.0, (1.0 - eps_) * shadow_depth_ / 2.0)) * model;
             model = get_view_matrix().inverse() * model;
 
             shadow_box.models.insert(model);

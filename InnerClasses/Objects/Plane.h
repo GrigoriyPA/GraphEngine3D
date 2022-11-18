@@ -7,9 +7,9 @@ class Plane : public RenderObject {
         plane.transparent = true;
 
         eng::Mesh mesh(4);
-        mesh.material.set_ambient(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-        mesh.material.set_diffuse(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
-        mesh.material.set_specular(eng::Vect3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_ambient(eng::Vec3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_diffuse(eng::Vec3(INTERFACE_TEXT_COLOR) / 255);
+        mesh.material.set_specular(eng::Vec3(INTERFACE_TEXT_COLOR) / 255);
         mesh.material.set_shininess(64);
         mesh.material.set_alpha(0.25);
         plane.meshes.insert(mesh);
@@ -70,11 +70,11 @@ class Plane : public RenderObject {
             action = 13;
     }
 
-    void update_plane(std::vector < eng::Vect3 > points) {
-        eng::Vect3 center = (points[0] + points[1] + points[2]) / 3;
-        eng::Vect3 normal = ((points[0] - points[1]) ^ (points[0] - points[2])).normalize();
-        eng::Vect3 horizont = normal.horizont();
-        eng::Vect3 vertical = normal ^ horizont;
+    void update_plane(std::vector < eng::Vec3 > points) {
+        eng::Vec3 center = (points[0] + points[1] + points[2]) / 3;
+        eng::Vec3 normal = ((points[0] - points[1]) ^ (points[0] - points[2])).normalize();
+        eng::Vec3 horizont = normal.horizont();
+        eng::Vec3 vertical = normal ^ horizont;
 
         double k = 2.0, sz = 0;
         for (int i = 0; i < 3; i++) {
@@ -101,26 +101,26 @@ class Plane : public RenderObject {
     }
 
     void update_three_points(std::pair < int, int > point1, std::pair < int, int > point2, std::pair < int, int > point3) {
-        eng::Vect3 coord1 = (*scene)[point1.first].get_center(point1.second);
-        eng::Vect3 coord2 = (*scene)[point2.first].get_center(point2.second);
-        eng::Vect3 coord3 = (*scene)[point3.first].get_center(point3.second);
+        eng::Vec3 coord1 = (*scene)[point1.first].get_center(point1.second);
+        eng::Vec3 coord2 = (*scene)[point2.first].get_center(point2.second);
+        eng::Vec3 coord3 = (*scene)[point3.first].get_center(point3.second);
         update_plane({ coord1, coord2, coord3 });
     }
 
     void update_point_line(std::pair < int, int > point, std::pair < int, int > line) {
-        eng::Vect3 coord1 = (*scene)[point.first].get_center(point.second);
-        eng::Vect3 coord2 = (*scene)[line.first].get_mesh_center(line.second, 0);
-        eng::Vect3 coord3 = (*scene)[line.first].get_mesh_center(line.second, 1);
+        eng::Vec3 coord1 = (*scene)[point.first].get_center(point.second);
+        eng::Vec3 coord2 = (*scene)[line.first].get_mesh_center(line.second, 0);
+        eng::Vec3 coord3 = (*scene)[line.first].get_mesh_center(line.second, 1);
         update_plane({ coord1, coord2, coord3 });
     }
 
     void update_two_lines(std::pair < int, int > line1, std::pair < int, int > line2) {
-        eng::Vect3 coord1 = (*scene)[line1.first].get_mesh_center(line1.second, 0);
-        eng::Vect3 coord2 = (*scene)[line1.first].get_mesh_center(line1.second, 1);
-        eng::Vect3 coord3 = (*scene)[line2.first].get_mesh_center(line2.second, 0);
-        eng::Vect3 coord4 = (*scene)[line2.first].get_mesh_center(line2.second, 1);
-        eng::Vect3 direct1 = (coord2 - coord1).normalize();
-        eng::Vect3 direct2 = (coord4 - coord3).normalize();
+        eng::Vec3 coord1 = (*scene)[line1.first].get_mesh_center(line1.second, 0);
+        eng::Vec3 coord2 = (*scene)[line1.first].get_mesh_center(line1.second, 1);
+        eng::Vec3 coord3 = (*scene)[line2.first].get_mesh_center(line2.second, 0);
+        eng::Vec3 coord4 = (*scene)[line2.first].get_mesh_center(line2.second, 1);
+        eng::Vec3 direct1 = (coord2 - coord1).normalize();
+        eng::Vec3 direct2 = (coord4 - coord3).normalize();
 
         if ((direct1 ^ direct2).length() > eps)
             update_plane({ coord3, coord4, coord3 + direct1 });
@@ -129,24 +129,24 @@ class Plane : public RenderObject {
     }
 
     void update_perpendicular_to_line(std::pair < int, int > line, std::pair < int, int > point) {
-        eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
-        eng::Vect3 point1 = (*scene)[line.first].get_mesh_center(line.second, 0);
-        eng::Vect3 point2 = (*scene)[line.first].get_mesh_center(line.second, 1);
+        eng::Vec3 coord = (*scene)[point.first].get_center(point.second);
+        eng::Vec3 point1 = (*scene)[line.first].get_mesh_center(line.second, 0);
+        eng::Vec3 point2 = (*scene)[line.first].get_mesh_center(line.second, 1);
         eng::Line line_cur(point1, point2);
-        eng::Vect3 horizont = line_cur.get_direction().horizont();
-        eng::Vect3 vertical = horizont ^ line_cur.get_direction();
+        eng::Vec3 horizont = line_cur.get_direction().horizont();
+        eng::Vec3 vertical = horizont ^ line_cur.get_direction();
 
         update_plane({ coord, coord + horizont, coord + vertical });
     }
 
     void update_perpendicular_to_plane(std::pair < int, int > line, std::pair < int, int > plane) {
-        eng::Vect3 point1 = (*scene)[line.first].get_mesh_center(line.second, 0);
-        eng::Vect3 point2 = (*scene)[line.first].get_mesh_center(line.second, 1);
-        std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
+        eng::Vec3 point1 = (*scene)[line.first].get_mesh_center(line.second, 0);
+        eng::Vec3 point2 = (*scene)[line.first].get_mesh_center(line.second, 1);
+        std::vector < eng::Vec3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
         eng::Line line_cur(point1, point2);
         eng::Plane plane_cur(coords);
 
-        eng::Vect3 horizont = plane_cur.get_normal();
+        eng::Vec3 horizont = plane_cur.get_normal();
         if ((horizont ^ line_cur.get_direction()).length() < eps)
             horizont = horizont.horizont();
 
@@ -154,26 +154,26 @@ class Plane : public RenderObject {
     }
 
     void update_parallel_to_plane(std::pair < int, int > point, std::pair < int, int > plane) {
-        eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
-        std::vector <eng::Vect3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
+        eng::Vec3 coord = (*scene)[point.first].get_center(point.second);
+        std::vector <eng::Vec3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
         eng::Plane plane_cur(coords);
-        eng::Vect3 horizont = plane_cur.get_normal().horizont();
-        eng::Vect3 vertical = horizont ^ plane_cur.get_normal();
+        eng::Vec3 horizont = plane_cur.get_normal().horizont();
+        eng::Vec3 vertical = horizont ^ plane_cur.get_normal();
 
         update_plane({ coord, coord + horizont, coord + vertical });
     }
 
     void update_parallel_to_lines(std::pair < int, int > point, std::pair < int, int > line1, std::pair < int, int > line2) {
-        eng::Vect3 coord = (*scene)[point.first].get_center(point.second);
-        eng::Vect3 coord1 = (*scene)[line1.first].get_mesh_center(line1.second, 0);
-        eng::Vect3 coord2 = (*scene)[line1.first].get_mesh_center(line1.second, 1);
-        eng::Vect3 coord3 = (*scene)[line2.first].get_mesh_center(line2.second, 0);
-        eng::Vect3 coord4 = (*scene)[line2.first].get_mesh_center(line2.second, 1);
+        eng::Vec3 coord = (*scene)[point.first].get_center(point.second);
+        eng::Vec3 coord1 = (*scene)[line1.first].get_mesh_center(line1.second, 0);
+        eng::Vec3 coord2 = (*scene)[line1.first].get_mesh_center(line1.second, 1);
+        eng::Vec3 coord3 = (*scene)[line2.first].get_mesh_center(line2.second, 0);
+        eng::Vec3 coord4 = (*scene)[line2.first].get_mesh_center(line2.second, 1);
         eng::Line line_cur1(coord1, coord2);
         eng::Line line_cur2(coord3, coord4);
-        eng::Vect3 direction1 = line_cur1.get_direction();
+        eng::Vec3 direction1 = line_cur1.get_direction();
 
-        eng::Vect3 direction2 = line_cur2.get_direction();
+        eng::Vec3 direction2 = line_cur2.get_direction();
         if ((direction1 ^ direction2).length() < eps)
             direction2 = (line_cur2.start_point - line_cur1.start_point).normalize();
 
@@ -181,83 +181,83 @@ class Plane : public RenderObject {
     }
 
     void update_center_two_points(std::pair < int, int > point1, std::pair < int, int > point2) {
-        eng::Vect3 coord1 = (*scene)[point1.first].get_center(point1.second);
-        eng::Vect3 coord2 = (*scene)[point2.first].get_center(point2.second);
-        eng::Vect3 normal = (coord2 - coord1).normalize();
-        eng::Vect3 horizont = normal.horizont();
-        eng::Vect3 vertical = normal ^ horizont;
-        eng::Vect3 p0 = (coord1 + coord2) / 2;
+        eng::Vec3 coord1 = (*scene)[point1.first].get_center(point1.second);
+        eng::Vec3 coord2 = (*scene)[point2.first].get_center(point2.second);
+        eng::Vec3 normal = (coord2 - coord1).normalize();
+        eng::Vec3 horizont = normal.horizont();
+        eng::Vec3 vertical = normal ^ horizont;
+        eng::Vec3 p0 = (coord1 + coord2) / 2;
 
         update_plane({ p0, p0 + horizont, p0 + vertical });
     }
 
     void update_center_cut(std::pair < int, int > cut) {
-        eng::Vect3 coord1 = (*scene)[cut.first].get_mesh_center(cut.second, 0);
-        eng::Vect3 coord2 = (*scene)[cut.first].get_mesh_center(cut.second, 1);
-        eng::Vect3 normal = (coord2 - coord1).normalize();
-        eng::Vect3 horizont = normal.horizont();
-        eng::Vect3 vertical = normal ^ horizont;
-        eng::Vect3 p0 = (coord1 + coord2) / 2;
+        eng::Vec3 coord1 = (*scene)[cut.first].get_mesh_center(cut.second, 0);
+        eng::Vec3 coord2 = (*scene)[cut.first].get_mesh_center(cut.second, 1);
+        eng::Vec3 normal = (coord2 - coord1).normalize();
+        eng::Vec3 horizont = normal.horizont();
+        eng::Vec3 vertical = normal ^ horizont;
+        eng::Vec3 p0 = (coord1 + coord2) / 2;
 
         update_plane({ p0, p0 + horizont, p0 + vertical });
     }
 
     void update_point_symmetry(std::pair < int, int > plane, std::pair < int, int > center) {
-        eng::Vect3 coord_center = (*scene)[center.first].get_center(center.second);
-        std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
+        eng::Vec3 coord_center = (*scene)[center.first].get_center(center.second);
+        std::vector < eng::Vec3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
 
         coords.pop_back();
-        for (eng::Vect3& el : coords)
+        for (eng::Vec3& el : coords)
             el = el.symmetry(coord_center);
 
         update_plane(coords);
     }
 
     void update_line_symmetry(std::pair < int, int > plane, std::pair < int, int > center) {
-        eng::Vect3 coord_center1 = (*scene)[center.first].get_mesh_center(center.second, 0);
-        eng::Vect3 coord_center2 = (*scene)[center.first].get_mesh_center(center.second, 1);
+        eng::Vec3 coord_center1 = (*scene)[center.first].get_mesh_center(center.second, 0);
+        eng::Vec3 coord_center2 = (*scene)[center.first].get_mesh_center(center.second, 1);
         eng::Line center_line(coord_center1, coord_center2);
-        std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
 
         coords.pop_back();
-        for (eng::Vect3& el : coords)
+        for (eng::Vec3& el : coords)
             el = center_line.symmetry(el);
 
         update_plane(coords);
     }
 
     void update_plane_symmetry(std::pair < int, int > plane, std::pair < int, int > center) {
-        std::vector < eng::Vect3 > center_coords = (*scene)[center.first].get_mesh_positions(center.second, 0);
+        std::vector < eng::Vec3 > center_coords = (*scene)[center.first].get_mesh_positions(center.second, 0);
         eng::Plane center_plane(center_coords);
-        std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
 
         coords.pop_back();
-        for (eng::Vect3& el : coords)
+        for (eng::Vec3& el : coords)
             el = center_plane.symmetry(el);
 
         update_plane(coords);
     }
 
     void update_translate(std::pair < int, int > plane, std::pair < int, int > start, std::pair < int, int > end) {
-        eng::Vect3 start_coord = (*scene)[start.first].get_center(start.second);
-        eng::Vect3 end_coord = (*scene)[end.first].get_center(end.second);
-        eng::Vect3 translate = end_coord - start_coord;
-        std::vector < eng::Vect3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
+        eng::Vec3 start_coord = (*scene)[start.first].get_center(start.second);
+        eng::Vec3 end_coord = (*scene)[end.first].get_center(end.second);
+        eng::Vec3 translate = end_coord - start_coord;
+        std::vector < eng::Vec3 > coords = (*scene)[plane.first].get_mesh_positions(plane.second, 0);
 
         coords.pop_back();
-        for (eng::Vect3& el : coords)
+        for (eng::Vec3& el : coords)
             el += translate;
 
         update_plane(coords);
     }
 
     void update_bisector(std::pair < int, int > plane1, std::pair < int, int > plane2) {
-        std::vector < eng::Vect3 > coords1 = (*scene)[plane1.first].get_mesh_positions(plane1.second, 0);
-        std::vector < eng::Vect3 > coords2 = (*scene)[plane2.first].get_mesh_positions(plane2.second, 0);
+        std::vector < eng::Vec3 > coords1 = (*scene)[plane1.first].get_mesh_positions(plane1.second, 0);
+        std::vector < eng::Vec3 > coords2 = (*scene)[plane2.first].get_mesh_positions(plane2.second, 0);
         eng::Plane plane_cur1(coords1);
         eng::Plane plane_cur2(coords2);
 
-        std::vector < eng::Vect3 > pos(3);
+        std::vector < eng::Vec3 > pos(3);
         for (int i = 0; i < 3; i++)
             pos[i] = (coords1[i] + coords2[i]) / 2;
 
@@ -270,8 +270,8 @@ class Plane : public RenderObject {
         pos[0] = intersection.start_point;
         pos[1] = intersection.start_point + intersection.get_direction();
 
-        eng::Vect3 direction1 = plane_cur1.get_normal() ^ intersection.get_direction();
-        eng::Vect3 direction2 = plane_cur2.get_normal() ^ intersection.get_direction();
+        eng::Vec3 direction1 = plane_cur1.get_normal() ^ intersection.get_direction();
+        eng::Vec3 direction2 = plane_cur2.get_normal() ^ intersection.get_direction();
         if (direction1 * direction2 * special_coefficient < 0)
             direction2 *= -1;
         pos[2] = intersection.start_point + (direction1 + direction2) / 2;
@@ -280,8 +280,8 @@ class Plane : public RenderObject {
     }
 
     RenderObject* intersect_cut(eng::Plane plane_cur, RenderObject* cut) {
-        eng::Vect3 coord1 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 0);
-        eng::Vect3 coord2 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 1);
+        eng::Vec3 coord1 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 0);
+        eng::Vec3 coord2 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 1);
         eng::Cut cut_ot(coord1, coord2);
 
         if (!plane_cur.is_intersect(cut_ot))
@@ -295,8 +295,8 @@ class Plane : public RenderObject {
     }
 
     RenderObject* intersect_line(eng::Plane plane_cur, RenderObject* line) {
-        eng::Vect3 coord1 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 0);
-        eng::Vect3 coord2 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 1);
+        eng::Vec3 coord1 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 0);
+        eng::Vec3 coord2 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 1);
         eng::Line line_ot(coord1, coord2);
 
         if (!plane_cur.is_intersect(line_ot))
@@ -310,7 +310,7 @@ class Plane : public RenderObject {
     }
 
     RenderObject* intersect_plane(eng::Plane plane_cur, RenderObject* plane) {
-        std::vector < eng::Vect3 > coords = (*scene)[plane->scene_id.first].get_mesh_positions(plane->scene_id.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene)[plane->scene_id.first].get_mesh_positions(plane->scene_id.second, 0);
         eng::Plane plane_ot(coords);
 
         if (!plane_cur.is_intersect(plane_ot))
@@ -391,7 +391,7 @@ public:
         if (obj->get_type() > type)
             return obj->intersect(this);
 
-        std::vector < eng::Vect3 > coords = (*scene)[scene_id.first].get_mesh_positions(scene_id.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene)[scene_id.first].get_mesh_positions(scene_id.second, 0);
         eng::Plane plane_cur(coords);
 
         if (obj->get_type() == 1)

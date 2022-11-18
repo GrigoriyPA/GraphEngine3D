@@ -178,10 +178,10 @@ namespace eng {
 			std::vector<Mesh> new_meshes;
 			while (!meshes_.empty()) {
 				Mesh current_mesh = meshes_[0].second;
-				std::vector<Vect3> positions;
-				std::vector<Vect3> normals;
-				std::vector<Vect2> tex_coords;
-				std::vector<Vect3> colors;
+				std::vector<Vec3> positions;
+				std::vector<Vec3> normals;
+				std::vector<Vec2> tex_coords;
+				std::vector<Vec3> colors;
 				std::vector<GLuint> indices;
 				for (size_t i = 0; i < meshes_.size(); ++i) {
 					if (meshes_[i].second != current_mesh) {
@@ -191,16 +191,16 @@ namespace eng {
 					for (GLuint index : meshes_[i].second.get_indices()) {
 						indices.push_back(static_cast<GLuint>(positions.size()) + index);
 					}
-					for (const Vect3& position : meshes_[i].second.get_positions()) {
+					for (const Vec3& position : meshes_[i].second.get_positions()) {
 						positions.push_back(position);
 					}
-					for (const Vect3& normal : meshes_[i].second.get_normals()) {
+					for (const Vec3& normal : meshes_[i].second.get_normals()) {
 						normals.push_back(normal);
 					}
-					for (const Vect2& tex_coord : meshes_[i].second.get_tex_coords()) {
+					for (const Vec2& tex_coord : meshes_[i].second.get_tex_coords()) {
 						tex_coords.push_back(tex_coord);
 					}
-					for (const Vect3& color : meshes_[i].second.get_colors()) {
+					for (const Vec3& color : meshes_[i].second.get_colors()) {
 						colors.push_back(color);
 					}
 

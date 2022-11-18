@@ -16,7 +16,7 @@ namespace eng {
 
         double border_in_;
         double border_out_;
-        Vect3 direction_;
+        Vec3 direction_;
         Matrix projection_;
 
         void set_projection_matrix() {
@@ -24,21 +24,21 @@ namespace eng {
                 throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
-            projection_ = Matrix::scale_matrix(Vect3(1.0 / tan(border_out_), 1.0 / tan(border_out_), (shadow_max_distance_ + shadow_min_distance_) / (shadow_max_distance_ - shadow_min_distance_)));
-            projection_ *= Matrix::translation_matrix(Vect3(0.0, 0.0, -2.0 * shadow_max_distance_ * shadow_min_distance_ / (shadow_max_distance_ + shadow_min_distance_)));
+            projection_ = Matrix::scale_matrix(Vec3(1.0 / tan(border_out_), 1.0 / tan(border_out_), (shadow_max_distance_ + shadow_min_distance_) / (shadow_max_distance_ - shadow_min_distance_)));
+            projection_ *= Matrix::translation_matrix(Vec3(0.0, 0.0, -2.0 * shadow_max_distance_ * shadow_min_distance_ / (shadow_max_distance_ + shadow_min_distance_)));
             projection_[3][3] = 0.0;
             projection_[3][2] = 1.0;
         }
 
         Matrix get_view_matrix() const noexcept {
-            const Vect3& horizont = direction_.horizont();
+            const Vec3& horizont = direction_.horizont();
             return Matrix(horizont, direction_ ^ horizont, direction_).transpose() * Matrix::translation_matrix(-position);
         }
 
     public:
-        Vect3 position;
+        Vec3 position;
 
-        SpotLight(const Vect3& position, const Vect3& direction, double border_in, double border_out) : projection_(4, 4) {
+        SpotLight(const Vec3& position, const Vec3& direction, double border_in, double border_out) : projection_(4, 4) {
             if (!glew_is_ok()) {
                 throw EngRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
             }
@@ -129,7 +129,7 @@ namespace eng {
             return *this;
         }
 
-        SpotLight& set_direction(const Vect3& direction) {
+        SpotLight& set_direction(const Vec3& direction) {
             try {
                 direction_ = direction.normalize();
             }
@@ -153,10 +153,10 @@ namespace eng {
 
             Mesh mesh(4);
             mesh.set_positions({
-                Vect3(1.0, 1.0, 1.0),
-                Vect3(1.0, -1.0, 1.0),
-                Vect3(-1.0, -1.0, 1.0),
-                Vect3(-1.0, 1.0, 1.0)
+                Vec3(1.0, 1.0, 1.0),
+                Vec3(1.0, -1.0, 1.0),
+                Vec3(-1.0, -1.0, 1.0),
+                Vec3(-1.0, 1.0, 1.0)
             }, true);
             shadow_box.meshes.insert(mesh);
 
@@ -167,28 +167,28 @@ namespace eng {
 
             mesh = Mesh(4);
             mesh.set_positions({
-                Vect3(1.0, -1.0, 1.0),
-                Vect3(1.0, 1.0, 1.0),
-                Vect3(delt, delt, delt),
-                Vect3(delt, -delt, delt)
+                Vec3(1.0, -1.0, 1.0),
+                Vec3(1.0, 1.0, 1.0),
+                Vec3(delt, delt, delt),
+                Vec3(delt, -delt, delt)
             }, true);
             shadow_box.meshes.insert(mesh);
 
-            mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2.0));
+            mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
             shadow_box.meshes.insert(mesh);
 
-            mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2.0));
+            mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
             shadow_box.meshes.insert(mesh);
 
-            mesh.apply_matrix(Matrix::rotation_matrix(Vect3(0.0, 0.0, 1.0), PI / 2.0));
+            mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
             shadow_box.meshes.insert(mesh);
 
             shadow_box.meshes.apply_func([](auto& mesh) {
-                mesh.material.set_diffuse(Vect3(1.0, 1.0, 1.0));
+                mesh.material.set_diffuse(Vec3(1.0, 1.0, 1.0));
                 mesh.material.set_alpha(0.3);
             });
 
-            Matrix model = Matrix::scale_matrix((1.0 - eps_) * shadow_max_distance_ * Vect3(tan(border_out_), tan(border_out_), 1.0));
+            Matrix model = Matrix::scale_matrix((1.0 - eps_) * shadow_max_distance_ * Vec3(tan(border_out_), tan(border_out_), 1.0));
             model = get_view_matrix().inverse() * model;
 
             shadow_box.models.insert(model);
@@ -199,12 +199,12 @@ namespace eng {
             GraphObject light_object = GraphObject::cone(20, true, 1);
 
             light_object.meshes.apply_func([](auto& mesh) {
-                mesh.material.set_emission(Vect3(1.0, 1.0, 1.0));
+                mesh.material.set_emission(Vec3(1.0, 1.0, 1.0));
                 mesh.material.shadow = false;
             });
 
-            Matrix model = Matrix::scale_matrix(0.25 * Vect3(tan(border_out_), tan(border_out_), 1.0));
-            model = Matrix::rotation_matrix(Vect3(1.0, 0.0, 0.0), -PI / 2.0) * model;
+            Matrix model = Matrix::scale_matrix(0.25 * Vec3(tan(border_out_), tan(border_out_), 1.0));
+            model = Matrix::rotation_matrix(Vec3(1.0, 0.0, 0.0), -PI / 2.0) * model;
             model = get_view_matrix().inverse() * model;
 
             light_object.models.insert(model);

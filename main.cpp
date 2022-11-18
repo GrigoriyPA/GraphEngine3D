@@ -33,7 +33,7 @@ void screenshot(sf::RenderWindow& window) {
 signed main() {
     try {
         sf::RenderWindow window(sf::VideoMode::getFullscreenModes()[0], "Editor", sf::Style::None);
-        //window.setVerticalSyncEnabled(true);
+        window.setVerticalSyncEnabled(true);
 
         int window_width = window.getSize().x, window_height = window.getSize().y;
 
@@ -45,7 +45,7 @@ signed main() {
         circle_tex.loadFromFile("Interface/Resources/Textures/circle.png");
         circle_tex.setSmooth(true);
 
-        eng::Vect2 cross_position(0.5, 0.5);
+        eng::Vec2 cross_position(0.5, 0.5);
         sf::Sprite cross(cross_tex);
         cross.setScale(sf::Vector2f(INTERFACE_SIZE * eng::FI / cross_tex.getSize().x, INTERFACE_SIZE * eng::FI / cross_tex.getSize().y));
         cross.setPosition(sf::Vector2f(window_width * cross_position.x - INTERFACE_SIZE * eng::FI / 2, window_height * cross_position.y - INTERFACE_SIZE * eng::FI / 2));
@@ -59,8 +59,8 @@ signed main() {
         Interface window_interface(&window);
 
         eng::GraphEngine scene(&window);
-        scene.set_clear_color(eng::Vect3(INTERFACE_MAIN_COLOR) / 255.0);
-        scene.set_border_color(eng::Vect3(INTERFACE_ADD_COLOR) / 255.0);
+        scene.set_clear_color(eng::Vec3(INTERFACE_MAIN_COLOR) / 255.0);
+        scene.set_border_color(eng::Vec3(INTERFACE_ADD_COLOR) / 255.0);
         scene.set_check_point(cross_position);
         scene.camera.set_fov(FOV);
         scene.camera.set_distance(MIN_DIST, MAX_DIST);
@@ -71,22 +71,22 @@ signed main() {
 
         double ratio = scene.camera.get_screen_ratio();
         double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
-        eng::SpotLight spot_light(eng::Vect3(0, 0, 0), eng::Vect3(0, 0, 1), angle, 1.1 * angle);
-        spot_light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
-        spot_light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
+        eng::SpotLight spot_light(eng::Vec3(0, 0, 0), eng::Vec3(0, 0, 1), angle, 1.1 * angle);
+        spot_light.set_diffuse(eng::Vec3(0.6, 0.6, 0.6));
+        spot_light.set_specular(eng::Vec3(0.8, 0.8, 0.8));
         spot_light.set_quadratic(0.1);
         scene.set_light(0, &spot_light);
 
-        /*eng::DirLight light(eng::Vect3(1, -1, 1));
-        light.set_ambient(eng::Vect3(0.2, 0.2, 0.2));
-        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
-        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
+        /*eng::DirLight light(eng::Vec3(1, -1, 1));
+        light.set_ambient(eng::Vec3(0.2, 0.2, 0.2));
+        light.set_diffuse(eng::Vec3(0.6, 0.6, 0.6));
+        light.set_specular(eng::Vec3(0.8, 0.8, 0.8));
         scene.set_light(1, &light);*/
 
-        eng::SpotLight light(eng::Vect3(0, 5, 5), eng::Vect3(0, -1, 0), eng::PI / 4.0, 1.1 * eng::PI / 4.0);
-        light.set_ambient(eng::Vect3(0.2, 0.2, 0.2));
-        light.set_diffuse(eng::Vect3(0.6, 0.6, 0.6));
-        light.set_specular(eng::Vect3(0.8, 0.8, 0.8));
+        eng::SpotLight light(eng::Vec3(0, 5, 5), eng::Vec3(0, -1, 0), eng::PI / 4.0, 1.1 * eng::PI / 4.0);
+        light.set_ambient(eng::Vec3(0.2, 0.2, 0.2));
+        light.set_diffuse(eng::Vec3(0.6, 0.6, 0.6));
+        light.set_specular(eng::Vec3(0.8, 0.8, 0.8));
         light.set_linear(0.1);
         light.set_quadratic(0.1);
         light.set_shadow_distance(1, 6.5);
@@ -99,23 +99,23 @@ signed main() {
 
         int obj_id = scene.add_object(eng::GraphObject(1));
         scene[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
-        int model_id = scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vect3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vect3(0, 1, 0), eng::PI));
+        int model_id = scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vec3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vec3(0, 1, 0), eng::PI));
         render.add_object(new Object({ obj_id, model_id }, &scene));
         //scene[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
-        //scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vect3(-1, 1, 1) * 0.03));
+        //scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(-1, 1, 1) * 0.03));
 
         eng::Mesh mesh(4);
         mesh.set_positions({
-            eng::Vect3(-1, 0, 1),
-            eng::Vect3(-1, 0, -1),
-            eng::Vect3(1, 0, -1),
-            eng::Vect3(1, 0, 1)
+            eng::Vec3(-1, 0, 1),
+            eng::Vec3(-1, 0, -1),
+            eng::Vec3(1, 0, -1),
+            eng::Vec3(1, 0, 1)
         }, true);
-        mesh.material.set_ambient(eng::Vect3(0.5, 0.5, 0.5));
-        mesh.material.set_diffuse(eng::Vect3(0.5, 0.5, 0.5));
+        mesh.material.set_ambient(eng::Vec3(0.5, 0.5, 0.5));
+        mesh.material.set_diffuse(eng::Vec3(0.5, 0.5, 0.5));
         eng::GraphObject obj(1);
         obj.meshes.insert(mesh);
-        obj.models.insert(eng::Matrix::translation_matrix(eng::Vect3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
+        obj.models.insert(eng::Matrix::translation_matrix(eng::Vec3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
         scene.add_object(obj);
 
         for (; window_interface.running;) {

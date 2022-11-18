@@ -25,7 +25,7 @@ namespace eng {
 
     template <typename T>  // T - numeric type
     bool equality(const T& left, const T& right, const T& eps = T(EPS)) {
-        return std::abs(left - right) < eps;
+        return std::abs(left - right) <= eps;
     }
 
     template <typename T>  // T - numeric type

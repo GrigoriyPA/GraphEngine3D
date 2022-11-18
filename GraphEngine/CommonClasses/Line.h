@@ -1,21 +1,21 @@
 #pragma once
 
-#include "Vect3.h"
+#include "Vec3.h"
 
 
 namespace eng {
 	class Line {
 		inline static double eps_ = 1e-5;
 
-		Vect3 direction_ = Vect3(1, 0, 0);
+		Vec3 direction_ = Vec3(1, 0, 0);
 
 	public:
-		Vect3 start_point = Vect3(0, 0, 0);
+		Vec3 start_point = Vec3(0, 0, 0);
 
 		Line() noexcept {
 		}
 
-		Line(const Vect3& point1, const Vect3& point2) {
+		Line(const Vec3& point1, const Vec3& point2) {
 			try {
 				direction_ = (point2 - point1).normalize();
 			}
@@ -26,7 +26,7 @@ namespace eng {
 			start_point = point1;
 		}
 
-		Line& set_direction(const Vect3& direction) {
+		Line& set_direction(const Vec3& direction) {
 			try {
 				direction_ = direction.normalize();
 			}
@@ -36,15 +36,15 @@ namespace eng {
 			return *this;
 		}
 
-		Vect3 get_direction() const noexcept {
+		Vec3 get_direction() const noexcept {
 			return direction_;
 		}
 
-		Vect3 project_point(const Vect3& point) const noexcept {
+		Vec3 project_point(const Vec3& point) const noexcept {
 			return direction_ * (direction_ * (point - start_point)) + start_point;
 		}
 
-		bool on_line(const Vect3& point) const noexcept {
+		bool on_line(const Vec3& point) const noexcept {
 			return equality((point - project_point(point)).length(), 0.0, eps_);
 		}
 
@@ -58,9 +58,9 @@ namespace eng {
 		}
 
 		// Returns some point on other object if there is no intersection
-		Vect3 intersect(const Line& line) const noexcept {
+		Vec3 intersect(const Line& line) const noexcept {
 			try {
-				Vect3 normal = ((direction_ ^ line.direction_) ^ direction_).normalize();
+				Vec3 normal = ((direction_ ^ line.direction_) ^ direction_).normalize();
 
 				double k = start_point * normal;
 				double alf = (k - normal * line.start_point) / (line.direction_ * normal);
@@ -71,7 +71,7 @@ namespace eng {
 			}
 		}
 
-		Vect3 symmetry(const Vect3& point) const noexcept {
+		Vec3 symmetry(const Vec3& point) const noexcept {
 			return point.symmetry(project_point(point));
 		}
 

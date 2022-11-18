@@ -11,7 +11,7 @@ const double GAMMA = 2.2;
 
 const double FOV = eng::PI / 2;
 const double MIN_DIST = 0.1;
-const double MAX_DIST = 25;
+const double MAX_DIST = 250;
 
 const double POINT_RADIUS = 0.05;
 const double BORDER_WIDTH = 0.1;

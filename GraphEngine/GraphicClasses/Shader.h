@@ -237,7 +237,7 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_f(const GLchar* uniform_name, const Vect2& v) const {
+		void set_uniform_f(const GLchar* uniform_name, const Vec2& v) const {
 			if (get_current_program() != program_id_) {
 				use();
 			}
@@ -253,7 +253,7 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_f(const GLchar* uniform_name, const Vect3& v) const {
+		void set_uniform_f(const GLchar* uniform_name, const Vec3& v) const {
 			if (get_current_program() != program_id_) {
 				use();
 			}

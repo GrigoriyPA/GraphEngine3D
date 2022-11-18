@@ -152,7 +152,6 @@ namespace eng {
 			for (size_t i = 0; i < line_.size(); ++i) {
 				result += line_[i] * other[i];
 			}
-
 			return result;
 		}
 
@@ -173,6 +172,10 @@ namespace eng {
 		}
 
 		size_t size() const noexcept {
+			return line_.size();
+		}
+
+		bool empty() const noexcept {
 			return line_.size();
 		}
 

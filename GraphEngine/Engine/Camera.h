@@ -14,9 +14,9 @@ namespace eng {
 		double min_distance_;
 		double max_distance_;
 		double screen_ratio_;
-		Vect3 direction_;
-		Vect3 horizont_;
-		Vect3 last_position_;
+		Vec3 direction_;
+		Vec3 horizont_;
+		Vec3 last_position_;
 		Matrix projection_;
 		sf::Vector2i mouse_position_;
 		sf::RenderWindow* window_;
@@ -26,8 +26,8 @@ namespace eng {
 				throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
 			}
 
-			projection_ = Matrix::scale_matrix(Vect3(1.0 / tan(fov_ / 2.0), screen_ratio_ / tan(fov_ / 2.0), (max_distance_ + min_distance_) / (max_distance_ - min_distance_)));
-			projection_ *= Matrix::translation_matrix(Vect3(0.0, 0.0, -2.0 * max_distance_ * min_distance_ / (max_distance_ + min_distance_)));
+			projection_ = Matrix::scale_matrix(Vec3(1.0 / tan(fov_ / 2.0), screen_ratio_ / tan(fov_ / 2.0), (max_distance_ + min_distance_) / (max_distance_ - min_distance_)));
+			projection_ *= Matrix::translation_matrix(Vec3(0.0, 0.0, -2.0 * max_distance_ * min_distance_ / (max_distance_ + min_distance_)));
 			projection_[3][3] = 0.0;
 			projection_[3][2] = 1.0;
 		}
@@ -39,7 +39,7 @@ namespace eng {
 		double rotation_speed = 0.0;
 		double speed_delt = 0.0;
 
-		Vect3 position;
+		Vec3 position;
 
 		explicit Camera(sf::RenderWindow* window) : projection_(4, 4) {
 			fov_ = PI / 2.0;
@@ -47,8 +47,8 @@ namespace eng {
 			max_distance_ = 2.0;
 			screen_ratio_ = 1.0;
 
-			direction_ = Vect3(0, 0, 1);
-			last_position_ = Vect3(0.0, 0.0, 0.0);
+			direction_ = Vec3(0, 0, 1);
+			last_position_ = Vec3(0.0, 0.0, 0.0);
 			window_ = window;
 
 			horizont_ = direction_.horizont();
@@ -58,7 +58,7 @@ namespace eng {
 		}
 
 		// screen_ratio = screen_width / screen_height
-		Camera(sf::RenderWindow* window, const Vect3& position, const Vect3& direction, double fov, double min_distance, double max_distance, double screen_ratio) : projection_(4, 4) {
+		Camera(sf::RenderWindow* window, const Vec3& position, const Vec3& direction, double fov, double min_distance, double max_distance, double screen_ratio) : projection_(4, 4) {
 			if (less_equality(fov, 0.0, eps_) || less_equality(PI, fov, eps_)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid FOV value.\n\n");
 			}
@@ -121,7 +121,7 @@ namespace eng {
 			return *this;
 		}
 
-		Camera& set_direction(const Vect3& direction) {
+		Camera& set_direction(const Vec3& direction) {
 			try {
 				direction_ = direction.normalize();
 			}
@@ -153,19 +153,19 @@ namespace eng {
 			return screen_ratio_;
 		}
 
-		Vect3 get_direction() const noexcept {
+		Vec3 get_direction() const noexcept {
 			return direction_;
 		}
 
-		Vect3 get_horizont() const noexcept {
+		Vec3 get_horizont() const noexcept {
 			return horizont_;
 		}
 
-		Vect3 get_vertical() const noexcept {
+		Vec3 get_vertical() const noexcept {
 			return direction_ ^ horizont_;
 		}
 
-		Vect3 get_last_position() const noexcept {
+		Vec3 get_last_position() const noexcept {
 			return last_position_;
 		}
 
@@ -177,11 +177,11 @@ namespace eng {
 			return Matrix(horizont_, get_vertical(), direction_).transpose() * Matrix::translation_matrix(-position);
 		}
 
-		Vect3 get_change_vector(const Vect3& stable_point) const noexcept {
+		Vec3 get_change_vector(const Vec3& stable_point) const noexcept {
 			return change_matrix_ * (stable_point - last_position_) + position - stable_point;
 		}
 
-		Vect3 get_change_vector() const noexcept {
+		Vec3 get_change_vector() const noexcept {
 			return position - last_position_;
 		}
 
@@ -191,7 +191,7 @@ namespace eng {
 			return *this;
 		}
 
-		Camera& rotate(const Vect3& axis, double angle) {
+		Camera& rotate(const Vec3& axis, double angle) {
 			try {
 				Matrix rotate = Matrix::rotation_matrix(axis, angle);
 				direction_ = rotate * direction_;
@@ -276,7 +276,7 @@ namespace eng {
 			}
 		}
 
-		Vect3 convert_point(const Vect3& point) const {
+		Vec3 convert_point(const Vec3& point) const {
 			double divisor = max_distance_ - point.z * (max_distance_ - min_distance_);
 			if (equality(divisor, 0.0, eps_)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "convert_point, invalid point coordinate.\n\n");
@@ -287,7 +287,7 @@ namespace eng {
 			}
 
 			double tg = tan(fov_ / 2.0);
-			return Matrix(horizont_, get_vertical(), direction_) * Vect3(tg * point.x, (tg / screen_ratio_) * point.y, max_distance_ * min_distance_ / divisor) + position;
+			return Matrix(horizont_, get_vertical(), direction_) * Vec3(tg * point.x, (tg / screen_ratio_) * point.y, max_distance_ * min_distance_ / divisor) + position;
 		}
 
 		static void set_epsilon(double eps) {

@@ -12,7 +12,7 @@ class RenderingSequence {
 	std::vector < RenderObject* > selected_objects;
 	std::vector < RenderObject* > objects;
 	std::map < std::pair < int, int >, int > object_id;
-	eng::Vect3 stable_point, temp_point, intersect_point;
+	eng::Vec3 stable_point, temp_point, intersect_point;
 	eng::GraphEngine* scene;
 
 	bool can_switch_to_point() {
@@ -391,12 +391,12 @@ public:
 		scene->camera.update();
 
 		double delt = pow(SCROLL_SENSITIVITY, scroll);
-		eng::Vect3 new_point = (stable_point - scene->camera.position) * delt + scene->camera.position;
+		eng::Vec3 new_point = (stable_point - scene->camera.position) * delt + scene->camera.position;
 		trans = trans * eng::Matrix::translation_matrix(new_point - stable_point);
 		stable_point = new_point;
 		scroll = 0;
 
-		if ((trans * eng::Vect3(0, 0, 0)).length() > eps) {
+		if ((trans * eng::Vec3(0, 0, 0)).length() > eps) {
 			for (RenderObject* object : objects) {
 				if (object->connect)
 					object->move(trans);
@@ -404,7 +404,7 @@ public:
 		}
 
 		if (input_state == 1) {
-			eng::Vect3 new_temp_point = scene->camera.position + scene->camera.get_direction() * point_distance;
+			eng::Vec3 new_temp_point = scene->camera.position + scene->camera.get_direction() * point_distance;
 			if ((new_temp_point - temp_point).length() > eps)
 				objects[0]->move(eng::Matrix::translation_matrix(new_temp_point - temp_point));
 			temp_point = new_temp_point;

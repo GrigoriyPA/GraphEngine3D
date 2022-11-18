@@ -8,9 +8,9 @@ namespace eng {
     protected:
         inline static double eps_ = 1e-5;
 
-        Vect3 ambient_ = Vect3(0.0, 0.0, 0.0);
-        Vect3 diffuse_ = Vect3(0.0, 0.0, 0.0);
-        Vect3 specular_ = Vect3(0.0, 0.0, 0.0);
+        Vec3 ambient_ = Vec3(0.0, 0.0, 0.0);
+        Vec3 diffuse_ = Vec3(0.0, 0.0, 0.0);
+        Vec3 specular_ = Vec3(0.0, 0.0, 0.0);
 
         void set_light_uniforms(const std::string& name, const Shader<size_t>& shader) const {
             if (shader.description != ShaderType::MAIN) {
@@ -33,17 +33,17 @@ namespace eng {
             }
         }
 
-        void set_ambient(const Vect3& ambient) {
+        void set_ambient(const Vec3& ambient) {
             check_color_value(__FILE__, __LINE__, __func__, ambient);
             ambient_ = ambient;
         }
 
-        void set_diffuse(const Vect3& diffuse) {
+        void set_diffuse(const Vec3& diffuse) {
             check_color_value(__FILE__, __LINE__, __func__, diffuse);
             diffuse_ = diffuse;
         }
 
-        void set_specular(const Vect3& specular) {
+        void set_specular(const Vec3& specular) {
             check_color_value(__FILE__, __LINE__, __func__, specular);
             specular_ = specular;
         }

@@ -8,11 +8,11 @@ namespace eng {
 		inline static double eps_ = 1e-5;
 
 		Line line_;
-		Vect3 point1_;
-		Vect3 point2_;
+		Vec3 point1_;
+		Vec3 point2_;
 
 	public:
-		Cut(const Vect3& point1, const Vect3& point2) {
+		Cut(const Vec3& point1, const Vec3& point2) {
 			try {
 				line_ = Line(point1_, point2_);
 			}
@@ -24,11 +24,11 @@ namespace eng {
 			point2_ = point2;
 		}
 
-		Vect3 get_point1() const noexcept {
+		Vec3 get_point1() const noexcept {
 			return point1_;
 		}
 
-		Vect3 get_point2() const noexcept  {
+		Vec3 get_point2() const noexcept  {
 			return point2_;
 		}
 
@@ -36,7 +36,7 @@ namespace eng {
 			return line_;
 		}
 
-		Vect3 project_point(const Vect3& point) const noexcept {
+		Vec3 project_point(const Vec3& point) const noexcept {
 			if ((point2_ - point1_) * (point - point1_) < 0.0) {
 				return point1_;
 			}
@@ -46,7 +46,7 @@ namespace eng {
 			return line_.project_point(point);
 		}
 
-		bool on_cut(const Vect3& point) const noexcept {
+		bool on_cut(const Vec3& point) const noexcept {
 			return line_.on_line(point) && (point1_ - point) * (point2_ - point) < 0.0;
 		}
 
@@ -59,12 +59,12 @@ namespace eng {
 		}
 
 		// Returns some point on other object if there is no intersection
-		Vect3 intersect(const Line& line) const noexcept {
+		Vec3 intersect(const Line& line) const noexcept {
 			return line_.intersect(line);
 		}
 
 		// Returns some point on other object if there is no intersection
-		Vect3 intersect(const Cut& cut) const noexcept {
+		Vec3 intersect(const Cut& cut) const noexcept {
 			return cut.project_point(line_.intersect(cut.line_));
 		}
 

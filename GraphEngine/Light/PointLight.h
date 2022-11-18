@@ -13,9 +13,9 @@ namespace eng {
         double quadratic_ = 0.0;
 
     public:
-        Vect3 position;
+        Vec3 position;
 
-        PointLight(const Vect3& position) {
+        PointLight(const Vec3& position) {
             if (!glew_is_ok()) {
                 throw EngRuntimeError(__FILE__, __LINE__, "PointLight, failed to initialize GLEW.\n\n");
             }
@@ -73,7 +73,7 @@ namespace eng {
             GraphObject light_object = GraphObject::sphere(6, true, 1);
 
             light_object.meshes.apply_func([](auto& mesh) {
-                mesh.material.set_emission(Vect3(1.0, 1.0, 1.0));
+                mesh.material.set_emission(Vec3(1.0, 1.0, 1.0));
                 mesh.material.shadow = false;
             });
 

@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include "MatrixLine.h"
-#include "Vect3.h"
+#include "Vec3.h"
 
 
 namespace eng {
@@ -62,7 +62,7 @@ namespace eng {
 			}
 		}
 
-		Matrix(const Vect3& vector_x, const Vect3& vector_y, const Vect3& vector_z) noexcept {
+		Matrix(const Vec3& vector_x, const Vec3& vector_y, const Vec3& vector_z) noexcept {
 			*this = Matrix({
 				{ vector_x.x, vector_y.x, vector_z.x, 0.0 },
 				{ vector_x.y, vector_y.y, vector_z.y, 0.0 },
@@ -258,12 +258,12 @@ namespace eng {
 			return result;
 		}
 
-		Vect3 operator*(const Vect3& other) const {
+		Vec3 operator*(const Vec3& other) const {
 			if (matrix_.size() != 4 || matrix_[0].size() != 4) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix size.\n\n");
 			}
 
-			Vect3 result;
+			Vec3 result;
 			for (size_t i = 0; i < 3; ++i) {
 				for (size_t j = 0; j < 3; ++j) {
 					result[i] += matrix_[i][j] * other[j];
@@ -499,7 +499,7 @@ namespace eng {
 			return result;
 		}
 
-		static Matrix scale_matrix(const Vect3& scale) noexcept {
+		static Matrix scale_matrix(const Vec3& scale) noexcept {
 			return Matrix({
 				{ scale.x,     0.0,     0.0, 0.0 },
 				{     0.0, scale.y,     0.0, 0.0 },
@@ -517,7 +517,7 @@ namespace eng {
 				});
 		}
 
-		static Matrix translation_matrix(const Vect3& translation) noexcept {
+		static Matrix translation_matrix(const Vec3& translation) noexcept {
 			return Matrix({
 				{ 1.0, 0.0, 0.0, translation.x },
 				{ 0.0, 1.0, 0.0, translation.y },
@@ -526,12 +526,12 @@ namespace eng {
 				});
 		}
 
-		static Matrix rotation_matrix(const Vect3& axis, double angle) {
+		static Matrix rotation_matrix(const Vec3& axis, double angle) {
 			if (equality(axis.length(), 0.0)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "rotation_matrix, the axis vector has zero length.\n\n");
 			}
 
-			Vect3 norm_axis = axis.normalize();
+			Vec3 norm_axis = axis.normalize();
 			double x = norm_axis.x;
 			double y = norm_axis.y;
 			double z = norm_axis.z;

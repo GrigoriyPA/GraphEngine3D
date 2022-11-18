@@ -17,7 +17,7 @@ namespace eng {
 			size_t model_id;
 			const GraphObject* object;
 
-			TransparentObject(const Vect3& camera_position, const GraphObject* object, size_t object_id, size_t model_id) noexcept {
+			TransparentObject(const Vec3& camera_position, const GraphObject* object, size_t object_id, size_t model_id) noexcept {
 				this->object_id = object_id;
 				this->model_id = model_id;
 				this->object = object;
@@ -42,9 +42,9 @@ namespace eng {
 		bool grayscale_ = false;
 		uint32_t border_width_ = 7; 
 		double gamma_ = 2.2;
-		Vect2 check_point_ = Vect2(0.0);
-		Vect3 border_color_ = Vect3(0.0);
-		Vect3 clear_color_ = Vect3(0.0);
+		Vec2 check_point_ = Vec2(0.0);
+		Vec3 border_color_ = Vec3(0.0);
+		Vec3 clear_color_ = Vec3(0.0);
 		Kernel kernel_ = Kernel();
 
 		size_t shadow_width_ = 1024;
@@ -446,18 +446,18 @@ namespace eng {
 			return *this;
 		}
 
-		GraphEngine& set_check_point(const Vect2& point) {
+		GraphEngine& set_check_point(const Vec2& point) {
 			if (point.x < 0.0 || 1.0 < point.x || point.y < 0.0 || 1.0 < point.y) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_check_point, invalid point coordinate.\n\n");
 			}
 
 			set_active();
-			check_point_ = Vect2(point.x, 1.0 - point.y);
+			check_point_ = Vec2(point.x, 1.0 - point.y);
 			main_shader_.set_uniform_f("check_point", static_cast<GLfloat>(check_point_.x * window_->getSize().x), static_cast<GLfloat>(check_point_.y * window_->getSize().y));
 			return *this;
 		}
 
-		GraphEngine& set_border_color(const Vect3& color) {
+		GraphEngine& set_border_color(const Vec3& color) {
 			check_color_value(__FILE__, __LINE__, __func__, color);
 
 			set_active();
@@ -466,7 +466,7 @@ namespace eng {
 			return *this;
 		}
 
-		GraphEngine& set_clear_color(const Vect3& color) {
+		GraphEngine& set_clear_color(const Vec3& color) {
 			check_color_value(__FILE__, __LINE__, __func__, color);
 
 			set_active();
@@ -514,15 +514,15 @@ namespace eng {
 			return gamma_;
 		}
 
-		Vect2 get_check_point() const noexcept {
+		Vec2 get_check_point() const noexcept {
 			return check_point_;
 		}
 
-		Vect3 get_border_color() const noexcept {
+		Vec3 get_border_color() const noexcept {
 			return border_color_;
 		}
 
-		Vect3 get_clear_color() const noexcept {
+		Vec3 get_clear_color() const noexcept {
 			return clear_color_;
 		}
 
@@ -550,7 +550,7 @@ namespace eng {
 			return lights_.size();
 		}
 
-		ObjectDesc get_check_object(Vect3& intersect_point) const {
+		ObjectDesc get_check_object(Vec3& intersect_point) const {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
 
 			GLint data_int[2] = { -1, -1 };
@@ -561,7 +561,7 @@ namespace eng {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			intersect_point = camera.convert_point(Vect3(2.0 * check_point_ - Vect2(1.0), distance));
+			intersect_point = camera.convert_point(Vec3(2.0 * check_point_ - Vec2(1.0), distance));
 
 			if (data_int[0] < 0 || data_int[1] < 0 || objects_.count(data_int[0]) == 0 || !objects_.at(data_int[0]).models.contains_memory(data_int[1])) {
 				return ObjectDesc();
