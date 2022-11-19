@@ -170,7 +170,7 @@ namespace eng {
 		}
 
 	public:
-		T description;
+		T description = T();
 
 		Shader() {
 			if (!glew_is_ok()) {
@@ -215,7 +215,7 @@ namespace eng {
 			return *this;
 		}
 
-		Shader<T>& operator=(Shader<T>&& other)& {
+		Shader<T>& operator=(Shader<T>&& other)& noexcept {
 			deallocate();
 			swap(other);
 			return *this;

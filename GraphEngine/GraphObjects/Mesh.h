@@ -145,7 +145,7 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& operator=(Mesh&& other)& {
+		Mesh& operator=(Mesh&& other)& noexcept {
 			deallocate();
 			swap(other);
 			return *this;

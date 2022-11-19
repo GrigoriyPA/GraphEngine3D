@@ -17,7 +17,6 @@ namespace eng {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_light_uniforms, invalid shader type.\n\n");
             }
 
-            shader.set_uniform_i((name + "exist").c_str(), 1);
             shader.set_uniform_f((name + "ambient").c_str(), ambient_);
             shader.set_uniform_f((name + "diffuse").c_str(), diffuse_);
             shader.set_uniform_f((name + "specular").c_str(), specular_);
@@ -52,20 +51,15 @@ namespace eng {
 
         virtual Matrix get_light_space_matrix() const = 0;
 
+        virtual ~Light() {
+        }
+
         static void set_epsilon(double eps) {
             if (eps <= 0) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
             }
 
             eps_ = eps;
-        }
-
-        static void set_exist(bool value, size_t id, const Shader<size_t>& shader) {
-            if (shader.description != ShaderType::MAIN) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-            }
-
-            shader.set_uniform_i(("lights[" + std::to_string(id) + "].exist").c_str(), value);
         }
     };
 }

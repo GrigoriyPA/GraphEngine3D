@@ -28,6 +28,17 @@ namespace eng {
 			swap(other);
 		}
 
+		MeshStorage& operator=(const MeshStorage& other)& {
+			MeshStorage object(other);
+			swap(object);
+			return *this;
+		}
+
+		MeshStorage& operator=(MeshStorage&& other)& noexcept {
+			swap(other);
+			return *this;
+		}
+
 		void set_mesh_matrix_buffer(Mesh& mesh) const {
 			if (matrix_buffer_ == 0) {
 				return;
@@ -66,17 +77,6 @@ namespace eng {
 			std::swap(meshes_index_, other.meshes_index_);
 			std::swap(free_mesh_id_, other.free_mesh_id_);
 			std::swap(meshes_, other.meshes_);
-		}
-
-		MeshStorage& operator=(const MeshStorage& other)& {
-			MeshStorage object(other);
-			swap(object);
-			return *this;
-		}
-
-		MeshStorage& operator=(MeshStorage&& other)& noexcept {
-			swap(other);
-			return *this;
 		}
 
 	public:

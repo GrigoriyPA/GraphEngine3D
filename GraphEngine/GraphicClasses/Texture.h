@@ -95,7 +95,7 @@ namespace eng {
 			return *this;
 		}
 
-		Texture& operator=(Texture&& other)& {
+		Texture& operator=(Texture&& other)& noexcept {
 			deallocate();
 			swap(other);
 			return *this;

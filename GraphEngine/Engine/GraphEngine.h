@@ -1,9 +1,9 @@
 #pragma once
 
+#include "LightStorage.h"
 #include "Camera.h"
 #include "GraphObjectStorage.h"
 #include "../GraphicClasses/Kernel.h"
-#include "../Light/Light.h"
 
 
 namespace eng {
@@ -49,7 +49,6 @@ namespace eng {
 		size_t shadow_width_ = 1024;
 		size_t shadow_height_ = 1024;
 
-		std::vector<Light*> lights_;
 		Shader<size_t> main_shader_;
 		Shader<size_t> depth_shader_;
 		Shader<size_t> post_shader_;
@@ -77,13 +76,9 @@ namespace eng {
 		}
 
 		void set_light_uniforms() const {
-			for (size_t i = 0; i < lights_.size(); ++i) {
-				if (lights_[i] == nullptr) {
-					Light::set_exist(false, i, main_shader_);
-					continue;
-				}
-
-				lights_[i]->set_uniforms(i, main_shader_);
+			main_shader_.set_uniform_i("number_lights", static_cast<GLint>(lights.size()));
+			for (const auto& [id, light] : lights) {
+				light->set_uniforms(lights.get_memory_id(id), main_shader_);
 			}
 		}
 
@@ -133,13 +128,13 @@ namespace eng {
 		}
 
 		void create_depth_map_frame_buffer() {
-			if (lights_.empty()) {
+			if (lights.get_max_count_lights() == 0) {
 				return;
 			}
 
 			glGenTextures(1, &depth_map_texture_id_);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(shadow_width_), static_cast<GLsizei>(shadow_height_), static_cast<GLsizei>(lights_.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(shadow_width_), static_cast<GLsizei>(shadow_height_), static_cast<GLsizei>(lights.get_max_count_lights()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -208,15 +203,12 @@ namespace eng {
 			glBindFramebuffer(GL_FRAMEBUFFER, depth_map_frame_buffer_);
 			glViewport(0, 0, static_cast<GLsizei>(shadow_width_), static_cast<GLsizei>(shadow_height_));
 
-			glClear(GL_DEPTH_BUFFER_BIT);
+			for (const auto& [id, light] : lights) {
+				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, static_cast<GLint>(depth_map_texture_id_), 0, static_cast<GLint>(lights.get_memory_id(id)));
+				
+				glClear(GL_DEPTH_BUFFER_BIT);
 
-			for (size_t i = 0; i < lights_.size(); ++i) {
-				if (lights_[i] == nullptr || !lights_[i]->shadow) {
-					continue;
-				}
-
-				depth_shader_.set_uniform_matrix("light_space", lights_[i]->get_light_space_matrix());
-				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, static_cast<GLint>(depth_map_texture_id_), 0, static_cast<GLint>(i));
+				depth_shader_.set_uniform_matrix("light_space", light->get_light_space_matrix());
 				for (const auto& [id, object] : objects) {
 					object.draw_depth_map();
 				}
@@ -334,6 +326,7 @@ namespace eng {
 		};
 
 		GraphObjectStorage objects;
+		LightStorage lights;
 		Camera camera;
 
 		explicit GraphEngine(sf::RenderWindow* window) : camera(window) {
@@ -354,7 +347,7 @@ namespace eng {
 				throw EngRuntimeError(__FILE__, __LINE__, "GraphEngine, invalid OpenGL version.\n\n");
 			}
 
-			lights_.resize(std::stoi(main_shader_.get_value_frag("NR_LIGHTS")), nullptr);
+			lights.max_count_lights_ = std::stoi(main_shader_.get_value_frag("NR_LIGHTS"));
 
 			camera.set_screen_ratio(static_cast<double>(window->getSize().x) / static_cast<double>(window->getSize().y));
 
@@ -374,9 +367,9 @@ namespace eng {
 			check_point_ = other.check_point_;
 			border_color_ = other.border_color_;
 			clear_color_ = other.clear_color_;
-			lights_ = other.lights_;
 			kernel_ = other.kernel_;
 			objects = other.objects;
+			lights = other.lights;
 			camera = other.camera;
 
 			main_shader_ = other.main_shader_;
@@ -467,21 +460,12 @@ namespace eng {
 
 		GraphEngine& set_shadow_resolution(size_t width, size_t height) {
 			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width), static_cast<GLsizei>(height), static_cast<GLsizei>(lights_.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width), static_cast<GLsizei>(height), static_cast<GLsizei>(lights.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
 			shadow_width_ = width;
 			shadow_height_ = height;
-			return *this;
-		}
-
-		GraphEngine& set_light(size_t light_id, Light* new_light) {
-			if (lights_.size() <= light_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "set_light, invalid light id.\n\n");
-			}
-
-			lights_[light_id] = new_light;
 			return *this;
 		}
 
@@ -511,26 +495,6 @@ namespace eng {
 
 		Kernel get_kernel() const noexcept {
 			return kernel_;
-		}
-
-		Light* get_light(size_t light_id) {
-			if (lights_.size() <= light_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_light, invalid light id.\n\n");
-			}
-
-			return lights_[light_id];
-		}
-
-		const Light* get_light(size_t light_id) const {
-			if (lights_.size() <= light_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_light, invalid light id.\n\n");
-			}
-
-			return lights_[light_id];
-		}
-
-		size_t get_count_lights() const noexcept {
-			return lights_.size();
 		}
 
 		ObjectDesc get_check_object(Vec3& intersect_point) const {
@@ -579,9 +543,9 @@ namespace eng {
 			std::swap(check_point_, other.check_point_);
 			std::swap(border_color_, other.border_color_);
 			std::swap(clear_color_, other.clear_color_);
-			std::swap(lights_, other.lights_);
 			std::swap(kernel_, other.kernel_);
 			objects.swap(other.objects);
+			lights.swap(other.lights);
 			std::swap(camera, other.camera);
 
 			main_shader_.swap(other.main_shader_);
@@ -614,7 +578,7 @@ namespace eng {
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			
+
 			draw_depth_map();
 			draw_primary_frame_buffer();
 			draw_mainbuffer();

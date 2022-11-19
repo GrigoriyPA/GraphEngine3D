@@ -75,7 +75,7 @@ signed main() {
         spot_light.set_diffuse(eng::Vec3(0.6, 0.6, 0.6));
         spot_light.set_specular(eng::Vec3(0.8, 0.8, 0.8));
         spot_light.set_quadratic(0.1);
-        scene.set_light(0, &spot_light);
+        int spot_light_id = scene.lights.insert(&spot_light);
 
         /*eng::DirLight light(eng::Vec3(1, -1, 1));
         light.set_ambient(eng::Vec3(0.2, 0.2, 0.2));
@@ -91,7 +91,7 @@ signed main() {
         light.set_quadratic(0.1);
         light.set_shadow_distance(1, 6.5);
         light.shadow = true;
-        scene.set_light(1, &light);
+        scene.lights.insert(&light);
         //scene.add_object(light.get_shadow_box());
         scene.objects.insert(light.get_light_object());
 
@@ -132,10 +132,12 @@ signed main() {
                     } else if (event.key.code == sf::Keyboard::F11) {
                         screenshot(window);
                     } else if (event.key.code == sf::Keyboard::F) {
-                        if (scene.get_light(0) == nullptr)
-                            scene.set_light(0, &spot_light);
-                        else
-                            scene.set_light(0, nullptr);
+                        if (spot_light_id == -1)
+                            spot_light_id = scene.lights.insert(&spot_light);
+                        else {
+                            scene.lights.erase(spot_light_id);
+                            spot_light_id = -1;
+                        }
                     }
                     break;
                 }

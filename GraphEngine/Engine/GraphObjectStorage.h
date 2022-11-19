@@ -14,15 +14,15 @@ namespace eng {
 		GraphObjectStorage() noexcept {
 		}
 
+		GraphObjectStorage& operator=(const GraphObjectStorage& other)& noexcept = default;
+
+		GraphObjectStorage& operator=(GraphObjectStorage&& other)& noexcept = default;
+
 		void swap(GraphObjectStorage& other) noexcept {
 			std::swap(objects_index_, other.objects_index_);
 			std::swap(free_object_id_, other.free_object_id_);
 			std::swap(objects_, other.objects_);
 		}
-
-		GraphObjectStorage& operator=(const GraphObjectStorage& other)& noexcept = default;
-
-		GraphObjectStorage& operator=(GraphObjectStorage&& other)& noexcept = default;
 
 	public:
 		using Iterator = std::vector<std::pair<size_t, GraphObject>>::iterator;

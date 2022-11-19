@@ -42,6 +42,18 @@ namespace eng {
 			swap(other);
 		}
 
+		ModelStorage& operator=(const ModelStorage& other)& {
+			ModelStorage object(other);
+			swap(object);
+			return *this;
+		}
+
+		ModelStorage& operator=(ModelStorage&& other)& noexcept {
+			deallocate();
+			swap(other);
+			return *this;
+		}
+
 		GLuint create_matrix_buffer(size_t max_count_models) {
 			max_count_models_ = max_count_models;
 
@@ -77,18 +89,6 @@ namespace eng {
 			std::swap(models_index_, other.models_index_);
 			std::swap(free_model_id_, other.free_model_id_);
 			std::swap(models_, other.models_);
-		}
-
-		ModelStorage& operator=(const ModelStorage& other)& {
-			ModelStorage object(other);
-			swap(object);
-			return *this;
-		}
-
-		ModelStorage& operator=(ModelStorage&& other)& noexcept {
-			deallocate();
-			swap(other);
-			return *this;
 		}
 
 	public:
@@ -139,6 +139,10 @@ namespace eng {
 			}
 
 			return models_[memory_id].first;
+		}
+
+		size_t get_max_count_models() const noexcept {
+			return max_count_models_;
 		}
 
 		bool contains(size_t id) const noexcept {

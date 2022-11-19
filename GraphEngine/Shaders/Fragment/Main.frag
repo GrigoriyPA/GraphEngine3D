@@ -4,7 +4,7 @@ const int NR_LIGHTS = 2;
 
 
 struct Light {
-    bool exist, shadow;
+    bool shadow;
     int type;
     float constant, linear, quadratic, cut_in, cut_out;
     vec3 position, direction, ambient, diffuse, specular;
@@ -30,6 +30,7 @@ uniform bool use_diffuse_map;
 uniform bool use_specular_map;
 uniform bool use_emission_map;
 uniform int object_id;
+uniform int number_lights;
 uniform float gamma;
 uniform sampler2D diffuse_map;
 uniform sampler2D specular_map;
@@ -172,8 +173,8 @@ void main() {
 
     vec3 result_color = vec3(0.0);
     for(int i = 0; i < NR_LIGHTS; i++) {
-        if (!lights[i].exist)
-            continue;
+        if (i == number_lights)
+            break;
 
         if (lights[i].type == 0)
   	        result_color += calc_dir_light(lights[i], normal, view_dir, material, i);
