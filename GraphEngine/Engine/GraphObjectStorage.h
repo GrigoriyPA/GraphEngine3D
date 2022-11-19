@@ -1,0 +1,147 @@
+#pragma once
+
+#include "../GraphObjects/GraphObject.h"
+
+
+namespace eng {
+	class GraphObjectStorage {
+		friend class GraphEngine;
+
+		std::vector<size_t> objects_index_;
+		std::vector<size_t> free_object_id_;
+		std::vector<std::pair<size_t, GraphObject>> objects_;
+
+		GraphObjectStorage() noexcept {
+		}
+
+		void swap(GraphObjectStorage& other) noexcept {
+			std::swap(objects_index_, other.objects_index_);
+			std::swap(free_object_id_, other.free_object_id_);
+			std::swap(objects_, other.objects_);
+		}
+
+		GraphObjectStorage& operator=(const GraphObjectStorage& other)& noexcept = default;
+
+		GraphObjectStorage& operator=(GraphObjectStorage&& other)& noexcept = default;
+
+	public:
+		using Iterator = std::vector<std::pair<size_t, GraphObject>>::iterator;
+		using ConstIterator = std::vector<std::pair<size_t, GraphObject>>::const_iterator;
+
+		GraphObject& operator[](size_t id) {
+			if (!contains(id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
+			}
+
+			return objects_[objects_index_[id]].second;
+		}
+
+		const GraphObject& operator[](size_t id) const {
+			if (!contains(id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
+			}
+
+			return objects_[objects_index_[id]].second;
+		}
+
+		size_t get_memory_id(size_t id) const {
+			if (!contains(id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid object id.\n\n");
+			}
+
+			return objects_index_[id];
+		}
+
+		size_t get_id(size_t memory_id) const {
+			if (objects_.size() <= memory_id) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+			}
+
+			return objects_[memory_id].first;
+		}
+
+		bool contains(size_t id) const noexcept {
+			return id < objects_index_.size() && objects_index_[id] < std::numeric_limits<size_t>::max();
+		}
+
+		bool contains_memory(size_t memory_id) const noexcept {
+			return memory_id < objects_.size();
+		}
+
+		size_t size() const noexcept {
+			return objects_.size();
+		}
+
+		bool empty() const noexcept {
+			return objects_.empty();
+		}
+
+		Iterator begin() noexcept {
+			return objects_.begin();
+		}
+
+		Iterator end() noexcept {
+			return objects_.end();
+		}
+
+		ConstIterator begin() const noexcept {
+			return objects_.begin();
+		}
+
+		ConstIterator end() const noexcept {
+			return objects_.end();
+		}
+
+		bool erase(size_t id, size_t model_id) {
+			if (!contains(id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
+			}
+			if (!objects_[objects_index_[id]].second.models.contains(model_id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
+			}
+
+			objects_[objects_index_[id]].second.models.erase(model_id);
+			if (objects_[objects_index_[id]].second.models.empty()) {
+				erase(id);
+				return true;
+			}
+			return false;
+		}
+
+		GraphObjectStorage& erase(size_t id) {
+			if (!contains(id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
+			}
+
+			free_object_id_.push_back(id);
+
+			objects_index_[objects_.back().first] = objects_index_[id];
+			objects_[objects_index_[id]].swap(objects_.back());
+
+			objects_.pop_back();
+			objects_index_[id] = std::numeric_limits<size_t>::max();
+			return *this;
+		}
+
+		GraphObjectStorage& clear() noexcept {
+			objects_index_.clear();
+			free_object_id_.clear();
+			objects_.clear();
+			return *this;
+		}
+
+		size_t insert(const GraphObject& object) noexcept {
+			size_t free_object_id = objects_index_.size();
+			if (free_object_id_.empty()) {
+				objects_index_.push_back(objects_.size());
+			} else {
+				free_object_id = free_object_id_.back();
+				free_object_id_.pop_back();
+				objects_index_[free_object_id] = objects_.size();
+			}
+
+			objects_.push_back({ free_object_id, object });
+			return free_object_id;
+		}
+	};
+}

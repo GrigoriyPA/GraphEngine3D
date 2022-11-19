@@ -206,7 +206,7 @@ namespace eng {
 			return *this;
 		}
 
-		GraphObject& operator=(GraphObject&& other)& {
+		GraphObject& operator=(GraphObject&& other)& noexcept {
 			swap(other);
 			return *this;
 		}
@@ -280,7 +280,7 @@ namespace eng {
 		void swap(GraphObject& other) noexcept {
 			std::swap(transparent, other.transparent);
 			std::swap(border_mask, other.border_mask);
-			std::swap(meshes, other.meshes);
+			meshes.swap(other.meshes);
 			models.swap(other.models);
 
 			meshes.set_matrix_buffer(models.matrix_buffer_);

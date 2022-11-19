@@ -15,6 +15,33 @@ namespace eng {
 		std::vector<size_t> free_model_id_;
 		std::vector<std::pair<size_t, Matrix>> models_;
 
+		ModelStorage() noexcept {
+			max_count_models_ = 0;
+		}
+
+		ModelStorage(const ModelStorage& other) {
+			max_count_models_ = other.max_count_models_;
+			models_index_ = other.models_index_;
+			free_model_id_ = other.free_model_id_;
+			models_ = other.models_;
+
+			create_matrix_buffer(max_count_models_);
+
+			glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer_);
+			glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer_);
+
+			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * 16 * max_count_models_);
+
+			glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+			glBindBuffer(GL_COPY_READ_BUFFER, 0);
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		ModelStorage(ModelStorage&& other) noexcept {
+			swap(other);
+		}
+
 		GLuint create_matrix_buffer(size_t max_count_models) {
 			max_count_models_ = max_count_models;
 
@@ -52,47 +79,20 @@ namespace eng {
 			std::swap(models_, other.models_);
 		}
 
-		ModelStorage() noexcept {
-			max_count_models_ = 0;
-		}
-
-		ModelStorage(const ModelStorage& other) {
-			max_count_models_ = other.max_count_models_;
-			models_index_ = other.models_index_;
-			free_model_id_ = other.free_model_id_;
-			models_ = other.models_;
-
-			create_matrix_buffer(max_count_models_);
-
-			glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer_);
-			glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer_);
-
-			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * 16 * max_count_models_);
-
-			glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
-			glBindBuffer(GL_COPY_READ_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		ModelStorage(ModelStorage&& other) noexcept {
-			swap(other);
-		}
-
-	public:
-		using Iterator = std::vector<std::pair<size_t, Matrix>>::const_iterator;
-
 		ModelStorage& operator=(const ModelStorage& other)& {
 			ModelStorage object(other);
 			swap(object);
 			return *this;
 		}
 
-		ModelStorage& operator=(ModelStorage&& other)& {
+		ModelStorage& operator=(ModelStorage&& other)& noexcept {
 			deallocate();
 			swap(other);
 			return *this;
 		}
+
+	public:
+		using Iterator = std::vector<std::pair<size_t, Matrix>>::const_iterator;
 
 		const Matrix& operator[](size_t id) const {
 			if (!contains(id)) {

@@ -16,9 +16,9 @@ public:
 
     void set_border(bool flag) {
         if (flag) {
-            (*scene)[scene_id.first].border_mask = 0b1000;
+            (*scene).objects[scene_id.first].border_mask = 0b1000;
         } else {
-            (*scene)[scene_id.first].border_mask = 0;
+            (*scene).objects[scene_id.first].border_mask = 0;
         }
     }
 

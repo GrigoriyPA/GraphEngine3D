@@ -21,7 +21,7 @@ class Triangle : public RenderObject {
         triangle.meshes.insert(mesh);
 
         scene_id.second = triangle.models.insert(eng::Matrix::one_matrix(4));
-        scene_id.first = scene->add_object(triangle);
+        scene_id.first = scene->objects.insert(triangle);
     }
 
     void set_action(std::pair < int, int > button) {
@@ -48,19 +48,19 @@ class Triangle : public RenderObject {
         eng::Vec3 normal = ((points[0] - points[1]) ^ (points[0] - points[2])).normalize();
         eng::Vec3 delt = normal * eps;
 
-        (*scene)[scene_id.first].meshes.modify(0, (*scene)[scene_id.first].meshes.get(0).set_positions({
+        (*scene).objects[scene_id.first].meshes.modify(0, (*scene).objects[scene_id.first].meshes.get(0).set_positions({
         points[0],
         points[1],
         points[2]
             }, true));
 
-        (*scene)[scene_id.first].meshes.modify(1, (*scene)[scene_id.first].meshes.get(1).set_positions({
+        (*scene).objects[scene_id.first].meshes.modify(1, (*scene).objects[scene_id.first].meshes.get(1).set_positions({
         points[0] - delt,
         points[1] - delt,
         points[2] - delt
             }, true));
 
-        (*scene)[scene_id.first].meshes.modify(2, (*scene)[scene_id.first].meshes.get(2).set_positions({
+        (*scene).objects[scene_id.first].meshes.modify(2, (*scene).objects[scene_id.first].meshes.get(2).set_positions({
         points[2] + delt,
         points[1] + delt,
         points[0] + delt
@@ -68,22 +68,22 @@ class Triangle : public RenderObject {
     }
 
     void update_three_points(std::pair < int, int > point1, std::pair < int, int > point2, std::pair < int, int > point3) {
-        eng::Vec3 coord1 = (*scene)[point1.first].get_center(point1.second);
-        eng::Vec3 coord2 = (*scene)[point2.first].get_center(point2.second);
-        eng::Vec3 coord3 = (*scene)[point3.first].get_center(point3.second);
+        eng::Vec3 coord1 = (*scene).objects[point1.first].get_center(point1.second);
+        eng::Vec3 coord2 = (*scene).objects[point2.first].get_center(point2.second);
+        eng::Vec3 coord3 = (*scene).objects[point3.first].get_center(point3.second);
         update_triangle({ coord1, coord2, coord3 });
     }
 
     void update_point_cut(std::pair < int, int > point, std::pair < int, int > cut) {
-        eng::Vec3 coord1 = (*scene)[point.first].get_center(point.second);
-        eng::Vec3 coord2 = (*scene)[cut.first].get_mesh_center(cut.second, 0);
-        eng::Vec3 coord3 = (*scene)[cut.first].get_mesh_center(cut.second, 1);
+        eng::Vec3 coord1 = (*scene).objects[point.first].get_center(point.second);
+        eng::Vec3 coord2 = (*scene).objects[cut.first].get_mesh_center(cut.second, 0);
+        eng::Vec3 coord3 = (*scene).objects[cut.first].get_mesh_center(cut.second, 1);
         update_triangle({ coord1, coord2, coord3 });
     }
 
     void update_point_symmetry(std::pair < int, int > triangle, std::pair < int, int > center) {
-        eng::Vec3 coord_center = (*scene)[center.first].get_center(center.second);
-        std::vector < eng::Vec3 > coords = (*scene)[triangle.first].get_mesh_positions(triangle.second, 0);
+        eng::Vec3 coord_center = (*scene).objects[center.first].get_center(center.second);
+        std::vector < eng::Vec3 > coords = (*scene).objects[triangle.first].get_mesh_positions(triangle.second, 0);
 
         std::reverse(coords.begin(), coords.end());
         for (eng::Vec3& el : coords)
@@ -93,10 +93,10 @@ class Triangle : public RenderObject {
     }
 
     void update_line_symmetry(std::pair < int, int > triangle, std::pair < int, int > center) {
-        eng::Vec3 coord_center1 = (*scene)[center.first].get_mesh_center(center.second, 0);
-        eng::Vec3 coord_center2 = (*scene)[center.first].get_mesh_center(center.second, 1);
+        eng::Vec3 coord_center1 = (*scene).objects[center.first].get_mesh_center(center.second, 0);
+        eng::Vec3 coord_center2 = (*scene).objects[center.first].get_mesh_center(center.second, 1);
         eng::Line center_line(coord_center1, coord_center2);
-        std::vector < eng::Vec3 > coords = (*scene)[triangle.first].get_mesh_positions(triangle.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene).objects[triangle.first].get_mesh_positions(triangle.second, 0);
 
         for (eng::Vec3& el : coords)
             el = center_line.symmetry(el);
@@ -105,9 +105,9 @@ class Triangle : public RenderObject {
     }
 
     void update_plane_symmetry(std::pair < int, int > triangle, std::pair < int, int > center) {
-        std::vector < eng::Vec3 > center_coords = (*scene)[center.first].get_mesh_positions(center.second, 0);
+        std::vector < eng::Vec3 > center_coords = (*scene).objects[center.first].get_mesh_positions(center.second, 0);
         eng::Plane center_plane(center_coords);
-        std::vector < eng::Vec3 > coords = (*scene)[triangle.first].get_mesh_positions(triangle.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene).objects[triangle.first].get_mesh_positions(triangle.second, 0);
 
         std::reverse(coords.begin(), coords.end());
         for (eng::Vec3& el : coords)
@@ -117,10 +117,10 @@ class Triangle : public RenderObject {
     }
 
     void update_translate(std::pair < int, int > triangle, std::pair < int, int > start, std::pair < int, int > end) {
-        eng::Vec3 start_coord = (*scene)[start.first].get_center(start.second);
-        eng::Vec3 end_coord = (*scene)[end.first].get_center(end.second);
+        eng::Vec3 start_coord = (*scene).objects[start.first].get_center(start.second);
+        eng::Vec3 end_coord = (*scene).objects[end.first].get_center(end.second);
         eng::Vec3 translate = end_coord - start_coord;
-        std::vector < eng::Vec3 > coords = (*scene)[triangle.first].get_mesh_positions(triangle.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene).objects[triangle.first].get_mesh_positions(triangle.second, 0);
 
         for (eng::Vec3& el : coords)
             el += translate;
@@ -129,8 +129,8 @@ class Triangle : public RenderObject {
     }
 
     RenderObject* intersect_cut(std::vector < eng::Vec3 > triangle, RenderObject* cut) {
-        eng::Vec3 coord1 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 0);
-        eng::Vec3 coord2 = (*scene)[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 1);
+        eng::Vec3 coord1 = (*scene).objects[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 0);
+        eng::Vec3 coord2 = (*scene).objects[cut->scene_id.first].get_mesh_center(cut->scene_id.second, 1);
         eng::Cut cut_ot(coord1, coord2);
         eng::Plane plane(triangle);
 
@@ -149,8 +149,8 @@ class Triangle : public RenderObject {
     }
 
     RenderObject* intersect_line(std::vector < eng::Vec3 > triangle, RenderObject* line) {
-        eng::Vec3 coord1 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 0);
-        eng::Vec3 coord2 = (*scene)[line->scene_id.first].get_mesh_center(line->scene_id.second, 1);
+        eng::Vec3 coord1 = (*scene).objects[line->scene_id.first].get_mesh_center(line->scene_id.second, 0);
+        eng::Vec3 coord2 = (*scene).objects[line->scene_id.first].get_mesh_center(line->scene_id.second, 1);
         eng::Line line_ot(coord1, coord2);
         eng::Plane plane(triangle);
 
@@ -169,7 +169,7 @@ class Triangle : public RenderObject {
     }
 
     RenderObject* intersect_plane(std::vector < eng::Vec3 > triangle, RenderObject* plane) {
-        std::vector < eng::Vec3 > coords = (*scene)[plane->scene_id.first].get_mesh_positions(plane->scene_id.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene).objects[plane->scene_id.first].get_mesh_positions(plane->scene_id.second, 0);
         eng::Plane plane_ot(coords);
         eng::Plane plane_cur(triangle);
 
@@ -219,21 +219,21 @@ public:
 
     void switch_hide() {
         if (!hide) {
-            (*scene)[scene_id.first].meshes.apply_func([](auto& mesh) { mesh.material.set_alpha(0.25); });
-            (*scene)[scene_id.first].transparent = true;
+            (*scene).objects[scene_id.first].meshes.apply_func([](auto& mesh) { mesh.material.set_alpha(0.25); });
+            (*scene).objects[scene_id.first].transparent = true;
         }
         else {
-            (*scene)[scene_id.first].meshes.apply_func([](auto& mesh) { mesh.material.set_alpha(1); });
-            (*scene)[scene_id.first].transparent = false;
+            (*scene).objects[scene_id.first].meshes.apply_func([](auto& mesh) { mesh.material.set_alpha(1); });
+            (*scene).objects[scene_id.first].transparent = false;
         }
         hide ^= 1;
     }
 
     void set_border(bool flag) {
         if (flag) {
-            (*scene)[scene_id.first].border_mask = 0b100;
+            (*scene).objects[scene_id.first].border_mask = 0b100;
         } else {
-            (*scene)[scene_id.first].border_mask = 0;
+            (*scene).objects[scene_id.first].border_mask = 0;
         }
     }
 
@@ -256,7 +256,7 @@ public:
         if (obj->get_type() > type)
             return obj->intersect(this);
 
-        std::vector < eng::Vec3 > coords = (*scene)[scene_id.first].get_mesh_positions(scene_id.second, 0);
+        std::vector < eng::Vec3 > coords = (*scene).objects[scene_id.first].get_mesh_positions(scene_id.second, 0);
 
         if (obj->get_type() == 1)
             return intersect_cut(coords, obj);

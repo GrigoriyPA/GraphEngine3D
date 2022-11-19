@@ -1,9 +1,8 @@
 #pragma once
 
-#include <unordered_map>
 #include "Camera.h"
+#include "GraphObjectStorage.h"
 #include "../GraphicClasses/Kernel.h"
-#include "../GraphObjects/GraphObject.h"
 #include "../Light/Light.h"
 
 
@@ -51,7 +50,6 @@ namespace eng {
 		size_t shadow_height_ = 1024;
 
 		std::vector<Light*> lights_;
-		std::unordered_map<size_t, GraphObject> objects_;
 		Shader<size_t> main_shader_;
 		Shader<size_t> depth_shader_;
 		Shader<size_t> post_shader_;
@@ -187,7 +185,7 @@ namespace eng {
 
 		void draw_objects() const {
 			std::vector<TransparentObject> transparent_objects;
-			for (const auto& [object_id, object] : objects_) {
+			for (const auto& [object_id, object] : objects) {
 				if (object.transparent) {
 					for (const auto& [model_id, model] : object.models) {
 						transparent_objects.emplace_back(camera.position, &object, object_id, model_id);
@@ -219,7 +217,7 @@ namespace eng {
 
 				depth_shader_.set_uniform_matrix("light_space", lights_[i]->get_light_space_matrix());
 				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, static_cast<GLint>(depth_map_texture_id_), 0, static_cast<GLint>(i));
-				for (const auto& [id, object] : objects_) {
+				for (const auto& [id, object] : objects) {
 					object.draw_depth_map();
 				}
 			}
@@ -335,6 +333,7 @@ namespace eng {
 			size_t model_id = 0;
 		};
 
+		GraphObjectStorage objects;
 		Camera camera;
 
 		explicit GraphEngine(sf::RenderWindow* window) : camera(window) {
@@ -376,8 +375,8 @@ namespace eng {
 			border_color_ = other.border_color_;
 			clear_color_ = other.clear_color_;
 			lights_ = other.lights_;
-			objects_ = other.objects_;
 			kernel_ = other.kernel_;
+			objects = other.objects;
 			camera = other.camera;
 
 			main_shader_ = other.main_shader_;
@@ -389,7 +388,7 @@ namespace eng {
 			create_buffers();
 		}
 
-		GraphEngine(GraphEngine&& other) : camera(other.window_) {
+		GraphEngine(GraphEngine&& other) noexcept : camera(other.window_) {
 			swap(other);
 		}
 
@@ -399,26 +398,10 @@ namespace eng {
 			return *this;
 		}
 
-		GraphEngine& operator=(GraphEngine&& other)& {
+		GraphEngine& operator=(GraphEngine&& other)& noexcept {
 			deallocate();
 			swap(other);
 			return *this;
-		}
-
-		GraphObject& operator[](size_t object_id) {
-			if (objects_.count(object_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
-			}
-
-			return objects_[object_id];
-		}
-
-		const GraphObject& operator[](size_t object_id) const {
-			if (objects_.count(object_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
-			}
-
-			return objects_.at(object_id);
 		}
 
 		GraphEngine& set_grayscale(bool grayscale) {
@@ -563,7 +546,7 @@ namespace eng {
 
 			intersect_point = camera.convert_point(Vec3(2.0 * check_point_ - Vec2(1.0), distance));
 
-			if (data_int[0] < 0 || data_int[1] < 0 || objects_.count(data_int[0]) == 0 || !objects_.at(data_int[0]).models.contains_memory(data_int[1])) {
+			if (data_int[0] < 0 || data_int[1] < 0 || !objects.contains(data_int[0]) || !objects[data_int[0]].models.contains_memory(data_int[1])) {
 				return ObjectDesc();
 			}
 			return { true, static_cast<size_t>(data_int[0]), static_cast<size_t>(data_int[1]) };
@@ -578,7 +561,7 @@ namespace eng {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			if (data_int[0] < 0 || data_int[1] < 0 || objects_.count(data_int[0]) == 0 || !objects_.at(data_int[0]).models.contains_memory(data_int[1])) {
+			if (data_int[0] < 0 || data_int[1] < 0 || !objects.contains(data_int[0]) || !objects[data_int[0]].models.contains_memory(data_int[1])) {
 				return ObjectDesc();
 			}
 			return { true, static_cast<size_t>(data_int[0]), static_cast<size_t>(data_int[1]) };
@@ -597,8 +580,8 @@ namespace eng {
 			std::swap(border_color_, other.border_color_);
 			std::swap(clear_color_, other.clear_color_);
 			std::swap(lights_, other.lights_);
-			std::swap(objects_, other.objects_);
 			std::swap(kernel_, other.kernel_);
+			objects.swap(other.objects);
 			std::swap(camera, other.camera);
 
 			main_shader_.swap(other.main_shader_);
@@ -613,39 +596,6 @@ namespace eng {
 			std::swap(depth_map_frame_buffer_, other.depth_map_frame_buffer_);
 			std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
 			init_gl();
-		}
-
-		size_t add_object(const GraphObject& object) {
-			size_t free_object_id = 0;
-			for (; objects_.count(free_object_id) == 1; ++free_object_id) {}
-
-			objects_[free_object_id] = object;
-			return free_object_id;
-		}
-
-		bool delete_object(size_t object_id, size_t model_id) {
-			if (objects_.count(object_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "delete_object, invalid object id.\n\n");
-			}
-			if (!objects_[object_id].models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "delete_object, invalid model id.\n\n");
-			}
-
-			objects_[object_id].models.erase(model_id);
-			if (objects_[object_id].models.empty()) {
-				objects_.erase(object_id);
-				return true;
-			}
-			return false;
-		}
-
-		GraphEngine& delete_object(size_t object_id) {
-			if (objects_.count(object_id) == 0) {
-				throw EngOutOfRange(__FILE__, __LINE__, "delete_object, invalid object id.\n\n");
-			}
-
-			objects_.erase(object_id);
-			return *this;
 		}
 
 		void draw() const {

@@ -33,7 +33,7 @@ void screenshot(sf::RenderWindow& window) {
 signed main() {
     try {
         sf::RenderWindow window(sf::VideoMode::getFullscreenModes()[0], "Editor", sf::Style::None);
-        window.setVerticalSyncEnabled(true);
+        //window.setVerticalSyncEnabled(true);
 
         int window_width = window.getSize().x, window_height = window.getSize().y;
 
@@ -93,13 +93,13 @@ signed main() {
         light.shadow = true;
         scene.set_light(1, &light);
         //scene.add_object(light.get_shadow_box());
-        scene.add_object(light.get_light_object());
+        scene.objects.insert(light.get_light_object());
 
         RenderingSequence render(&scene);
 
-        int obj_id = scene.add_object(eng::GraphObject(1));
-        scene[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
-        int model_id = scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vec3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vec3(0, 1, 0), eng::PI));
+        int obj_id = scene.objects.insert(eng::GraphObject(1));
+        scene.objects[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
+        int model_id = scene.objects[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vec3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vec3(0, 1, 0), eng::PI));
         render.add_object(new Object({ obj_id, model_id }, &scene));
         //scene[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
         //scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(-1, 1, 1) * 0.03));
@@ -116,7 +116,7 @@ signed main() {
         eng::GraphObject obj(1);
         obj.meshes.insert(mesh);
         obj.models.insert(eng::Matrix::translation_matrix(eng::Vec3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
-        scene.add_object(obj);
+        scene.objects.insert(obj);
 
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {

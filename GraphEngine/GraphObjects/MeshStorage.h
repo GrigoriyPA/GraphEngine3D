@@ -13,6 +13,21 @@ namespace eng {
 		std::vector<size_t> free_mesh_id_;
 		std::vector<std::pair<size_t, Mesh>> meshes_;
 
+		MeshStorage() noexcept {
+		}
+
+		MeshStorage(const MeshStorage& other) {
+			meshes_index_ = other.meshes_index_;
+			free_mesh_id_ = other.free_mesh_id_;
+			meshes_ = other.meshes_;
+
+			set_matrix_buffer(other.matrix_buffer_);
+		}
+
+		MeshStorage(MeshStorage&& other) noexcept {
+			swap(other);
+		}
+
 		void set_mesh_matrix_buffer(Mesh& mesh) const {
 			if (matrix_buffer_ == 0) {
 				return;
@@ -46,7 +61,22 @@ namespace eng {
 			}
 		}
 
-		MeshStorage() {
+		void swap(MeshStorage& other) noexcept {
+			std::swap(matrix_buffer_, other.matrix_buffer_);
+			std::swap(meshes_index_, other.meshes_index_);
+			std::swap(free_mesh_id_, other.free_mesh_id_);
+			std::swap(meshes_, other.meshes_);
+		}
+
+		MeshStorage& operator=(const MeshStorage& other)& {
+			MeshStorage object(other);
+			swap(object);
+			return *this;
+		}
+
+		MeshStorage& operator=(MeshStorage&& other)& noexcept {
+			swap(other);
+			return *this;
 		}
 
 	public:
