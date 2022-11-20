@@ -116,7 +116,7 @@ namespace eng {
 			free_object_id_.push_back(id);
 
 			objects_index_[objects_.back().first] = objects_index_[id];
-			objects_[objects_index_[id]].swap(objects_.back());
+			std::swap(objects_[objects_index_[id]], objects_.back());
 
 			objects_.pop_back();
 			objects_index_[id] = std::numeric_limits<size_t>::max();

@@ -209,7 +209,7 @@ public:
 
 		object_id[std::make_pair(-1, -1)] = -1;
 
-		temp_point = scene->camera.position + scene->camera.get_direction() * point_distance;
+		temp_point = scene->cameras[0].position + scene->cameras[0].get_direction() * point_distance;
 		add_object(new Point(temp_point, scene));
 		objects[0]->switch_visibility();
 	}
@@ -386,12 +386,12 @@ public:
 			active_object = object_id[{obj_id.object_id, obj_id.model_id}];
 		}
 
-		eng::Matrix trans = eng::Matrix::translation_matrix(scene->camera.get_change_vector(stable_point));
+		eng::Matrix trans = eng::Matrix::translation_matrix(scene->cameras[0].get_change_vector(stable_point));
 		stable_point = trans * stable_point;
-		scene->camera.update();
+		scene->cameras[0].update();
 
 		double delt = pow(SCROLL_SENSITIVITY, scroll);
-		eng::Vec3 new_point = (stable_point - scene->camera.position) * delt + scene->camera.position;
+		eng::Vec3 new_point = (stable_point - scene->cameras[0].position) * delt + scene->cameras[0].position;
 		trans = trans * eng::Matrix::translation_matrix(new_point - stable_point);
 		stable_point = new_point;
 		scroll = 0;
@@ -404,7 +404,7 @@ public:
 		}
 
 		if (input_state == 1) {
-			eng::Vec3 new_temp_point = scene->camera.position + scene->camera.get_direction() * point_distance;
+			eng::Vec3 new_temp_point = scene->cameras[0].position + scene->cameras[0].get_direction() * point_distance;
 			if ((new_temp_point - temp_point).length() > eps)
 				objects[0]->move(eng::Matrix::translation_matrix(new_temp_point - temp_point));
 			temp_point = new_temp_point;

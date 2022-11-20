@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../CommonClasses/Matrix.h"
+#include "../GraphicClasses/Shader.h"
 
 
 namespace eng {
@@ -13,7 +13,7 @@ namespace eng {
 		double fov_;
 		double min_distance_;
 		double max_distance_;
-		double screen_ratio_;
+		Vec2 viewport_size_;
 		Vec3 direction_;
 		Vec3 horizont_;
 		Vec3 last_position_;
@@ -22,11 +22,11 @@ namespace eng {
 		sf::RenderWindow* window_;
 
 		void set_projection_matrix() {
-			if (equality(tan(fov_ / 2.0), 0.0, eps_) || equality(max_distance_, min_distance_, eps_) || equality(max_distance_ + min_distance_, 0.0, eps_)) {
+			if (equality(tan(fov_ / 2.0), 0.0, eps_) || equality(max_distance_, min_distance_, eps_) || equality(max_distance_ + min_distance_, 0.0, eps_) || equality(viewport_size_.y, 0.0, eps_)) {
 				throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
 			}
 
-			projection_ = Matrix::scale_matrix(Vec3(1.0 / tan(fov_ / 2.0), screen_ratio_ / tan(fov_ / 2.0), (max_distance_ + min_distance_) / (max_distance_ - min_distance_)));
+			projection_ = Matrix::scale_matrix(Vec3(1.0 / tan(fov_ / 2.0), viewport_size_.x / (viewport_size_.y * tan(fov_ / 2.0)), (max_distance_ + min_distance_) / (max_distance_ - min_distance_)));
 			projection_ *= Matrix::translation_matrix(Vec3(0.0, 0.0, -2.0 * max_distance_ * min_distance_ / (max_distance_ + min_distance_)));
 			projection_[3][3] = 0.0;
 			projection_[3][2] = 1.0;
@@ -39,34 +39,35 @@ namespace eng {
 		double rotation_speed = 0.0;
 		double speed_delt = 0.0;
 
+		Vec2 viewport_position;
 		Vec3 position;
 
 		explicit Camera(sf::RenderWindow* window) : projection_(4, 4) {
 			fov_ = PI / 2.0;
 			min_distance_ = 1.0;
 			max_distance_ = 2.0;
-			screen_ratio_ = 1.0;
 
 			direction_ = Vec3(0, 0, 1);
 			last_position_ = Vec3(0.0, 0.0, 0.0);
 			window_ = window;
 
+			viewport_size_ = Vec2(window->getSize().x, window->getSize().y);
 			horizont_ = direction_.horizont();
+			viewport_position = Vec2(0.0);
 			position = last_position_;
 
 			set_projection_matrix();
 		}
 
-		// screen_ratio = screen_width / screen_height
-		Camera(sf::RenderWindow* window, const Vec3& position, const Vec3& direction, double fov, double min_distance, double max_distance, double screen_ratio) : projection_(4, 4) {
+		Camera(sf::RenderWindow* window, const Vec2& viewport_position, const Vec2& viewport_size, const Vec3& position, const Vec3& direction, double fov, double min_distance, double max_distance) : projection_(4, 4) {
 			if (less_equality(fov, 0.0, eps_) || less_equality(PI, fov, eps_)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid FOV value.\n\n");
 			}
 			if (less_equality(min_distance, 0.0, eps_) || less_equality(max_distance, min_distance, eps_)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid distance value.\n\n");
 			}
-			if (less_equality(screen_ratio, 0.0, eps_)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid screen ratio value.\n\n");
+			if (less_equality(viewport_size.x, 0.0, eps_) || less_equality(viewport_size.y, 0.0, eps_)) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid viewport size.\n\n");
 			}
 			
 			try {
@@ -79,14 +80,29 @@ namespace eng {
 			fov_ = fov;
 			min_distance_ = min_distance;
 			max_distance_ = max_distance;
-			screen_ratio_ = screen_ratio;
+			viewport_size_ = viewport_size;
 			window_ = window;
+			this->viewport_position = viewport_position;
 			this->position = position;
 
 			horizont_ = direction.horizont();
 			last_position_ = position;
 
 			set_projection_matrix();
+		}
+
+		void set_viewport() const {
+			glViewport(static_cast<GLint>(viewport_position.x), static_cast<GLint>(viewport_position.y), static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		void set_uniforms(const Shader<size_t>& shader) const {
+			if (shader.description != ShaderType::MAIN) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+			}
+
+			shader.set_uniform_f("view_pos", position);
+			shader.set_uniform_matrix("view", get_view_matrix());
 		}
 
 		Camera& set_fov(double fov) {
@@ -110,13 +126,12 @@ namespace eng {
 			return *this;
 		}
 
-		// screen_ratio = screen_width / screen_height
-		Camera& set_screen_ratio(double screen_ratio) {
-			if (less_equality(screen_ratio, 0.0, eps_)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_screen_ratio, invalid screen ratio value.\n\n");
+		Camera& set_viewport_size(const Vec2& viewport_size) {
+			if (less_equality(viewport_size.x, 0.0, eps_) || less_equality(viewport_size.y, 0.0, eps_)) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_viewport_size, invalid viewport size.\n\n");
 			}
 
-			screen_ratio_ = screen_ratio;
+			viewport_size_ = viewport_size;
 			set_projection_matrix();
 			return *this;
 		}
@@ -149,8 +164,8 @@ namespace eng {
 			return max_distance_;
 		}
 
-		double get_screen_ratio() const noexcept {
-			return screen_ratio_;
+		Vec2 get_viewport_size() const noexcept {
+			return viewport_size_;
 		}
 
 		Vec3 get_direction() const noexcept {
@@ -282,12 +297,12 @@ namespace eng {
 				throw EngInvalidArgument(__FILE__, __LINE__, "convert_point, invalid point coordinate.\n\n");
 			}
 
-			if (equality(screen_ratio_, 0.0, eps_)) {
+			if (equality(viewport_size_.y, 0.0, eps_)) {
 				throw EngDomainError(__FILE__, __LINE__, "convert_point, invalid matrix settings.\n\n");
 			}
 
 			double tg = tan(fov_ / 2.0);
-			return Matrix(horizont_, get_vertical(), direction_) * Vec3(tg * point.x, (tg / screen_ratio_) * point.y, max_distance_ * min_distance_ / divisor) + position;
+			return Matrix(horizont_, get_vertical(), direction_) * Vec3(tg * point.x, (tg * viewport_size_.y / viewport_size_.x) * point.y, max_distance_ * min_distance_ / divisor) + position;
 		}
 
 		static void set_epsilon(double eps) {

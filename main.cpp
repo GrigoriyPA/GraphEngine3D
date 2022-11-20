@@ -62,19 +62,26 @@ signed main() {
         scene.set_clear_color(eng::Vec3(INTERFACE_MAIN_COLOR) / 255.0);
         scene.set_border_color(eng::Vec3(INTERFACE_ADD_COLOR) / 255.0);
         scene.set_check_point(cross_position);
-        scene.camera.set_fov(FOV);
-        scene.camera.set_distance(MIN_DIST, MAX_DIST);
-        scene.camera.sensitivity = SENSITIVITY;
-        scene.camera.speed = SPEED;
-        scene.camera.rotation_speed = ROTATION_SPEED;
-        scene.camera.speed_delt = SPEED_DELT;
+        scene.cameras[0].set_fov(FOV);
+        scene.cameras[0].set_distance(MIN_DIST, MAX_DIST);
+        scene.cameras[0].sensitivity = SENSITIVITY;
+        scene.cameras[0].speed = SPEED;
+        scene.cameras[0].rotation_speed = ROTATION_SPEED;
+        scene.cameras[0].speed_delt = SPEED_DELT;
+        scene.cameras[0].set_viewport_size(eng::Vec2(window.getSize().x / 2, window.getSize().y));
+        scene.cameras[0].viewport_position = eng::Vec2(window.getSize().x / 2, 0);
 
-        double ratio = scene.camera.get_screen_ratio();
+        scene.cameras.insert(eng::Camera(scene.cameras[0]));
+        scene.cameras[1].viewport_position = eng::Vec2(0, 0);
+
+        double ratio = scene.cameras[0].get_viewport_size().x / scene.cameras[0].get_viewport_size().y;
         double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
         eng::SpotLight spot_light(eng::Vec3(0, 0, 0), eng::Vec3(0, 0, 1), angle, 1.1 * angle);
         spot_light.set_diffuse(eng::Vec3(0.6, 0.6, 0.6));
         spot_light.set_specular(eng::Vec3(0.8, 0.8, 0.8));
         spot_light.set_quadratic(0.1);
+        spot_light.shadow = true;
+        spot_light.set_shadow_distance(1, 100);
         int spot_light_id = scene.lights.insert(&spot_light);
 
         /*eng::DirLight light(eng::Vec3(1, -1, 1));
@@ -101,6 +108,7 @@ signed main() {
         scene.objects[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
         int model_id = scene.objects[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(-1, 1, 1)) * eng::Matrix::translation_matrix(eng::Vec3(0, -0.5, 5)) * eng::Matrix::rotation_matrix(eng::Vec3(0, 1, 0), eng::PI));
         render.add_object(new Object({ obj_id, model_id }, &scene));
+        scene.objects[obj_id].border_mask = 1;
         //scene[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
         //scene[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(-1, 1, 1) * 0.03));
 
@@ -118,6 +126,18 @@ signed main() {
         obj.models.insert(eng::Matrix::translation_matrix(eng::Vec3(0, -1.5, 5)) * eng::Matrix::scale_matrix(10));
         scene.objects.insert(obj);
 
+        obj = eng::GraphObject(2);
+        //obj.importFromFile("Resources/Objects/anime/juicy/zero_suit_samus_fan_art_alt_pose.glb");
+        obj.importFromFile("Resources/Objects/Amogus/amogus_legs.glb");
+        obj.meshes.apply_func([](eng::Mesh& m) {
+            m.material.use_vertex_color = true;
+        });
+        obj_id = scene.objects.insert(obj);
+        //scene.objects[sphere_id].models.insert(eng::Matrix::translation_matrix(eng::Vec3(0, -0.2, -0.2)) * eng::Matrix::scale_matrix(eng::Vec3(-0.2, 0.2, 0.2)));
+        //scene.objects[sphere_id].models.insert(eng::Matrix::translation_matrix(eng::Vec3(0, -0.2, -0.2)) * eng::Matrix::scale_matrix(eng::Vec3(-0.2, 0.2, 0.2)));
+        model_id = scene.objects[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(0.2, 0.2, -0.2)));
+        scene.objects[obj_id].models.insert(eng::Matrix::scale_matrix(eng::Vec3(0.2, 0.2, -0.2)));
+
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {
                 switch (event.type) {
@@ -128,7 +148,7 @@ signed main() {
 
                 case sf::Event::KeyReleased: {
                     if (event.key.code == sf::Keyboard::Escape) {
-                        scene.camera.switch_active();
+                        scene.cameras[0].switch_active();
                     } else if (event.key.code == sf::Keyboard::F11) {
                         screenshot(window);
                     } else if (event.key.code == sf::Keyboard::F) {
@@ -145,18 +165,20 @@ signed main() {
                 default:
                     break;
                 }
-                scene.camera.compute_event(event);
+                scene.cameras[0].compute_event(event);
                 window_interface.compute_event(event);
                 if (window_interface.view_state == 1)
                     render.compute_event(event, window_interface.get_active_button());
             }
 
             double delta_time = window_interface.update();
-            scene.camera.update(delta_time);
+            scene.cameras[0].update(delta_time);
             render.update(window_interface.get_active_button());
 
-            spot_light.position = scene.camera.position;
-            spot_light.set_direction(scene.camera.get_direction());
+            //scene.objects[sphere_id].models.set(1, scene.cameras[0].get_view_matrix().inverse() * eng::Matrix::translation_matrix(eng::Vec3(0, -0.2, -0.2)) * eng::Matrix::scale_matrix(eng::Vec3(-0.2, 0.2, 0.2)));
+            scene.objects[obj_id].models.set(1, scene.cameras[0].get_view_matrix().inverse() * eng::Matrix::scale_matrix(eng::Vec3(0.2, 0.2, -0.2)));
+            spot_light.position = scene.cameras[0].position;
+            spot_light.set_direction(scene.cameras[0].get_direction());
 
             scene.draw();
 

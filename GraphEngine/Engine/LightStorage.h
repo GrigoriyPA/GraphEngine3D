@@ -101,7 +101,7 @@ namespace eng {
 
 		LightStorage& erase(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
+				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid light id.\n\n");
 			}
 
 			free_light_id_.push_back(id);
@@ -126,17 +126,17 @@ namespace eng {
 				throw EngRuntimeError(__FILE__, __LINE__, "insert, too many lights created.\n\n");
 			}
 
-			size_t free_object_id = lights_index_.size();
+			size_t free_light_id = lights_index_.size();
 			if (free_light_id_.empty()) {
 				lights_index_.push_back(lights_.size());
 			} else {
-				free_object_id = free_light_id_.back();
+				free_light_id = free_light_id_.back();
 				free_light_id_.pop_back();
-				lights_index_[free_object_id] = lights_.size();
+				lights_index_[free_light_id] = lights_.size();
 			}
 
-			lights_.push_back({ free_object_id, light });
-			return free_object_id;
+			lights_.push_back({ free_light_id, light });
+			return free_light_id;
 		}
 	};
 }

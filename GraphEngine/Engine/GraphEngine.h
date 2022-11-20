@@ -1,8 +1,8 @@
 #pragma once
 
-#include "LightStorage.h"
-#include "Camera.h"
+#include "CamerasStorage.h"
 #include "GraphObjectStorage.h"
+#include "LightStorage.h"
 #include "../GraphicClasses/Kernel.h"
 
 
@@ -178,7 +178,7 @@ namespace eng {
 			create_shader_storage_buffer();
 		}
 
-		void draw_objects() const {
+		void draw_objects(const Camera& camera) const {
 			std::vector<TransparentObject> transparent_objects;
 			for (const auto& [object_id, object] : objects) {
 				if (object.transparent) {
@@ -218,34 +218,34 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void draw_primary_frame_buffer() const {
+		void draw_primary_frame_buffer(const Camera& camera) const {
 			glBindFramebuffer(GL_FRAMEBUFFER, primary_frame_buffer_);
-			glViewport(0, 0, static_cast<GLsizei>(window_->getSize().x), static_cast<GLsizei>(window_->getSize().y));
-
+			glViewport(0, 0, static_cast<GLsizei>(camera.get_viewport_size().x), static_cast<GLsizei>(camera.get_viewport_size().y));
+			
 			glStencilMask(0xFF);
 			glStencilFunc(GL_ALWAYS, 0, 0xFF);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 			set_light_uniforms();
-			main_shader_.set_uniform_f("view_pos", camera.position);
-			main_shader_.set_uniform_matrix("view", camera.get_view_matrix());
+			camera.set_uniforms(main_shader_);
 
 			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
-			draw_objects();
+			draw_objects(camera);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void draw_mainbuffer() const {
+		void draw_mainbuffer(const Camera& camera) const {
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glViewport(0, 0, static_cast<GLsizei>(window_->getSize().x), static_cast<GLsizei>(window_->getSize().y));
+			camera.set_viewport();
 
-			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 
 			glBindVertexArray(screen_vertex_array_);
+
+			post_shader_.set_uniform_f("screen_texture_size", camera.get_viewport_size().x / window_->getSize().x, camera.get_viewport_size().y / window_->getSize().y);
 
 			post_shader_.use();
 			glActiveTexture(GL_TEXTURE0);
@@ -327,9 +327,9 @@ namespace eng {
 
 		GraphObjectStorage objects;
 		LightStorage lights;
-		Camera camera;
+		CamerasStorage cameras;
 
-		explicit GraphEngine(sf::RenderWindow* window) : camera(window) {
+		explicit GraphEngine(sf::RenderWindow* window) {
 			window_ = window;
 			set_active();
 
@@ -349,18 +349,16 @@ namespace eng {
 
 			lights.max_count_lights_ = std::stoi(main_shader_.get_value_frag("NR_LIGHTS"));
 
-			camera.set_screen_ratio(static_cast<double>(window->getSize().x) / static_cast<double>(window->getSize().y));
+			cameras.insert(Camera(window));
 
 			init_gl();
 			create_buffers();
 		}
 
-		GraphEngine(const GraphEngine& other) : camera(other.window_) {
+		GraphEngine(const GraphEngine& other) {
 			window_ = other.window_;
 			set_active();
 
-			shadow_width_ = other.shadow_width_;
-			shadow_height_ = other.shadow_height_;
 			grayscale_ = other.grayscale_;
 			border_width_ = other.border_width_;
 			gamma_ = other.gamma_;
@@ -368,9 +366,13 @@ namespace eng {
 			border_color_ = other.border_color_;
 			clear_color_ = other.clear_color_;
 			kernel_ = other.kernel_;
+
+			shadow_width_ = other.shadow_width_;
+			shadow_height_ = other.shadow_height_;
+
 			objects = other.objects;
 			lights = other.lights;
-			camera = other.camera;
+			cameras = other.cameras;
 
 			main_shader_ = other.main_shader_;
 			depth_shader_ = other.depth_shader_;
@@ -381,7 +383,7 @@ namespace eng {
 			create_buffers();
 		}
 
-		GraphEngine(GraphEngine&& other) noexcept : camera(other.window_) {
+		GraphEngine(GraphEngine&& other) noexcept {
 			swap(other);
 		}
 
@@ -508,7 +510,7 @@ namespace eng {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			intersect_point = camera.convert_point(Vec3(2.0 * check_point_ - Vec2(1.0), distance));
+			intersect_point = cameras[0].convert_point(Vec3(2.0 * check_point_ - Vec2(1.0), distance));
 
 			if (data_int[0] < 0 || data_int[1] < 0 || !objects.contains(data_int[0]) || !objects[data_int[0]].models.contains_memory(data_int[1])) {
 				return ObjectDesc();
@@ -535,8 +537,6 @@ namespace eng {
 			std::swap(window_, other.window_);
 			set_active();
 
-			std::swap(shadow_width_, other.shadow_width_);
-			std::swap(shadow_height_, other.shadow_height_);
 			std::swap(grayscale_, other.grayscale_);
 			std::swap(border_width_, other.border_width_);
 			std::swap(gamma_, other.gamma_);
@@ -544,9 +544,13 @@ namespace eng {
 			std::swap(border_color_, other.border_color_);
 			std::swap(clear_color_, other.clear_color_);
 			std::swap(kernel_, other.kernel_);
+
+			std::swap(shadow_width_, other.shadow_width_);
+			std::swap(shadow_height_, other.shadow_height_);
+
 			objects.swap(other.objects);
 			lights.swap(other.lights);
-			std::swap(camera, other.camera);
+			cameras.swap(other.cameras);
 
 			main_shader_.swap(other.main_shader_);
 			depth_shader_.swap(other.depth_shader_);
@@ -565,7 +569,9 @@ namespace eng {
 		void draw() const {
 			set_active();
 
-			main_shader_.set_uniform_matrix("projection", camera.get_projection_matrix());
+			draw_depth_map();
+
+			main_shader_.set_uniform_matrix("projection", cameras[0].get_projection_matrix());
 
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
@@ -577,11 +583,16 @@ namespace eng {
 			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint), sizeof(GLfloat), &init_float);
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glClear(GL_COLOR_BUFFER_BIT);
+
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			draw_depth_map();
-			draw_primary_frame_buffer();
-			draw_mainbuffer();
+			for (const auto& [id, camera] : cameras) {
+				draw_primary_frame_buffer(camera);
+				draw_mainbuffer(camera);
+			}
 		}
 
 		~GraphEngine() {
