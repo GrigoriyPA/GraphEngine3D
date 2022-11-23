@@ -180,6 +180,10 @@ namespace eng {
 		}
 
 		void swap(MatrixLine& other) noexcept {
+			if (line_.size() != other.size()) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "swap, invalid line sizes.\n\n");
+			}
+
 			std::swap(line_, other.line_);
 		}
 

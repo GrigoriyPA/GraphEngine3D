@@ -4,21 +4,187 @@
 
 
 namespace eng {
+	struct ObjectDesc {
+		bool exist = false;
+		size_t object_id = 0;
+		size_t model_id = 0;
+	};
+
 	class CamerasStorage {
 		friend class GraphEngine;
 
+		GLuint shader_storage_buffer_ = 0;
+
+		bool is_actual_ = false;
+		GLint* intersect_id_ = nullptr;
+		GLfloat* intersect_dist_ = nullptr;
+
+		GLint* init_int_ = nullptr;
+		GLfloat* init_float_ = nullptr;
+
+		size_t max_count_cameras_;
 		std::vector<size_t> cameras_index_;
 		std::vector<size_t> free_camera_id_;
 		std::vector<std::pair<size_t, Camera>> cameras_;
 
 		CamerasStorage() noexcept {
+			max_count_cameras_ = 0;
 		}
 
-		CamerasStorage& operator=(const CamerasStorage& other)& noexcept = default;
+		CamerasStorage(const CamerasStorage& other) {
+			max_count_cameras_ = other.max_count_cameras_;
+			cameras_index_ = other.cameras_index_;
+			free_camera_id_ = other.free_camera_id_;
+			cameras_ = other.cameras_;
 
-		CamerasStorage& operator=(CamerasStorage&& other)& noexcept = default;
+			if (max_count_cameras_ > 0) {
+				intersect_id_ = new GLint[2 * max_count_cameras_];
+				intersect_dist_ = new GLfloat[max_count_cameras_];
+				init_int_ = new GLint[2 * max_count_cameras_];
+				init_float_ = new GLfloat[max_count_cameras_];
+				for (size_t i = 0; i < max_count_cameras_; ++i) {
+					init_int_[2 * i] = -1;
+					init_int_[2 * i + 1] = -1;
+					init_float_[i] = 1;
+				}
+			}
+
+			create_shader_storage_buffer(max_count_cameras_);
+
+			glBindBuffer(GL_COPY_READ_BUFFER, other.shader_storage_buffer_);
+			glBindBuffer(GL_COPY_WRITE_BUFFER, shader_storage_buffer_);
+
+			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, (2 * sizeof(GLint) + sizeof(GLfloat)) * max_count_cameras_);
+
+			glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+			glBindBuffer(GL_COPY_READ_BUFFER, 0);
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		CamerasStorage(CamerasStorage&& other) noexcept {
+			swap(other);
+		}
+
+		CamerasStorage& operator=(const CamerasStorage& other)& {
+			CamerasStorage object(other);
+			swap(object);
+			return *this;
+		}
+
+		CamerasStorage& operator=(CamerasStorage&& other)& noexcept {
+			deallocate();
+			swap(other);
+			return *this;
+		}
+
+		ObjectDesc get_check_object(size_t id, Vec3& intersect_point) {
+			if (!contains(id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
+			}
+
+			load_buffer_data();
+
+			const Camera& camera = cameras_[cameras_index_[id]].second;
+			intersect_point = camera.convert_point(intersect_dist_[cameras_index_[id]]);
+
+			GLint object_id = intersect_id_[cameras_index_[id]];
+			GLint model_id = intersect_id_[cameras_index_[id] + max_count_cameras_];
+			return { .exist = true, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
+		}
+
+		ObjectDesc get_check_object(size_t id) {
+			if (!contains(id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
+			}
+
+			load_buffer_data();
+
+			GLint object_id = intersect_id_[cameras_index_[id]];
+			GLint model_id = intersect_id_[cameras_index_[id] + max_count_cameras_];
+			return { .exist = true, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
+		}
+
+		GLuint create_shader_storage_buffer(size_t max_count_cameras) {
+			max_count_cameras_ = max_count_cameras;
+
+			delete[] intersect_id_;
+			delete[] intersect_dist_;
+			delete[] init_int_;
+			delete[] init_float_;
+			intersect_id_ = new GLint[2 * max_count_cameras_];
+			intersect_dist_ = new GLfloat[max_count_cameras_];
+			init_int_ = new GLint[2 * max_count_cameras_];
+			init_float_ = new GLfloat[max_count_cameras_];
+			for (size_t i = 0; i < max_count_cameras_; ++i) {
+				init_int_[2 * i] = -1;
+				init_int_[2 * i + 1] = -1;
+				init_float_[i] = 1;
+			}
+
+			glGenBuffers(1, &shader_storage_buffer_);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
+
+			glBufferData(GL_SHADER_STORAGE_BUFFER, (2 * sizeof(GLint) + sizeof(GLfloat)) * max_count_cameras_, init_int_, GL_DYNAMIC_READ);
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, init_float_);
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+			return shader_storage_buffer_;
+		}
+
+		void load_buffer_data() {
+			if (is_actual_) {
+				return;
+			}
+			is_actual_ = true;
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
+
+			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint) * max_count_cameras_, intersect_id_);
+			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, intersect_dist_);
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		void update_storage() {
+			is_actual_ = false;
+
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
+
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint) * max_count_cameras_, init_int_);
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, init_float_);
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		void deallocate() {
+			glDeleteBuffers(1, &shader_storage_buffer_);
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			delete[] intersect_id_;
+			delete[] intersect_dist_;
+			delete[] init_int_;
+			delete[] init_float_;
+
+			shader_storage_buffer_ = 0;
+			intersect_id_ = nullptr;
+			intersect_dist_ = nullptr;
+			init_int_ = nullptr;
+			init_float_ = nullptr;
+		}
 
 		void swap(CamerasStorage& other) noexcept {
+			std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
+			std::swap(is_actual_, other.is_actual_);
+			std::swap(intersect_id_, other.intersect_id_);
+			std::swap(intersect_dist_, other.intersect_dist_);
+			std::swap(init_int_, other.init_int_);
+			std::swap(init_float_, other.init_float_);
+			std::swap(max_count_cameras_, other.max_count_cameras_);
 			std::swap(cameras_index_, other.cameras_index_);
 			std::swap(free_camera_id_, other.free_camera_id_);
 			std::swap(cameras_, other.cameras_);
@@ -58,6 +224,10 @@ namespace eng {
 			}
 
 			return cameras_[memory_id].first;
+		}
+
+		size_t get_max_count_cameras() const noexcept {
+			return max_count_cameras_;
 		}
 
 		bool contains(size_t id) const noexcept {

@@ -379,19 +379,21 @@ public:
 	}
 
 	void update(std::pair < int, int > cur_active_button) {
+		int cam_id = 0;
+
 		check_active_button(cur_active_button);
-		auto obj_id = scene->get_check_object(intersect_point);
+		auto obj_id = scene->get_check_object(cam_id, intersect_point);
 		active_object = object_id[{-1, -1}];
 		if (obj_id.exist) {
 			active_object = object_id[{obj_id.object_id, obj_id.model_id}];
 		}
 
-		eng::Matrix trans = eng::Matrix::translation_matrix(scene->cameras[0].get_change_vector(stable_point));
+		eng::Matrix trans = eng::Matrix::translation_matrix(scene->cameras[cam_id].get_change_vector(stable_point));
 		stable_point = trans * stable_point;
-		scene->cameras[0].update();
+		scene->cameras[cam_id].update();
 
 		double delt = pow(SCROLL_SENSITIVITY, scroll);
-		eng::Vec3 new_point = (stable_point - scene->cameras[0].position) * delt + scene->cameras[0].position;
+		eng::Vec3 new_point = (stable_point - scene->cameras[cam_id].position) * delt + scene->cameras[cam_id].position;
 		trans = trans * eng::Matrix::translation_matrix(new_point - stable_point);
 		stable_point = new_point;
 		scroll = 0;
@@ -404,7 +406,7 @@ public:
 		}
 
 		if (input_state == 1) {
-			eng::Vec3 new_temp_point = scene->cameras[0].position + scene->cameras[0].get_direction() * point_distance;
+			eng::Vec3 new_temp_point = scene->cameras[cam_id].position + scene->cameras[cam_id].get_direction() * point_distance;
 			if ((new_temp_point - temp_point).length() > eps)
 				objects[0]->move(eng::Matrix::translation_matrix(new_temp_point - temp_point));
 			temp_point = new_temp_point;

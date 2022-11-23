@@ -8,6 +8,7 @@ namespace eng {
 		inline static double eps_ = 1e-5;
 
 		uint8_t active_state_ = 0;
+		Vec2 check_point_ = Vec2(0.0);
 		Matrix change_matrix_ = Matrix::one_matrix(4);
 
 		double fov_;
@@ -91,9 +92,15 @@ namespace eng {
 			set_projection_matrix();
 		}
 
-		void set_viewport() const {
-			glViewport(static_cast<GLint>(viewport_position.x), static_cast<GLint>(viewport_position.y), static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
+		void set_viewport(const Shader<size_t>& shader) const {
+			if (shader.description != ShaderType::POST) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_viewport, invalid shader type.\n\n");
+			}
+
+			glViewport(static_cast<GLint>(viewport_position.x), static_cast<GLint>(window_->getSize().y - viewport_size_.y - viewport_position.y), static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
 			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			shader.set_uniform_f("screen_texture_size", viewport_size_.x / window_->getSize().x, viewport_size_.y / window_->getSize().y);
 		}
 
 		void set_uniforms(const Shader<size_t>& shader) const {
@@ -101,8 +108,23 @@ namespace eng {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
 
+			glViewport(0, 0, static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
+			check_gl_errors(__FILE__, __LINE__, __func__);
+
+			
+			shader.set_uniform_f("check_point", static_cast<GLfloat>(check_point_.x * viewport_size_.x), static_cast<GLfloat>(check_point_.y * viewport_size_.y));
 			shader.set_uniform_f("view_pos", position);
 			shader.set_uniform_matrix("view", get_view_matrix());
+			shader.set_uniform_matrix("projection", projection_);
+		}
+
+		Camera& set_check_point(const Vec2& point) {
+			if (point.x < 0.0 || 1.0 < point.x || point.y < 0.0 || 1.0 < point.y) {
+				throw EngInvalidArgument(__FILE__, __LINE__, "set_check_point, invalid point coordinate.\n\n");
+			}
+
+			check_point_ = Vec2(point.x, 1.0 - point.y);
+			return *this;
 		}
 
 		Camera& set_fov(double fov) {
@@ -146,6 +168,10 @@ namespace eng {
 
 			horizont_ = direction.horizont();
 			return *this;
+		}
+
+		Vec2 get_check_point() const noexcept {
+			return check_point_;
 		}
 
 		Matrix get_change_matrix() const noexcept {
@@ -291,8 +317,8 @@ namespace eng {
 			}
 		}
 
-		Vec3 convert_point(const Vec3& point) const {
-			double divisor = max_distance_ - point.z * (max_distance_ - min_distance_);
+		Vec3 convert_point(double distance) const {
+			double divisor = max_distance_ - distance * (max_distance_ - min_distance_);
 			if (equality(divisor, 0.0, eps_)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "convert_point, invalid point coordinate.\n\n");
 			}
@@ -302,7 +328,8 @@ namespace eng {
 			}
 
 			double tg = tan(fov_ / 2.0);
-			return Matrix(horizont_, get_vertical(), direction_) * Vec3(tg * point.x, (tg * viewport_size_.y / viewport_size_.x) * point.y, max_distance_ * min_distance_ / divisor) + position;
+			double z_coord = max_distance_* min_distance_ / divisor;
+			return Matrix(horizont_, get_vertical(), direction_) * Vec3(z_coord * tg * (2.0 * check_point_.x - 1.0), (z_coord * tg * viewport_size_.y / viewport_size_.x) * (2.0 * check_point_.y - 1.0), z_coord) + position;
 		}
 
 		static void set_epsilon(double eps) {

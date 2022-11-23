@@ -36,12 +36,10 @@ namespace eng {
 		GLuint primary_frame_buffer_ = 0;
 		GLuint depth_map_texture_id_ = 0;
 		GLuint depth_map_frame_buffer_ = 0;
-		GLuint shader_storage_buffer_ = 0;
 
 		bool grayscale_ = false;
-		uint32_t border_width_ = 7; 
+		uint32_t border_width_ = 7;
 		double gamma_ = 2.2;
-		Vec2 check_point_ = Vec2(0.0);
 		Vec3 border_color_ = Vec3(0.0);
 		Vec3 clear_color_ = Vec3(0.0);
 		Kernel kernel_ = Kernel();
@@ -65,8 +63,7 @@ namespace eng {
 			main_shader_.set_uniform_i("specular_map", 1);
 			main_shader_.set_uniform_i("emission_map", 2);
 			main_shader_.set_uniform_f("gamma", static_cast<GLfloat>(gamma_));
-			main_shader_.set_uniform_f("check_point", static_cast<GLfloat>(check_point_.x * window_->getSize().x), static_cast<GLfloat>(check_point_.y * window_->getSize().y));
-
+			
 			post_shader_.set_uniform_i("screen_texture", 0);
 			post_shader_.set_uniform_i("stencil_texture", 1);
 			post_shader_.set_uniform_i("grayscale", grayscale_);
@@ -158,26 +155,6 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void create_shader_storage_buffer() {
-			glGenBuffers(1, &shader_storage_buffer_);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
-
-			GLint init_int[2] = { -1, -1 };
-			GLfloat init_float = 1;
-			glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) + sizeof(GLfloat), &init_int, GL_DYNAMIC_READ);
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint), sizeof(GLfloat), &init_float);
-
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		void create_buffers() {
-			create_screen_vertex_array();
-			create_primary_frame_buffer();
-			create_depth_map_frame_buffer();
-			create_shader_storage_buffer();
-		}
-
 		void draw_objects(const Camera& camera) const {
 			std::vector<TransparentObject> transparent_objects;
 			for (const auto& [object_id, object] : objects) {
@@ -203,13 +180,12 @@ namespace eng {
 			glBindFramebuffer(GL_FRAMEBUFFER, depth_map_frame_buffer_);
 			glViewport(0, 0, static_cast<GLsizei>(shadow_width_), static_cast<GLsizei>(shadow_height_));
 
-			for (const auto& [id, light] : lights) {
-				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, static_cast<GLint>(depth_map_texture_id_), 0, static_cast<GLint>(lights.get_memory_id(id)));
-				
+			for (const auto& [light_id, light] : lights) {
+				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, static_cast<GLint>(depth_map_texture_id_), 0, static_cast<GLint>(lights.get_memory_id(light_id)));
 				glClear(GL_DEPTH_BUFFER_BIT);
 
 				depth_shader_.set_uniform_matrix("light_space", light->get_light_space_matrix());
-				for (const auto& [id, object] : objects) {
+				for (const auto& [object_id, object] : objects) {
 					object.draw_depth_map();
 				}
 			}
@@ -220,14 +196,11 @@ namespace eng {
 
 		void draw_primary_frame_buffer(const Camera& camera) const {
 			glBindFramebuffer(GL_FRAMEBUFFER, primary_frame_buffer_);
-			glViewport(0, 0, static_cast<GLsizei>(camera.get_viewport_size().x), static_cast<GLsizei>(camera.get_viewport_size().y));
+			camera.set_uniforms(main_shader_);
 			
 			glStencilMask(0xFF);
 			glStencilFunc(GL_ALWAYS, 0, 0xFF);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-			set_light_uniforms();
-			camera.set_uniforms(main_shader_);
 
 			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
 			draw_objects(camera);
@@ -239,15 +212,12 @@ namespace eng {
 
 		void draw_mainbuffer(const Camera& camera) const {
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			camera.set_viewport();
+			camera.set_viewport(post_shader_);
 
 			glDisable(GL_DEPTH_TEST);
 
 			glBindVertexArray(screen_vertex_array_);
 
-			post_shader_.set_uniform_f("screen_texture_size", camera.get_viewport_size().x / window_->getSize().x, camera.get_viewport_size().y / window_->getSize().y);
-
-			post_shader_.use();
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
 			glActiveTexture(GL_TEXTURE1);
@@ -269,7 +239,6 @@ namespace eng {
 		void deallocate() {
 			glDeleteFramebuffers(1, &primary_frame_buffer_);
 			glDeleteFramebuffers(1, &depth_map_frame_buffer_);
-			glDeleteBuffers(1, &shader_storage_buffer_);
 			glDeleteTextures(1, &screen_texture_id_);
 			glDeleteTextures(1, &depth_stencil_texture_id_);
 			glDeleteTextures(1, &depth_map_texture_id_);
@@ -277,7 +246,6 @@ namespace eng {
 
 			primary_frame_buffer_ = 0;
 			depth_map_frame_buffer_ = 0;
-			shader_storage_buffer_ = 0;
 			screen_texture_id_ = 0;
 			depth_stencil_texture_id_ = 0;
 			depth_map_texture_id_ = 0;
@@ -319,12 +287,6 @@ namespace eng {
 		}
 
 	public:
-		struct ObjectDesc {
-			bool exist = false;
-			size_t object_id = 0;
-			size_t model_id = 0;
-		};
-
 		GraphObjectStorage objects;
 		LightStorage lights;
 		CamerasStorage cameras;
@@ -340,19 +302,21 @@ namespace eng {
 			depth_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth", eng::ShaderType::DEPTH);
 			post_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post", eng::ShaderType::POST);
 			main_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main", eng::ShaderType::MAIN);
-			set_uniforms();
 			
 			const sf::ContextSettings& settings = window->getSettings();
 			if (!depth_shader_.check_window_settings(settings) || !post_shader_.check_window_settings(settings) || !main_shader_.check_window_settings(settings)) {
 				throw EngRuntimeError(__FILE__, __LINE__, "GraphEngine, invalid OpenGL version.\n\n");
 			}
-
-			lights.max_count_lights_ = std::stoi(main_shader_.get_value_frag("NR_LIGHTS"));
+			set_uniforms();
 
 			cameras.insert(Camera(window));
 
 			init_gl();
-			create_buffers();
+			lights.max_count_lights_ = std::stoi(main_shader_.get_value_frag("NR_LIGHTS"));
+			cameras.create_shader_storage_buffer(std::stoi(main_shader_.get_value_frag("NR_CAMERAS")));
+			create_screen_vertex_array();
+			create_primary_frame_buffer();
+			create_depth_map_frame_buffer();
 		}
 
 		GraphEngine(const GraphEngine& other) {
@@ -362,7 +326,6 @@ namespace eng {
 			grayscale_ = other.grayscale_;
 			border_width_ = other.border_width_;
 			gamma_ = other.gamma_;
-			check_point_ = other.check_point_;
 			border_color_ = other.border_color_;
 			clear_color_ = other.clear_color_;
 			kernel_ = other.kernel_;
@@ -380,7 +343,9 @@ namespace eng {
 			set_uniforms();
 
 			init_gl();
-			create_buffers();
+			create_screen_vertex_array();
+			create_primary_frame_buffer();
+			create_depth_map_frame_buffer();
 		}
 
 		GraphEngine(GraphEngine&& other) noexcept {
@@ -421,17 +386,6 @@ namespace eng {
 			set_active();
 			post_shader_.set_uniform_f("gamma", static_cast<GLfloat>(gamma));
 			gamma_ = gamma;
-			return *this;
-		}
-
-		GraphEngine& set_check_point(const Vec2& point) {
-			if (point.x < 0.0 || 1.0 < point.x || point.y < 0.0 || 1.0 < point.y) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_check_point, invalid point coordinate.\n\n");
-			}
-
-			set_active();
-			check_point_ = Vec2(point.x, 1.0 - point.y);
-			main_shader_.set_uniform_f("check_point", static_cast<GLfloat>(check_point_.x * window_->getSize().x), static_cast<GLfloat>(check_point_.y * window_->getSize().y));
 			return *this;
 		}
 
@@ -483,10 +437,6 @@ namespace eng {
 			return gamma_;
 		}
 
-		Vec2 get_check_point() const noexcept {
-			return check_point_;
-		}
-
 		Vec3 get_border_color() const noexcept {
 			return border_color_;
 		}
@@ -499,38 +449,26 @@ namespace eng {
 			return kernel_;
 		}
 
-		ObjectDesc get_check_object(Vec3& intersect_point) const {
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
-
-			GLint data_int[2] = { -1, -1 };
-			GLfloat distance = 0.0;
-			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint), data_int);
-			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint), sizeof(GLfloat), &distance);
-
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-
-			intersect_point = cameras[0].convert_point(Vec3(2.0 * check_point_ - Vec2(1.0), distance));
-
-			if (data_int[0] < 0 || data_int[1] < 0 || !objects.contains(data_int[0]) || !objects[data_int[0]].models.contains_memory(data_int[1])) {
-				return ObjectDesc();
+		ObjectDesc get_check_object(size_t camera_id, Vec3& intersect_point) {
+			if (!cameras.contains(camera_id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
-			return { true, static_cast<size_t>(data_int[0]), static_cast<size_t>(data_int[1]) };
+
+			ObjectDesc result = cameras.get_check_object(camera_id, intersect_point);
+
+			result.exist = result.object_id >= 0 && result.model_id >= 0 && objects.contains(result.object_id) && objects[result.object_id].models.contains_memory(result.model_id);
+			return result;
 		}
 
-		ObjectDesc get_check_object() const {
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
-
-			GLint data_int[2] = { -1, -1 };
-			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint), data_int);
-
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-
-			if (data_int[0] < 0 || data_int[1] < 0 || !objects.contains(data_int[0]) || !objects[data_int[0]].models.contains_memory(data_int[1])) {
-				return ObjectDesc();
+		ObjectDesc get_check_object(size_t camera_id) {
+			if (!cameras.contains(camera_id)) {
+				throw EngOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
-			return { true, static_cast<size_t>(data_int[0]), static_cast<size_t>(data_int[1]) };
+
+			ObjectDesc result = cameras.get_check_object(camera_id);
+
+			result.exist = result.object_id >= 0 && result.model_id >= 0 && objects.contains(result.object_id) && objects[result.object_id].models.contains_memory(result.model_id);
+			return result;
 		}
 
 		void swap(GraphEngine& other) {
@@ -540,7 +478,6 @@ namespace eng {
 			std::swap(grayscale_, other.grayscale_);
 			std::swap(border_width_, other.border_width_);
 			std::swap(gamma_, other.gamma_);
-			std::swap(check_point_, other.check_point_);
 			std::swap(border_color_, other.border_color_);
 			std::swap(clear_color_, other.clear_color_);
 			std::swap(kernel_, other.kernel_);
@@ -562,34 +499,23 @@ namespace eng {
 			std::swap(primary_frame_buffer_, other.primary_frame_buffer_);
 			std::swap(depth_map_texture_id_, other.depth_map_texture_id_);
 			std::swap(depth_map_frame_buffer_, other.depth_map_frame_buffer_);
-			std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
 			init_gl();
 		}
 
-		void draw() const {
+		void draw() {
 			set_active();
 
 			draw_depth_map();
 
-			main_shader_.set_uniform_matrix("projection", cameras[0].get_projection_matrix());
-
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
-
-			GLint init_int = -1;
-			GLfloat init_float = 1;
-
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLint), &init_int);
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint), sizeof(GLfloat), &init_float);
-
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glClear(GL_COLOR_BUFFER_BIT);
-
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
+			set_light_uniforms();
+			cameras.update_storage();
 			for (const auto& [id, camera] : cameras) {
+				main_shader_.set_uniform_i("camera_id", cameras.get_memory_id(id));
+
 				draw_primary_frame_buffer(camera);
 				draw_mainbuffer(camera);
 			}
