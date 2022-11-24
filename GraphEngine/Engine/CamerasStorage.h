@@ -105,7 +105,7 @@ namespace eng {
 			return { .exist = true, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
 		}
 
-		GLuint create_shader_storage_buffer(size_t max_count_cameras) {
+		void create_shader_storage_buffer(size_t max_count_cameras) {
 			max_count_cameras_ = max_count_cameras;
 
 			delete[] intersect_id_;
@@ -130,7 +130,6 @@ namespace eng {
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return shader_storage_buffer_;
 		}
 
 		void load_buffer_data() {
@@ -161,6 +160,19 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
+		void swap(CamerasStorage& other) noexcept {
+			std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
+			std::swap(is_actual_, other.is_actual_);
+			std::swap(intersect_id_, other.intersect_id_);
+			std::swap(intersect_dist_, other.intersect_dist_);
+			std::swap(init_int_, other.init_int_);
+			std::swap(init_float_, other.init_float_);
+			std::swap(max_count_cameras_, other.max_count_cameras_);
+			std::swap(cameras_index_, other.cameras_index_);
+			std::swap(free_camera_id_, other.free_camera_id_);
+			std::swap(cameras_, other.cameras_);
+		}
+
 		void deallocate() {
 			glDeleteBuffers(1, &shader_storage_buffer_);
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -175,19 +187,6 @@ namespace eng {
 			intersect_dist_ = nullptr;
 			init_int_ = nullptr;
 			init_float_ = nullptr;
-		}
-
-		void swap(CamerasStorage& other) noexcept {
-			std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
-			std::swap(is_actual_, other.is_actual_);
-			std::swap(intersect_id_, other.intersect_id_);
-			std::swap(intersect_dist_, other.intersect_dist_);
-			std::swap(init_int_, other.init_int_);
-			std::swap(init_float_, other.init_float_);
-			std::swap(max_count_cameras_, other.max_count_cameras_);
-			std::swap(cameras_index_, other.cameras_index_);
-			std::swap(free_camera_id_, other.free_camera_id_);
-			std::swap(cameras_, other.cameras_);
 		}
 
 	public:

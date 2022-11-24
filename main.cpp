@@ -184,5 +184,7 @@ signed main() {
     catch (...) {
         std::cout << "Unknown error.\n\n";
     }
+
+    system("pause");
     return -1;
 }

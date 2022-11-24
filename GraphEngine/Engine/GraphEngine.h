@@ -34,8 +34,6 @@ namespace eng {
 		GLuint screen_texture_id_ = 0;
 		GLuint depth_stencil_texture_id_ = 0;
 		GLuint primary_frame_buffer_ = 0;
-		GLuint depth_map_texture_id_ = 0;
-		GLuint depth_map_frame_buffer_ = 0;
 
 		bool grayscale_ = false;
 		uint32_t border_width_ = 7;
@@ -43,9 +41,6 @@ namespace eng {
 		Vec3 border_color_ = Vec3(0.0);
 		Vec3 clear_color_ = Vec3(0.0);
 		Kernel kernel_ = Kernel();
-
-		size_t shadow_width_ = 1024;
-		size_t shadow_height_ = 1024;
 
 		Shader<size_t> main_shader_;
 		Shader<size_t> depth_shader_;
@@ -70,13 +65,6 @@ namespace eng {
 			post_shader_.set_uniform_i("border_width", border_width_);
 			post_shader_.set_uniform_f("border_color", border_color_);
 			kernel_.set_uniforms(post_shader_);
-		}
-
-		void set_light_uniforms() const {
-			main_shader_.set_uniform_i("number_lights", static_cast<GLint>(lights.size()));
-			for (const auto& [id, light] : lights) {
-				light->set_uniforms(lights.get_memory_id(id), main_shader_);
-			}
 		}
 
 		void init_gl() const {
@@ -124,37 +112,6 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void create_depth_map_frame_buffer() {
-			if (lights.get_max_count_lights() == 0) {
-				return;
-			}
-
-			glGenTextures(1, &depth_map_texture_id_);
-			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(shadow_width_), static_cast<GLsizei>(shadow_height_), static_cast<GLsizei>(lights.get_max_count_lights()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			GLfloat border_ñolor[] = { 1.0, 1.0, 1.0, 1.0 };
-			glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, border_ñolor);
-			glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-
-			glGenFramebuffers(1, &depth_map_frame_buffer_);
-			glBindFramebuffer(GL_FRAMEBUFFER, depth_map_frame_buffer_);
-
-			glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_map_texture_id_, 0, 0);
-			glDrawBuffer(GL_NONE);
-			glReadBuffer(GL_NONE);
-
-			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-				throw EngRuntimeError(__FILE__, __LINE__, "create_depth_map_frame_buffer, framebuffer is not complete.\n\n");
-			}
-
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
 		void draw_objects(const Camera& camera) const {
 			std::vector<TransparentObject> transparent_objects;
 			for (const auto& [object_id, object] : objects) {
@@ -177,12 +134,10 @@ namespace eng {
 		}
 
 		void draw_depth_map() const {
-			glBindFramebuffer(GL_FRAMEBUFFER, depth_map_frame_buffer_);
-			glViewport(0, 0, static_cast<GLsizei>(shadow_width_), static_cast<GLsizei>(shadow_height_));
+			lights.set_framebuffer();
 
 			for (const auto& [light_id, light] : lights) {
-				glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, static_cast<GLint>(depth_map_texture_id_), 0, static_cast<GLint>(lights.get_memory_id(light_id)));
-				glClear(GL_DEPTH_BUFFER_BIT);
+				lights.set_depth_map_texture(light_id);
 
 				depth_shader_.set_uniform_matrix("light_space", light->get_light_space_matrix());
 				for (const auto& [object_id, object] : objects) {
@@ -202,7 +157,7 @@ namespace eng {
 			glStencilFunc(GL_ALWAYS, 0, 0xFF);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
+			glBindTexture(GL_TEXTURE_2D_ARRAY, lights.depth_map_texture_id_);
 			draw_objects(camera);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
@@ -238,17 +193,13 @@ namespace eng {
 
 		void deallocate() {
 			glDeleteFramebuffers(1, &primary_frame_buffer_);
-			glDeleteFramebuffers(1, &depth_map_frame_buffer_);
 			glDeleteTextures(1, &screen_texture_id_);
 			glDeleteTextures(1, &depth_stencil_texture_id_);
-			glDeleteTextures(1, &depth_map_texture_id_);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
 			primary_frame_buffer_ = 0;
-			depth_map_frame_buffer_ = 0;
 			screen_texture_id_ = 0;
 			depth_stencil_texture_id_ = 0;
-			depth_map_texture_id_ = 0;
 		}
 
 		static void create_screen_vertex_array() {
@@ -312,11 +263,10 @@ namespace eng {
 			cameras.insert(Camera(window));
 
 			init_gl();
-			lights.max_count_lights_ = std::stoi(main_shader_.get_value_frag("NR_LIGHTS"));
+			lights.create_depth_map_frame_buffer(std::stoi(main_shader_.get_value_frag("NR_LIGHTS")));
 			cameras.create_shader_storage_buffer(std::stoi(main_shader_.get_value_frag("NR_CAMERAS")));
 			create_screen_vertex_array();
 			create_primary_frame_buffer();
-			create_depth_map_frame_buffer();
 		}
 
 		GraphEngine(const GraphEngine& other) {
@@ -330,9 +280,6 @@ namespace eng {
 			clear_color_ = other.clear_color_;
 			kernel_ = other.kernel_;
 
-			shadow_width_ = other.shadow_width_;
-			shadow_height_ = other.shadow_height_;
-
 			objects = other.objects;
 			lights = other.lights;
 			cameras = other.cameras;
@@ -345,7 +292,6 @@ namespace eng {
 			init_gl();
 			create_screen_vertex_array();
 			create_primary_frame_buffer();
-			create_depth_map_frame_buffer();
 		}
 
 		GraphEngine(GraphEngine&& other) noexcept {
@@ -414,17 +360,6 @@ namespace eng {
 			return *this;
 		}
 
-		GraphEngine& set_shadow_resolution(size_t width, size_t height) {
-			glBindTexture(GL_TEXTURE_2D_ARRAY, depth_map_texture_id_);
-			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width), static_cast<GLsizei>(height), static_cast<GLsizei>(lights.size()), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-			glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-
-			shadow_width_ = width;
-			shadow_height_ = height;
-			return *this;
-		}
-
 		bool get_grayscale() const noexcept {
 			return grayscale_;
 		}
@@ -482,9 +417,6 @@ namespace eng {
 			std::swap(clear_color_, other.clear_color_);
 			std::swap(kernel_, other.kernel_);
 
-			std::swap(shadow_width_, other.shadow_width_);
-			std::swap(shadow_height_, other.shadow_height_);
-
 			objects.swap(other.objects);
 			lights.swap(other.lights);
 			cameras.swap(other.cameras);
@@ -497,8 +429,6 @@ namespace eng {
 			std::swap(screen_texture_id_, other.screen_texture_id_);
 			std::swap(depth_stencil_texture_id_, other.depth_stencil_texture_id_);
 			std::swap(primary_frame_buffer_, other.primary_frame_buffer_);
-			std::swap(depth_map_texture_id_, other.depth_map_texture_id_);
-			std::swap(depth_map_frame_buffer_, other.depth_map_frame_buffer_);
 			init_gl();
 		}
 
@@ -511,8 +441,8 @@ namespace eng {
 			glClear(GL_COLOR_BUFFER_BIT);
 			check_gl_errors(__FILE__, __LINE__, __func__);
 
-			set_light_uniforms();
 			cameras.update_storage();
+			lights.set_uniforms(main_shader_);
 			for (const auto& [id, camera] : cameras) {
 				main_shader_.set_uniform_i("camera_id", cameras.get_memory_id(id));
 
