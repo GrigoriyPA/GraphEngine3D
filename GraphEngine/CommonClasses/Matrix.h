@@ -7,8 +7,6 @@
 
 namespace eng {
 	class Matrix {
-		inline static double eps_ = 1e-5;
-
 		std::vector<MatrixLine> matrix_;
 
 	public:
@@ -136,7 +134,7 @@ namespace eng {
 
 			for (size_t i = 0; i < matrix_.size(); ++i) {
 				for (size_t j = 0; j < matrix_[i].size(); ++j) {
-					if (!equality(matrix_[i][j], other[i][j], eps_)) {
+					if (!equality(matrix_[i][j], other[i][j])) {
 						return false;
 					}
 				}
@@ -181,7 +179,7 @@ namespace eng {
 		}
 
 		Matrix& operator/=(double other)& {
-			if (equality(other, 0.0, eps_)) {
+			if (equality(other, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
@@ -274,7 +272,7 @@ namespace eng {
 		}
 
 		Matrix operator/(double other) const {
-			if (equality(other, 0.0, eps_)) {
+			if (equality(other, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
@@ -381,7 +379,7 @@ namespace eng {
 			for (size_t j = 0, i0 = 0; j < count_columns() && i0 < matrix_.size(); ++j) {
 				size_t k = matrix_.size();
 				for (size_t i = i0; i < matrix_.size(); ++i) {
-					if (!equality(result[i][j], 0.0, eps_)) {
+					if (!equality(result[i][j], 0.0)) {
 						k = i;
 						break;
 					}
@@ -415,7 +413,7 @@ namespace eng {
 			for (size_t j = 0, i0 = 0; j < count_columns(); ++j) {
 				size_t k = matrix_.size();
 				for (size_t i = i0; i < matrix_.size(); ++i) {
-					if (!equality(cur_matrix[i][j], 0.0, eps_)) {
+					if (!equality(cur_matrix[i][j], 0.0)) {
 						k = i;
 						break;
 					}
@@ -459,7 +457,7 @@ namespace eng {
 			Matrix isv_matrix = (*this | Matrix(value)).improved_step_view();
 			Matrix result(count_columns(), 1, 0);
 			for (size_t i = 0, j = 0; i < matrix_.size(); ++i) {
-				for (; j <= count_columns() && !equality(isv_matrix[i][j], 1.0, eps_); ++j) {}
+				for (; j <= count_columns() && !equality(isv_matrix[i][j], 1.0); ++j) {}
 
 				if (j == count_columns()) {
 					return Matrix(0, 0);
@@ -471,14 +469,6 @@ namespace eng {
 				result[j][0] = isv_matrix[i].back();
 			}
 			return result;
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 
 		static Matrix zip_map(const Matrix& matrix1, const Matrix& matrix2, std::function<double(double, double)> zip_func) {

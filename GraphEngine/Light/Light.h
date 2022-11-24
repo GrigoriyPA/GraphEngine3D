@@ -6,8 +6,6 @@
 namespace eng {
     class Light {
     protected:
-        inline static double eps_ = 1e-5;
-
         Vec3 ambient_ = Vec3(0.0, 0.0, 0.0);
         Vec3 diffuse_ = Vec3(0.0, 0.0, 0.0);
         Vec3 specular_ = Vec3(0.0, 0.0, 0.0);
@@ -52,14 +50,6 @@ namespace eng {
         virtual Matrix get_light_space_matrix() const = 0;
 
         virtual ~Light() {
-        }
-
-        static void set_epsilon(double eps) {
-            if (eps <= 0) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-            }
-
-            eps_ = eps;
         }
     };
 }

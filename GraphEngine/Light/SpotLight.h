@@ -20,7 +20,7 @@ namespace eng {
         Matrix projection_;
 
         void set_projection_matrix() {
-            if (equality(tan(border_out_), 0.0, eps_) || equality(shadow_max_distance_, shadow_min_distance_, eps_) || equality(shadow_max_distance_ + shadow_min_distance_, 0.0, eps_)) {
+            if (equality(tan(border_out_), 0.0) || equality(shadow_max_distance_, shadow_min_distance_) || equality(shadow_max_distance_ + shadow_min_distance_, 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
@@ -42,7 +42,7 @@ namespace eng {
             if (!glew_is_ok()) {
                 throw EngRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
             }
-            if (border_in < 0.0 || less_equality(PI / 2.0, border_out, eps_) || less_equality(border_out, border_in, eps_)) {
+            if (border_in < 0.0 || less_equality(PI / 2.0, border_out) || less_equality(border_out, border_in)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "SpotLight, invalid values of the external and internal angles of the spotlight.\n\n");
             }
 
@@ -82,7 +82,7 @@ namespace eng {
         }
 
         SpotLight& set_shadow_distance(double shadow_min_distance, double shadow_max_distance) {
-            if (less_equality(shadow_min_distance, 0.0, eps_) || less_equality(shadow_max_distance, shadow_min_distance, eps_)) {
+            if (less_equality(shadow_min_distance, 0.0) || less_equality(shadow_max_distance, shadow_min_distance)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_distance, invalid shadow distance.\n\n");
             }
 
@@ -120,7 +120,7 @@ namespace eng {
         }
 
         SpotLight& set_angle(double border_in, double border_out) {
-            if (border_in < 0.0 || less_equality(PI / 2.0, border_out, eps_) || less_equality(border_out, border_in, eps_)) {
+            if (border_in < 0.0 || less_equality(PI / 2.0, border_out) || less_equality(border_out, border_in)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_angle, invalid values of the external and internal angles of the spotlight.\n\n");
             }
 
@@ -144,7 +144,7 @@ namespace eng {
         }
 
         GraphObject get_shadow_box() const {
-            if (equality(shadow_max_distance_, 0.0, eps_)) {
+            if (equality(shadow_max_distance_, 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "get_shadow_box, invalid matrix settings.\n\n");
             }
 
@@ -188,7 +188,7 @@ namespace eng {
                 mesh.material.set_alpha(0.3);
             });
 
-            Matrix model = Matrix::scale_matrix((1.0 - eps_) * shadow_max_distance_ * Vec3(tan(border_out_), tan(border_out_), 1.0));
+            Matrix model = Matrix::scale_matrix((1.0 - EPS) * shadow_max_distance_ * Vec3(tan(border_out_), tan(border_out_), 1.0));
             model = get_view_matrix().inverse() * model;
 
             shadow_box.models.insert(model);

@@ -28,7 +28,6 @@ namespace eng {
 			}
 		};
 
-		inline static double eps_ = 1e-5;
 		inline static GLuint screen_vertex_array_ = 0;
 
 		GLuint screen_texture_id_ = 0;
@@ -325,7 +324,7 @@ namespace eng {
 		}
 
 		GraphEngine& set_gamma(double gamma) {
-			if (less_equality(gamma, 0.0, eps_)) {
+			if (less_equality(gamma, 0.0)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_gamma, not positive gamma.\n\n");
 			}
 
@@ -453,14 +452,6 @@ namespace eng {
 
 		~GraphEngine() {
 			deallocate();
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 	};
 }

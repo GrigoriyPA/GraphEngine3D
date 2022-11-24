@@ -16,7 +16,7 @@ namespace eng {
         Matrix projection_;
 
         void set_projection_matrix() {
-            if (equality(shadow_width_, 0.0, eps_) || equality(shadow_height_, 0.0, eps_) || equality(shadow_depth_, 0.0, eps_)) {
+            if (equality(shadow_width_, 0.0) || equality(shadow_height_, 0.0) || equality(shadow_depth_, 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
@@ -63,7 +63,7 @@ namespace eng {
         }
 
         DirLight& set_shadow_width(double shadow_width) {
-            if (shadow_width < 0.0 || equality(shadow_width, 0.0, eps_)) {
+            if (shadow_width < 0.0 || equality(shadow_width, 0.0)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_width, not a positive shadow width.\n\n");
             }
 
@@ -73,7 +73,7 @@ namespace eng {
         }
 
         DirLight& set_shadow_height(double shadow_height) {
-            if (shadow_height < 0.0 || equality(shadow_height, 0.0, eps_)) {
+            if (shadow_height < 0.0 || equality(shadow_height, 0.0)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_height, not a positive shadow height.\n\n");
             }
 
@@ -83,7 +83,7 @@ namespace eng {
         }
 
         DirLight& set_shadow_depth(double shadow_depth) {
-            if (shadow_depth < 0.0 || equality(shadow_depth, 0.0, eps_)) {
+            if (shadow_depth < 0.0 || equality(shadow_depth, 0.0)) {
                 throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_depth, not a positive shadow depth.\n\n");
             }
 
@@ -116,7 +116,7 @@ namespace eng {
             });
 
             Matrix model = Matrix::scale_matrix(Vec3(shadow_width_, shadow_height_, shadow_depth_));
-            model = Matrix::translation_matrix(Vec3(0.0, 0.0, (1.0 - eps_) * shadow_depth_ / 2.0)) * model;
+            model = Matrix::translation_matrix(Vec3(0.0, 0.0, (1.0 - EPS) * shadow_depth_ / 2.0)) * model;
             model = get_view_matrix().inverse() * model;
 
             shadow_box.models.insert(model);

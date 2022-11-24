@@ -8,8 +8,6 @@
 
 namespace eng {
     class Vec2 {
-        inline static double eps_ = 1e-5;
-
     public:
         double x = 0.0;
         double y = 0.0;
@@ -85,7 +83,7 @@ namespace eng {
         }
 
         bool operator==(const Vec2& other) const noexcept {
-            return equality(x, other.x, eps_) && equality(y, other.y, eps_);
+            return equality(x, other.x) && equality(y, other.y);
         }
 
         bool operator!=(const Vec2& other) const noexcept {
@@ -111,7 +109,7 @@ namespace eng {
         }
 
         Vec2& operator/=(double other)& {
-            if (equality(other, 0.0, eps_)) {
+            if (equality(other, 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
             }
 
@@ -173,7 +171,7 @@ namespace eng {
         }
 
         Vec2 operator/(double other) const {
-            if (equality(other, 0.0, eps_)) {
+            if (equality(other, 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
             }
 
@@ -197,7 +195,7 @@ namespace eng {
 
         Vec2 normalize() const {
             double vect_length = length();
-            if (equality(vect_length, 0.0, eps_)) {
+            if (equality(vect_length, 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
             }
 
@@ -205,7 +203,7 @@ namespace eng {
         }
 
         Vec2 reflect_vect(const Vec2& n) const {
-            if (equality(n.length(), 0.0, eps_)) {
+            if (equality(n.length(), 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
             }
 
@@ -224,17 +222,9 @@ namespace eng {
             return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
         }
 
-        static void set_epsilon(double eps) {
-            if (eps <= 0) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-            }
-
-            eps_ = eps;
-        }
-
         static double cos_angle(const Vec2& v1, const Vec2& v2) {
             double length_prod = v1.length() * v2.length();
-            if (equality(length_prod, 0.0, eps_)) {
+            if (equality(length_prod, 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
             }
 
@@ -243,7 +233,7 @@ namespace eng {
 
         static double sin_angle(const Vec2& v1, const Vec2& v2) {
             double length_prod = v1.length() * v2.length();
-            if (equality(length_prod, 0.0, eps_)) {
+            if (equality(length_prod, 0.0)) {
                 throw EngDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
             }
 

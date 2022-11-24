@@ -10,6 +10,7 @@ namespace eng {
 		GLuint vertex_array_ = 0;
 		GLuint vertex_buffer_ = 0;
 		GLuint index_buffer_ = 0;
+
 		GLfloat border_width_ = 1.0;
 
 		size_t count_points_;

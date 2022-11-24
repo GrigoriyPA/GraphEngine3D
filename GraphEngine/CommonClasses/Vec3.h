@@ -6,8 +6,6 @@
 
 namespace eng {
 	class Vec3 {
-		inline static double eps_ = 1e-5;
-
 	public:
 		double x = 0.0;
 		double y = 0.0;
@@ -101,7 +99,7 @@ namespace eng {
 		}
 
 		bool operator==(const Vec3& other) const noexcept {
-			return equality(x, other.x, eps_) && equality(y, other.y, eps_) && equality(z, other.z, eps_);
+			return equality(x, other.x) && equality(y, other.y) && equality(z, other.z);
 		}
 
 		bool operator!=(const Vec3& other) const noexcept {
@@ -130,7 +128,7 @@ namespace eng {
 		}
 
 		Vec3& operator/=(double other)& {
-			if (equality(other, 0.0, eps_)) {
+			if (equality(other, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
@@ -179,7 +177,7 @@ namespace eng {
 		}
 
 		Vec3 operator/(double other) const {
-			if (equality(other, 0.0, eps_)) {
+			if (equality(other, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
@@ -220,7 +218,7 @@ namespace eng {
 
 		Vec3 normalize() const {
 			double vect_length = length();
-			if (equality(vect_length, 0.0, eps_)) {
+			if (equality(vect_length, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
 			}
 
@@ -229,7 +227,7 @@ namespace eng {
 
 		Vec3 horizont() const noexcept {
 			Vec3 horizont_vect(1.0, 0.0, 0.0);
-			if (!equality(Vec3(z, 0.0, -x).length(), 0.0, eps_)) {
+			if (!equality(Vec3(z, 0.0, -x).length(), 0.0)) {
 				horizont_vect = Vec3(z, 0.0, -x).normalize();
 			}
 
@@ -237,7 +235,7 @@ namespace eng {
 		}
 
 		Vec3 reflect_vect(const Vec3& n) const {
-			if (equality(n.length(), 0.0, eps_)) {
+			if (equality(n.length(), 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
 			}
 
@@ -251,7 +249,7 @@ namespace eng {
 
 		bool in_two_side_angle(const Vec3& v1, const Vec3& v2) const noexcept {
 			try {
-				return equality(cos_angle(v1 ^ *this, v2 ^ *this), -1.0, eps_);
+				return equality(cos_angle(v1 ^ *this, v2 ^ *this), -1.0);
 			}
 			catch (EngDomainError) {
 				return false;
@@ -260,15 +258,15 @@ namespace eng {
 
 		bool in_angle(const Vec3& v1, const Vec3& v2) const noexcept {
 			Vec3 prod1 = v1 ^ *this, prod2 = v2 ^ *this, prod3 = v1 ^ v2;
-			if (equality(prod1.length() * prod3.length(), 0.0, eps_)) {
+			if (equality(prod1.length() * prod3.length(), 0.0)) {
 				return false;
 			}
 
 			try {
-				if (equality(prod1.length() * prod2.length(), 0.0, eps_)) {
-					return equality(cos_angle(*this, v1), 1.0, eps_) || equality(cos_angle(*this, v2), 1.0, eps_);
+				if (equality(prod1.length() * prod2.length(), 0.0)) {
+					return equality(cos_angle(*this, v1), 1.0) || equality(cos_angle(*this, v2), 1.0);
 				}
-				return equality(cos_angle(prod1, prod2), -1.0, eps_) && equality(cos_angle(prod1, prod3), 1.0, eps_);
+				return equality(cos_angle(prod1, prod2), -1.0) && equality(cos_angle(prod1, prod3), 1.0);
 			}
 			catch (EngDomainError) {
 				return false;
@@ -279,17 +277,9 @@ namespace eng {
 			return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
 		}
 
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
-		}
-
 		static double cos_angle(const Vec3& v1, const Vec3& v2) {
 			double length_prod = v1.length() * v2.length();
-			if (equality(length_prod, 0.0, eps_)) {
+			if (equality(length_prod, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
 			}
 
@@ -298,7 +288,7 @@ namespace eng {
 
 		static double sin_angle(const Vec3& v1, const Vec3& v2) {
 			double length_prod = v1.length() * v2.length();
-			if (equality(length_prod, 0.0, eps_)) {
+			if (equality(length_prod, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
 			}
 

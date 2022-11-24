@@ -5,8 +5,6 @@
 
 namespace eng {
 	class Camera {
-		inline static double eps_ = 1e-5;
-
 		uint8_t active_state_ = 0;
 		Vec2 check_point_ = Vec2(0.0);
 		Matrix change_matrix_ = Matrix::one_matrix(4);
@@ -23,7 +21,7 @@ namespace eng {
 		sf::RenderWindow* window_;
 
 		void set_projection_matrix() {
-			if (equality(tan(fov_ / 2.0), 0.0, eps_) || equality(max_distance_, min_distance_, eps_) || equality(max_distance_ + min_distance_, 0.0, eps_) || equality(viewport_size_.y, 0.0, eps_)) {
+			if (equality(tan(fov_ / 2.0), 0.0) || equality(max_distance_, min_distance_) || equality(max_distance_ + min_distance_, 0.0) || equality(viewport_size_.y, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
 			}
 
@@ -61,13 +59,13 @@ namespace eng {
 		}
 
 		Camera(sf::RenderWindow* window, const Vec2& viewport_position, const Vec2& viewport_size, const Vec3& position, const Vec3& direction, double fov, double min_distance, double max_distance) : projection_(4, 4) {
-			if (less_equality(fov, 0.0, eps_) || less_equality(PI, fov, eps_)) {
+			if (less_equality(fov, 0.0) || less_equality(PI, fov)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid FOV value.\n\n");
 			}
-			if (less_equality(min_distance, 0.0, eps_) || less_equality(max_distance, min_distance, eps_)) {
+			if (less_equality(min_distance, 0.0) || less_equality(max_distance, min_distance)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid distance value.\n\n");
 			}
-			if (less_equality(viewport_size.x, 0.0, eps_) || less_equality(viewport_size.y, 0.0, eps_)) {
+			if (less_equality(viewport_size.x, 0.0) || less_equality(viewport_size.y, 0.0)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid viewport size.\n\n");
 			}
 			
@@ -128,7 +126,7 @@ namespace eng {
 		}
 
 		Camera& set_fov(double fov) {
-			if (less_equality(fov, 0.0, eps_) || less_equality(PI, fov, eps_)) {
+			if (less_equality(fov, 0.0) || less_equality(PI, fov)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_fov, invalid FOV value.\n\n");
 			}
 
@@ -138,7 +136,7 @@ namespace eng {
 		}
 
 		Camera& set_distance(double min_distance, double max_distance) {
-			if (less_equality(min_distance, 0.0, eps_) || less_equality(max_distance, min_distance, eps_)) {
+			if (less_equality(min_distance, 0.0) || less_equality(max_distance, min_distance)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_distance, invalid distance value.\n\n");
 			}
 
@@ -149,7 +147,7 @@ namespace eng {
 		}
 
 		Camera& set_viewport_size(const Vec2& viewport_size) {
-			if (less_equality(viewport_size.x, 0.0, eps_) || less_equality(viewport_size.y, 0.0, eps_)) {
+			if (less_equality(viewport_size.x, 0.0) || less_equality(viewport_size.y, 0.0)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "set_viewport_size, invalid viewport size.\n\n");
 			}
 
@@ -319,25 +317,17 @@ namespace eng {
 
 		Vec3 convert_point(double distance) const {
 			double divisor = max_distance_ - distance * (max_distance_ - min_distance_);
-			if (equality(divisor, 0.0, eps_)) {
+			if (equality(divisor, 0.0)) {
 				throw EngInvalidArgument(__FILE__, __LINE__, "convert_point, invalid point coordinate.\n\n");
 			}
 
-			if (equality(viewport_size_.y, 0.0, eps_)) {
+			if (equality(viewport_size_.y, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "convert_point, invalid matrix settings.\n\n");
 			}
 
 			double tg = tan(fov_ / 2.0);
 			double z_coord = max_distance_* min_distance_ / divisor;
 			return Matrix(horizont_, get_vertical(), direction_) * Vec3(z_coord * tg * (2.0 * check_point_.x - 1.0), (z_coord * tg * viewport_size_.y / viewport_size_.x) * (2.0 * check_point_.y - 1.0), z_coord) + position;
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 	};
 }

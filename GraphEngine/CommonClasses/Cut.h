@@ -5,8 +5,6 @@
 
 namespace eng {
 	class Cut {
-		inline static double eps_ = 1e-5;
-
 		Line line_;
 		Vec3 point1_;
 		Vec3 point2_;
@@ -66,14 +64,6 @@ namespace eng {
 		// Returns some point on other object if there is no intersection
 		Vec3 intersect(const Cut& cut) const noexcept {
 			return cut.project_point(line_.intersect(cut.line_));
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 	};
 }

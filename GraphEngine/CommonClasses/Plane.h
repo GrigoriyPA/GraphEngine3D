@@ -5,8 +5,6 @@
 
 namespace eng {
 	class Plane {
-		inline static double eps_ = 1e-5;
-
 		Vec3 normal_ = Vec3(0, 1, 0);
 
 	public:
@@ -69,11 +67,11 @@ namespace eng {
 		}
 
 		bool on_plane(const Vec3& point) const noexcept {
-			return equality(point * normal_, distance, eps_);
+			return equality(point * normal_, distance);
 		}
 
 		bool is_intersect(const Line& line) const noexcept {
-			return !equality(line.get_direction() * normal_, 0.0, eps_);
+			return !equality(line.get_direction() * normal_, 0.0);
 		}
 
 		bool is_intersect(const Cut& cut) const noexcept {
@@ -87,13 +85,13 @@ namespace eng {
 		}
 
 		bool is_intersect(const Plane& plane) const noexcept {
-			return !equality((normal_ ^ plane.normal_).length(), 0.0, eps_);
+			return !equality((normal_ ^ plane.normal_).length(), 0.0);
 		}
 
 		// Returns some point on other object if there is no intersection
 		Vec3 intersect(const Line& line) const noexcept {
 			double product = line.get_direction() * normal_;
-			if (equality(product, 0.0, eps_)) {
+			if (equality(product, 0.0)) {
 				return line.start_point;
 			}
 
@@ -123,14 +121,6 @@ namespace eng {
 
 		Vec3 symmetry(const Vec3& point) const noexcept {
 			return point.symmetry(project_point(point));
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 	};
 }

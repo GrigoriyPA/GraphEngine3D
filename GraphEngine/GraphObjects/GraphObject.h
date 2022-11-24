@@ -10,8 +10,6 @@
 
 namespace eng {
 	class GraphObject {
-		inline static double eps_ = 1e-5;
-
 		// ...
 		std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
 			std::vector<Texture> textures;
@@ -386,14 +384,6 @@ namespace eng {
 			if (border_mask > 0) {
 				glStencilMask(0x00);
 			}
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 
 		static GraphObject cube(size_t max_count_models) {

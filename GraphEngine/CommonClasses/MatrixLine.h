@@ -7,8 +7,6 @@ namespace eng {
 	class MatrixLine {
 		friend class Matrix;
 
-		inline static double eps_ = 1e-5;
-
 		std::vector<double> line_;
 
 		template <typename T>  // Casts required: double(T)
@@ -54,7 +52,7 @@ namespace eng {
 			}
 
 			for (size_t i = 0; i < line_.size(); ++i) {
-				if (!equality(line_[i], other[i], eps_)) {
+				if (!equality(line_[i], other[i])) {
 					return false;
 				}
 			}
@@ -89,7 +87,7 @@ namespace eng {
 		}
 
 		MatrixLine& operator/=(double other)& {
-			if (equality(other, 0.0, eps_)) {
+			if (equality(other, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
@@ -136,7 +134,7 @@ namespace eng {
 		}
 
 		MatrixLine operator/(double other) const {
-			if (equality(other, 0.0, eps_)) {
+			if (equality(other, 0.0)) {
 				throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
@@ -185,14 +183,6 @@ namespace eng {
 			}
 
 			std::swap(line_, other.line_);
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 	};
 

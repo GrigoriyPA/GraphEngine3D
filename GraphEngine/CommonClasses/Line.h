@@ -5,8 +5,6 @@
 
 namespace eng {
 	class Line {
-		inline static double eps_ = 1e-5;
-
 		Vec3 direction_ = Vec3(1, 0, 0);
 
 	public:
@@ -45,12 +43,12 @@ namespace eng {
 		}
 
 		bool on_line(const Vec3& point) const noexcept {
-			return equality((point - project_point(point)).length(), 0.0, eps_);
+			return equality((point - project_point(point)).length(), 0.0);
 		}
 
 		bool is_intersect(const Line& line) const noexcept {
 			try {
-				return equality((direction_ ^ line.direction_).normalize() * (start_point - line.start_point), 0.0, eps_);
+				return equality((direction_ ^ line.direction_).normalize() * (start_point - line.start_point), 0.0);
 			}
 			catch (EngDomainError) {
 				return false;
@@ -73,14 +71,6 @@ namespace eng {
 
 		Vec3 symmetry(const Vec3& point) const noexcept {
 			return point.symmetry(project_point(point));
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 	};
 }
