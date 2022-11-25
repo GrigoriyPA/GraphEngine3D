@@ -513,6 +513,20 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
+		void validate_program() const {
+			glValidateProgram(program_id_);
+
+			GLint validate_status;
+			glGetProgramiv(program_id_, GL_VALIDATE_STATUS, &validate_status);
+
+			if (validate_status == GL_TRUE) {
+				std::cout << "Validate status: success\n\n";
+			} else {
+				std::cout << "Validate status: fail\n";
+				std::cout << "Reason:\n" << load_program_info_log(program_id_) << "\n\n";
+			}
+		}
+
 		~Shader() {
 			deallocate();
 		}

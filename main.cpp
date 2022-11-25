@@ -151,7 +151,7 @@ signed main() {
             double delta_time = window_interface.update();
             scene.cameras[0].update(delta_time);
             render.update(window_interface.get_active_button());
-            
+
             spot_light.position = scene.cameras[0].position;
             spot_light.set_direction(scene.cameras[0].get_direction());
 
@@ -175,7 +175,7 @@ signed main() {
 
             window.display();
         }
-
+        
         return 0;
     }
     catch (const std::exception& error) {

@@ -56,8 +56,9 @@ namespace eng {
 			main_shader_.set_uniform_i("diffuse_map", 0);
 			main_shader_.set_uniform_i("specular_map", 1);
 			main_shader_.set_uniform_i("emission_map", 2);
+			main_shader_.set_uniform_i("shadow_maps", 3);
 			main_shader_.set_uniform_f("gamma", static_cast<GLfloat>(gamma_));
-			
+
 			post_shader_.set_uniform_i("screen_texture", 0);
 			post_shader_.set_uniform_i("stencil_texture", 1);
 			post_shader_.set_uniform_i("grayscale", grayscale_);
@@ -156,9 +157,15 @@ namespace eng {
 			glStencilFunc(GL_ALWAYS, 0, 0xFF);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+			glActiveTexture(GL_TEXTURE3);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, lights.depth_map_texture_id_);
+			glActiveTexture(GL_TEXTURE0);
+
 			draw_objects(camera);
+
+			glActiveTexture(GL_TEXTURE3);
 			glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+			glActiveTexture(GL_TEXTURE0);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -263,7 +270,7 @@ namespace eng {
 
 			init_gl();
 			lights.create_depth_map_frame_buffer(std::stoi(main_shader_.get_value_frag("NR_LIGHTS")));
-			cameras.create_shader_storage_buffer(std::stoi(main_shader_.get_value_frag("NR_CAMERAS")));
+			cameras.create_shader_storage_buffer(std::stoi(main_shader_.get_value_frag("NR_CAMERAS")), main_shader_);
 			create_screen_vertex_array();
 			create_primary_frame_buffer();
 		}

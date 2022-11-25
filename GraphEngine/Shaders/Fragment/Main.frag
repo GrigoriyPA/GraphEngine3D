@@ -44,7 +44,7 @@ uniform Material object_material;
 uniform Light lights[NR_LIGHTS];
 
 
-layout(binding=0) buffer central_object {
+layout(std430, binding=0) buffer central_object {
     int central_object_id[NR_CAMERAS];
     int central_object_model_id[NR_CAMERAS];
     float depth[NR_CAMERAS];
