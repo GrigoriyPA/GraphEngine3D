@@ -6,9 +6,9 @@
 namespace gre {
     class Light {
     protected:
-        Vec3 ambient_ = Vec3(0.0, 0.0, 0.0);
-        Vec3 diffuse_ = Vec3(0.0, 0.0, 0.0);
-        Vec3 specular_ = Vec3(0.0, 0.0, 0.0);
+        Vec3 ambient_ = Vec3(0.25);
+        Vec3 diffuse_ = Vec3(0.5);
+        Vec3 specular_ = Vec3(0.75);
 
         void set_light_uniforms(const std::string& name, const Shader<size_t>& shader) const {
             if (shader.description != ShaderType::MAIN) {
@@ -30,14 +30,26 @@ namespace gre {
             }
         }
 
+        void set_ambient(double red, double green, double blue) {
+            set_ambient(Vec3(red, green, blue));
+        }
+
         void set_ambient(const Vec3& ambient) {
             check_color_value(__FILE__, __LINE__, __func__, ambient);
             ambient_ = ambient;
         }
 
+        void set_diffuse(double red, double green, double blue) {
+            set_diffuse(Vec3(red, green, blue));
+        }
+
         void set_diffuse(const Vec3& diffuse) {
             check_color_value(__FILE__, __LINE__, __func__, diffuse);
             diffuse_ = diffuse;
+        }
+
+        void set_specular(double red, double green, double blue) {
+            set_specular(Vec3(red, green, blue));
         }
 
         void set_specular(const Vec3& specular) {

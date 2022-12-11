@@ -110,8 +110,8 @@ namespace gre {
 				polygon_mesh.material.set_shininess(shininess);
 				//std::cout << polygon_mesh.material.shininess << "\n";
 
-				//if (polygon_mesh.material.shininess > 0)
-				//	polygon_mesh.material.specular = Vec3(1, 1, 1);
+				/*if (shininess > 0)
+					polygon_mesh.material.set_specular(Vec3(1, 1, 1));*/
 			}
 
 			return polygon_mesh;

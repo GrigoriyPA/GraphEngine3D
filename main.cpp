@@ -45,7 +45,7 @@ signed main() {
         circle_tex.loadFromFile("Interface/Resources/Textures/circle.png");
         circle_tex.setSmooth(true);
 
-        gre::Vec2 cross_position(0.5, 0.5);
+        gre::Vec2 cross_position(0.25, 0.5);
         sf::Sprite cross(cross_tex);
         cross.setScale(sf::Vector2f(INTERFACE_SIZE * gre::FI / cross_tex.getSize().x, INTERFACE_SIZE * gre::FI / cross_tex.getSize().y));
         cross.setPosition(sf::Vector2f(window_width * cross_position.x - INTERFACE_SIZE * gre::FI / 2, window_height * cross_position.y - INTERFACE_SIZE * gre::FI / 2));
@@ -57,28 +57,45 @@ signed main() {
         circle.setColor(INTERFACE_ADD_COLOR);
 
         Interface window_interface(&window);
-
+        
+        gre::GraphEngine::default_control_system.sensitivity = SENSITIVITY;
+        gre::GraphEngine::default_control_system.speed = SPEED;
+        gre::GraphEngine::default_control_system.rotation_speed = ROTATION_SPEED;
+        gre::GraphEngine::default_control_system.speed_delt = SPEED_DELT;
         gre::GraphEngine scene(&window);
         scene.set_clear_color(gre::Vec3(INTERFACE_MAIN_COLOR) / 255.0);
         scene.set_border_color(gre::Vec3(INTERFACE_ADD_COLOR) / 255.0);
         scene.cameras[0].set_check_point(gre::Vec2(0.5, 0.5));
         scene.cameras[0].set_fov(FOV);
         scene.cameras[0].set_distance(MIN_DIST, MAX_DIST);
-        scene.cameras[0].sensitivity = SENSITIVITY;
-        scene.cameras[0].speed = SPEED;
-        scene.cameras[0].rotation_speed = ROTATION_SPEED;
-        scene.cameras[0].speed_delt = SPEED_DELT;
+        scene.cameras[0].set_viewport_size(window_width / 2, window_height);
+
+        scene.cameras.insert(scene.cameras[0]);
+        scene.cameras[1].set_viewport_position(window_width / 2, 0);
+        gre::DefaultControlSystem second_control_system;
+        scene.cameras[1].set_control_system(&second_control_system);
+        scene.cameras[1].position = gre::Vec3(0.0, 0.0, 10.0);
+        scene.cameras[1].set_direction(gre::Vec3(0.0, 0.0, -1.0));
 
         double ratio = scene.cameras[0].get_viewport_size().x / scene.cameras[0].get_viewport_size().y;
         double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
-        gre::SpotLight spot_light(gre::Vec3(0, 0, 0), gre::Vec3(0, 0, 1), angle, 1.1 * angle);
-        spot_light.set_ambient(gre::Vec3(0.4));
-        spot_light.set_diffuse(gre::Vec3(0.6, 0.6, 0.6));
-        spot_light.set_specular(gre::Vec3(0.8, 0.8, 0.8));
-        spot_light.set_quadratic(0.1);
-        //spot_light.shadow = true;
-        spot_light.set_shadow_distance(1, 100);
-        int spot_light_id = scene.lights.insert(&spot_light);
+        gre::SpotLight spot_light0(gre::Vec3(0, 0, 0), gre::Vec3(0, 0, 1), angle, 1.1 * angle);
+        spot_light0.set_ambient(gre::Vec3(0.4));
+        spot_light0.set_diffuse(gre::Vec3(0.3, 0.3, 0.3));
+        spot_light0.set_specular(gre::Vec3(0.4, 0.4, 0.4));
+        spot_light0.set_quadratic(0.1);
+        spot_light0.shadow = true;
+        spot_light0.set_shadow_distance(1, 100);
+        int spot_light_id0 = scene.lights.insert(&spot_light0);
+
+        gre::SpotLight spot_light1(gre::Vec3(0, 0, 0), gre::Vec3(0, 0, 1), angle, 1.1 * angle);
+        spot_light1.set_ambient(gre::Vec3(0.4));
+        spot_light1.set_diffuse(gre::Vec3(0.3, 0.3, 0.3));
+        spot_light1.set_specular(gre::Vec3(0.4, 0.4, 0.4));
+        spot_light1.set_quadratic(0.1);
+        spot_light1.shadow = true;
+        spot_light1.set_shadow_distance(1, 100);
+        int spot_light_id1 = scene.lights.insert(&spot_light1);
 
         gre::SpotLight light(gre::Vec3(0, 5, 5), gre::Vec3(0, -1, 0), gre::PI / 4.0, 1.1 * gre::PI / 4.0);
         light.set_ambient(gre::Vec3(0.2, 0.2, 0.2));
@@ -115,6 +132,15 @@ signed main() {
         obj.models.insert(gre::Matrix::translation_matrix(gre::Vec3(0, -1.5, 5)) * gre::Matrix::scale_matrix(10));
         scene.objects.insert(obj);
 
+        gre::GraphObject sph = gre::GraphObject::cube(2);
+        gre::Texture face_tex("Resources/Textures/diffuse/face.jpg");
+        sph.meshes.apply_func([&](gre::Mesh& m) {
+            m.material.diffuse_map = face_tex;
+        });
+        sph.models.insert(gre::Matrix::one_matrix(4));
+        sph.models.insert(gre::Matrix::one_matrix(4));
+        int sph_id = scene.objects.insert(sph);
+
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {
                 switch (event.type) {
@@ -125,15 +151,15 @@ signed main() {
 
                 case sf::Event::KeyReleased: {
                     if (event.key.code == sf::Keyboard::Escape) {
-                        scene.cameras[0].switch_active();
+                        scene.cameras.switch_active();
                     } else if (event.key.code == sf::Keyboard::F11) {
                         screenshot(window);
                     } else if (event.key.code == sf::Keyboard::F) {
-                        if (spot_light_id == -1)
-                            spot_light_id = scene.lights.insert(&spot_light);
+                        if (spot_light_id0 == -1)
+                            spot_light_id0 = scene.lights.insert(&spot_light0);
                         else {
-                            scene.lights.erase(spot_light_id);
-                            spot_light_id = -1;
+                            scene.lights.erase(spot_light_id0);
+                            spot_light_id0 = -1;
                         }
                     }
                     break;
@@ -142,18 +168,27 @@ signed main() {
                 default:
                     break;
                 }
-                scene.cameras[0].compute_event(event);
+                scene.cameras.compute_event(event);
                 window_interface.compute_event(event);
                 if (window_interface.view_state == 1)
                     render.compute_event(event, window_interface.get_active_button());
             }
 
             double delta_time = window_interface.update();
-            scene.cameras[0].update(delta_time);
+            scene.cameras.update();
             render.update(window_interface.get_active_button());
 
-            spot_light.position = scene.cameras[0].position;
-            spot_light.set_direction(scene.cameras[0].get_direction());
+            spot_light0.position = scene.cameras[0].position;
+            spot_light0.set_direction(scene.cameras[0].get_direction());
+            spot_light1.position = scene.cameras[1].position;
+            spot_light1.set_direction(scene.cameras[1].get_direction());
+
+
+            //
+            scene.objects[sph_id].models.set(0, scene.cameras[0].get_view_matrix().inverse());
+            scene.objects[sph_id].models.set(1, scene.cameras[1].get_view_matrix().inverse());
+            //
+
 
             scene.draw();
 

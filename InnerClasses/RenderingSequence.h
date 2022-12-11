@@ -390,7 +390,7 @@ public:
 
 		gre::Matrix trans = gre::Matrix::translation_matrix(scene->cameras[cam_id].get_change_vector(stable_point));
 		stable_point = trans * stable_point;
-		scene->cameras[cam_id].update();
+		scene->cameras[cam_id].drop_change_matrix_state();
 
 		double delt = pow(SCROLL_SENSITIVITY, scroll);
 		gre::Vec3 new_point = (stable_point - scene->cameras[cam_id].position) * delt + scene->cameras[cam_id].position;

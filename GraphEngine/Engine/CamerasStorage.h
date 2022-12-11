@@ -306,6 +306,24 @@ namespace gre {
 			cameras_.push_back({ free_camera_id, camera });
 			return free_camera_id;
 		}
+
+		void switch_active() {
+			for (auto& [id, camera] : cameras_) {
+				camera.switch_active();
+			}
+		}
+
+		void compute_event(const sf::Event& event) {
+			for (auto& [id, camera] : cameras_) {
+				camera.compute_event(event);
+			}
+		}
+
+		void update() {
+			for (auto& [id, camera] : cameras_) {
+				camera.update();
+			}
+		}
 	};
 }
 

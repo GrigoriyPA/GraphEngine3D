@@ -9,7 +9,7 @@ namespace gre {
         static const uint8_t LIGHT_TYPE = 2;
 
         double shadow_min_distance_ = 1.0;
-        double shadow_max_distance_ = 2.0;
+        double shadow_max_distance_ = 10.0;
         double constant_ = 1.0;
         double linear_ = 0.0;
         double quadratic_ = 0.0;

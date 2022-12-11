@@ -177,7 +177,7 @@ namespace gre {
 			return line_.size();
 		}
 
-		void swap(MatrixLine& other) noexcept {
+		void swap(MatrixLine& other) {
 			if (line_.size() != other.size()) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "swap, invalid line sizes.\n\n");
 			}

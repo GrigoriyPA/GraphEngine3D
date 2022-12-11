@@ -5,7 +5,7 @@
 
 namespace gre {
 	class Kernel {
-		GLuint offset_ = 0;
+		GLuint offset_ = 10;
 		Matrix kernel_ = Matrix(3, 3, 0.0);
 
 	public:

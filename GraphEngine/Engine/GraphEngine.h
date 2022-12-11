@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CamerasStorage.h"
+#include "DefaultControlSystem.h"
 #include "GraphObjectStorage.h"
 #include "LightStorage.h"
 #include "../GraphicClasses/Kernel.h"
@@ -37,7 +38,7 @@ namespace gre {
 		bool grayscale_ = false;
 		uint32_t border_width_ = 7;
 		double gamma_ = 2.2;
-		Vec3 border_color_ = Vec3(0.0);
+		Vec3 border_color_ = Vec3(1.0, 0.0, 0.0);
 		Vec3 clear_color_ = Vec3(0.0);
 		Kernel kernel_ = Kernel();
 
@@ -244,6 +245,8 @@ namespace gre {
 		}
 
 	public:
+		inline static DefaultControlSystem default_control_system;
+
 		GraphObjectStorage objects;
 		LightStorage lights;
 		CamerasStorage cameras;
@@ -266,7 +269,7 @@ namespace gre {
 			}
 			set_uniforms();
 
-			cameras.insert(Camera(window));
+			cameras.insert(Camera(window, &default_control_system));
 
 			init_gl();
 			lights.create_depth_map_frame_buffer(std::stoi(main_shader_.get_value_frag("NR_LIGHTS")));
@@ -341,6 +344,10 @@ namespace gre {
 			return *this;
 		}
 
+		void set_border_color(double red, double green, double blue) {
+			set_border_color(Vec3(red, green, blue));
+		}
+
 		GraphEngine& set_border_color(const Vec3& color) {
 			check_color_value(__FILE__, __LINE__, __func__, color);
 
@@ -348,6 +355,10 @@ namespace gre {
 			post_shader_.set_uniform_f("border_color", color);
 			border_color_ = color;
 			return *this;
+		}
+
+		void set_clear_color(double red, double green, double blue) {
+			set_clear_color(Vec3(red, green, blue));
 		}
 
 		GraphEngine& set_clear_color(const Vec3& color) {

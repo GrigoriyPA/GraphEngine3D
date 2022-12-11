@@ -8,9 +8,9 @@ namespace gre {
     class DirLight : public Light {
         static const uint8_t LIGHT_TYPE = 0;
 
-        double shadow_width_ = 1.0;
-        double shadow_height_ = 1.0;
-        double shadow_depth_ = 1.0;
+        double shadow_width_ = 10.0;
+        double shadow_height_ = 10.0;
+        double shadow_depth_ = 10.0;
 
         Vec3 direction_;
         Matrix projection_;
