@@ -4,7 +4,7 @@
 #include "../GraphObjects/GraphObject.h"
 
 
-namespace eng {
+namespace gre {
     class PointLight : public Light {
         static const uint8_t LIGHT_TYPE = 1;
 
@@ -13,11 +13,11 @@ namespace eng {
         double quadratic_ = 0.0;
 
     public:
-        Vect3 position;
+        Vec3 position;
 
-        PointLight(const Vect3& position) {
+        PointLight(const Vec3& position) {
             if (!glew_is_ok()) {
-                throw EngRuntimeError(__FILE__, __LINE__, "PointLight, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __LINE__, "PointLight, failed to initialize GLEW.\n\n");
             }
 
             this->position = position;
@@ -25,7 +25,7 @@ namespace eng {
 
         void set_uniforms(size_t id, const Shader<size_t>& shader) const override {
             if (shader.description != ShaderType::MAIN) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
             }
 
             std::string name = "lights[" + std::to_string(id) + "].";
@@ -40,7 +40,7 @@ namespace eng {
 
         PointLight& set_constant(double coefficient) {
             if (coefficient < 0.0) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_constant, negative coefficient value.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_constant, negative coefficient value.\n\n");
             }
 
             constant_ = coefficient;
@@ -49,7 +49,7 @@ namespace eng {
 
         PointLight& set_linear(double coefficient) {
             if (coefficient < 0.0) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_linear, negative coefficient value.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_linear, negative coefficient value.\n\n");
             }
 
             linear_ = coefficient;
@@ -58,7 +58,7 @@ namespace eng {
 
         PointLight& set_quadratic(double coefficient) {
             if (coefficient < 0.0) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_quadratic, negative coefficient value.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_quadratic, negative coefficient value.\n\n");
             }
 
             quadratic_ = coefficient;
@@ -73,7 +73,7 @@ namespace eng {
             GraphObject light_object = GraphObject::sphere(6, true, 1);
 
             light_object.meshes.apply_func([](auto& mesh) {
-                mesh.material.set_emission(Vect3(1.0, 1.0, 1.0));
+                mesh.material.set_emission(Vec3(1.0, 1.0, 1.0));
                 mesh.material.shadow = false;
             });
 

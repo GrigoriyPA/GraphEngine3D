@@ -4,7 +4,7 @@
 #include "../GraphicClasses/GraphicFunctions.h"
 
 
-namespace eng {
+namespace gre {
 	class ModelStorage {
 		friend class GraphObject;
 
@@ -14,6 +14,45 @@ namespace eng {
 		std::vector<size_t> models_index_;
 		std::vector<size_t> free_model_id_;
 		std::vector<std::pair<size_t, Matrix>> models_;
+
+		ModelStorage() noexcept {
+			max_count_models_ = 0;
+		}
+
+		ModelStorage(const ModelStorage& other) {
+			max_count_models_ = other.max_count_models_;
+			models_index_ = other.models_index_;
+			free_model_id_ = other.free_model_id_;
+			models_ = other.models_;
+
+			create_matrix_buffer(max_count_models_);
+
+			glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer_);
+			glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer_);
+
+			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * 16 * max_count_models_);
+
+			glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+			glBindBuffer(GL_COPY_READ_BUFFER, 0);
+
+			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		ModelStorage(ModelStorage&& other) noexcept {
+			swap(other);
+		}
+
+		ModelStorage& operator=(const ModelStorage& other)& {
+			ModelStorage object(other);
+			swap(object);
+			return *this;
+		}
+
+		ModelStorage& operator=(ModelStorage&& other)& noexcept {
+			deallocate();
+			swap(other);
+			return *this;
+		}
 
 		GLuint create_matrix_buffer(size_t max_count_models) {
 			max_count_models_ = max_count_models;
@@ -52,51 +91,12 @@ namespace eng {
 			std::swap(models_, other.models_);
 		}
 
-		ModelStorage() noexcept {
-			max_count_models_ = 0;
-		}
-
-		ModelStorage(const ModelStorage& other) {
-			max_count_models_ = other.max_count_models_;
-			models_index_ = other.models_index_;
-			free_model_id_ = other.free_model_id_;
-			models_ = other.models_;
-
-			create_matrix_buffer(max_count_models_);
-
-			glBindBuffer(GL_COPY_READ_BUFFER, other.matrix_buffer_);
-			glBindBuffer(GL_COPY_WRITE_BUFFER, matrix_buffer_);
-
-			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * 16 * max_count_models_);
-
-			glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
-			glBindBuffer(GL_COPY_READ_BUFFER, 0);
-
-			check_gl_errors(__FILE__, __LINE__, __func__);
-		}
-
-		ModelStorage(ModelStorage&& other) noexcept {
-			swap(other);
-		}
-
 	public:
 		using Iterator = std::vector<std::pair<size_t, Matrix>>::const_iterator;
 
-		ModelStorage& operator=(const ModelStorage& other)& {
-			ModelStorage object(other);
-			swap(object);
-			return *this;
-		}
-
-		ModelStorage& operator=(ModelStorage&& other)& {
-			deallocate();
-			swap(other);
-			return *this;
-		}
-
 		const Matrix& operator[](size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid model id.\n\n");
 			}
 
 			return models_[models_index_[id]].second;
@@ -104,7 +104,7 @@ namespace eng {
 
 		ModelStorage& set(size_t id, const Matrix& matrix) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "set, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "set, invalid model id.\n\n");
 			}
 
 			models_[models_index_[id]].second = matrix;
@@ -119,7 +119,7 @@ namespace eng {
 
 		Matrix get(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get, invalid model id.\n\n");
 			}
 
 			return models_[models_index_[id]].second;
@@ -127,7 +127,7 @@ namespace eng {
 
 		size_t get_memory_id(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid model id.\n\n");
 			}
 
 			return models_index_[id];
@@ -135,10 +135,14 @@ namespace eng {
 
 		size_t get_id(size_t memory_id) const {
 			if (models_.size() <= memory_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
 
 			return models_[memory_id].first;
+		}
+
+		size_t get_max_count_models() const noexcept {
+			return max_count_models_;
 		}
 
 		bool contains(size_t id) const noexcept {
@@ -167,7 +171,7 @@ namespace eng {
 
 		ModelStorage& erase(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
 			}
 
 			free_model_id_.push_back(id);
@@ -191,7 +195,7 @@ namespace eng {
 
 		size_t insert(const Matrix& matrix) {
 			if (models_.size() == max_count_models_) {
-				throw EngRuntimeError(__FILE__, __LINE__, "insert, too many instances created.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "insert, too many instances created.\n\n");
 			}
 
 			size_t free_model_id = models_index_.size();
@@ -210,7 +214,7 @@ namespace eng {
 
 		ModelStorage& change_left(size_t id, const Matrix& matrix) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
 			}
 
 			models_[models_index_[id]].second = matrix * models_[models_index_[id]].second;
@@ -220,7 +224,7 @@ namespace eng {
 
 		ModelStorage& change_right(size_t id, const Matrix& matrix) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
 			}
 
 			models_[models_index_[id]].second *= matrix;

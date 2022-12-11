@@ -5,7 +5,7 @@
 #include "../CommonClasses/Matrix.h"
 
 
-namespace eng {
+namespace gre {
 	template <typename T = void*>  // Constructors required: T(), T(T); Operators required: =(T, T)
 	class Shader {
 		inline static const char* VERTEX_SHADER_EXTENSION = ".vert";
@@ -19,7 +19,7 @@ namespace eng {
 		void load_vertex_shader(const std::string& vertex_shader_path) {
 			std::ifstream vertex_shader_file(vertex_shader_path + VERTEX_SHADER_EXTENSION);
 			if (vertex_shader_file.fail()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "load_vertex_shader, the vertex shader file does not exist.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "load_vertex_shader, the vertex shader file does not exist.\n\n");
 			}
 
 			vertex_shader_code_ = new std::string();
@@ -31,7 +31,7 @@ namespace eng {
 		void load_fragment_shader(const std::string& fragment_shader_path) {
 			std::ifstream fragment_shader_file(fragment_shader_path + FRAGMENT_SHADER_EXTENSION);
 			if (fragment_shader_file.fail()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "load_fragment_shader, the fragment shader file does not exist.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "load_fragment_shader, the fragment shader file does not exist.\n\n");
 			}
 
 			fragment_shader_code_ = new std::string();
@@ -68,7 +68,7 @@ namespace eng {
 			GLint success;
 			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 			if (success == GL_FALSE) {
-				throw EngRuntimeError(__FILE__, __LINE__, "create_vertex_shader, compilation failed, description \\/\n" + load_shader_info_log(vertex_shader) + "\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "create_vertex_shader, compilation failed, description \\/\n" + load_shader_info_log(vertex_shader) + "\n\n");
 			}
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -84,7 +84,7 @@ namespace eng {
 			GLint success;
 			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
 			if (success == GL_FALSE) {
-				throw EngRuntimeError(__FILE__, __LINE__, "create_fragment_shader, compilation failed, description \\/\n" + load_shader_info_log(fragment_shader) + "\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "create_fragment_shader, compilation failed, description \\/\n" + load_shader_info_log(fragment_shader) + "\n\n");
 			}
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -103,7 +103,7 @@ namespace eng {
 			GLint success;
 			glGetProgramiv(program, GL_LINK_STATUS, &success);
 			if (success == GL_FALSE) {
-				throw EngRuntimeError(__FILE__, __LINE__, "link_shaders, linking failed, description \\/\n" + load_program_info_log(program) + "\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "link_shaders, linking failed, description \\/\n" + load_program_info_log(program) + "\n\n");
 			}
 
 			glDeleteShader(vertex_shader);
@@ -115,7 +115,7 @@ namespace eng {
 		static std::string find_value(const std::string& code, const std::string& variable_name) {
 			std::vector<std::string> split_code = split(code, [](const char c) { return c == ' ' || c == '\n'; });
 			if (split_code.size() < 3) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
 			}
 
 			for (size_t i = 0; i < split_code.size() - 2; ++i) {
@@ -124,13 +124,13 @@ namespace eng {
 					return split_code[i + 2];
 				}
 			}
-			throw EngInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
+			throw GreInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
 		}
 
 		static uint64_t find_version(const std::string& code) {
 			std::vector<std::string> split_code = split(code, [](const char c) { return c == ' ' || c == '\n'; });
 			if (split_code.size() < 2) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "find_version, version not found.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "find_version, version not found.\n\n");
 			}
 
 			for (size_t i = 0; i < split_code.size() - 1; ++i) {
@@ -138,7 +138,7 @@ namespace eng {
 					return std::stoull(split_code[i + 1]);
 				}
 			}
-			throw EngInvalidArgument(__FILE__, __LINE__, "find_version, version not found.\n\n");
+			throw GreInvalidArgument(__FILE__, __LINE__, "find_version, version not found.\n\n");
 		}
 
 		static std::string load_shader_info_log(GLuint shader) {
@@ -170,17 +170,17 @@ namespace eng {
 		}
 
 	public:
-		T description;
+		T description = T();
 
 		Shader() {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
 			}
 		}
 
 		Shader(const std::string& vertex_shader_path, const std::string& fragment_shader_path, T desc_value = T()) {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
 			}
 
 			load_vertex_shader(vertex_shader_path);
@@ -215,7 +215,7 @@ namespace eng {
 			return *this;
 		}
 
-		Shader<T>& operator=(Shader<T>&& other)& {
+		Shader<T>& operator=(Shader<T>&& other)& noexcept {
 			deallocate();
 			swap(other);
 			return *this;
@@ -237,7 +237,7 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_f(const GLchar* uniform_name, const Vect2& v) const {
+		void set_uniform_f(const GLchar* uniform_name, const Vec2& v) const {
 			if (get_current_program() != program_id_) {
 				use();
 			}
@@ -253,7 +253,7 @@ namespace eng {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_f(const GLchar* uniform_name, const Vect3& v) const {
+		void set_uniform_f(const GLchar* uniform_name, const Vec3& v) const {
 			if (get_current_program() != program_id_) {
 				use();
 			}
@@ -352,7 +352,7 @@ namespace eng {
 				glUniform4fv(get_uniform_location(uniform_name), count, value);
 				break;
 			default:
-				throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_fv, invalid vector size.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_fv, invalid vector size.\n\n");
 				break;
 			}
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -377,7 +377,7 @@ namespace eng {
 				glUniform4iv(get_uniform_location(uniform_name), count, value);
 				break;
 			default:
-				throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_iv, invalid vector size.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_iv, invalid vector size.\n\n");
 				break;
 			}
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -402,7 +402,7 @@ namespace eng {
 				glUniform4uiv(get_uniform_location(uniform_name), count, value);
 				break;
 			default:
-				throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_uiv, invalid vector size.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_uiv, invalid vector size.\n\n");
 				break;
 			}
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -432,7 +432,7 @@ namespace eng {
 					glUniformMatrix2x4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
@@ -448,7 +448,7 @@ namespace eng {
 					glUniformMatrix3x4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
@@ -464,12 +464,12 @@ namespace eng {
 					glUniformMatrix4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
 			default:
-				throw EngOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 				break;
 			}
 			check_gl_errors(__FILE__, __LINE__, __func__);
@@ -511,6 +511,20 @@ namespace eng {
 		void use() const {
 			glUseProgram(program_id_);
 			check_gl_errors(__FILE__, __LINE__, __func__);
+		}
+
+		void validate_program() const {
+			glValidateProgram(program_id_);
+
+			GLint validate_status;
+			glGetProgramiv(program_id_, GL_VALIDATE_STATUS, &validate_status);
+
+			if (validate_status == GL_TRUE) {
+				std::cout << "Validate status: success\n\n";
+			} else {
+				std::cout << "Validate status: fail\n";
+				std::cout << "Reason:\n" << load_program_info_log(program_id_) << "\n\n";
+			}
 		}
 
 		~Shader() {

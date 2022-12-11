@@ -1,10 +1,11 @@
 #version 430 core
 
-const int NR_LIGHTS = 2;
+const int NR_LIGHTS = 3;
+const int NR_CAMERAS = 2;
 
 
 struct Light {
-    bool exist, shadow;
+    bool shadow;
     int type;
     float constant, linear, quadratic, cut_in, cut_out;
     vec3 position, direction, ambient, diffuse, specular;
@@ -30,6 +31,8 @@ uniform bool use_diffuse_map;
 uniform bool use_specular_map;
 uniform bool use_emission_map;
 uniform int object_id;
+uniform int camera_id;
+uniform int number_lights;
 uniform float gamma;
 uniform sampler2D diffuse_map;
 uniform sampler2D specular_map;
@@ -41,10 +44,10 @@ uniform Material object_material;
 uniform Light lights[NR_LIGHTS];
 
 
-layout(binding=0) buffer central_object {
-    int central_object_id;
-    int central_object_model_id;
-    float depth;
+layout(std430, binding=0) buffer central_object {
+    int central_object_id[NR_CAMERAS];
+    int central_object_model_id[NR_CAMERAS];
+    float depth[NR_CAMERAS];
 };
 
 
@@ -142,10 +145,10 @@ vec3 calc_spot_light(Light light, vec3 normal, vec3 view_dir, Material material,
 
 
 void main() {
-    if (abs(gl_FragCoord.x - check_point.x) <= 1 && abs(gl_FragCoord.y - check_point.y) <= 1 && gl_FragCoord.z < depth) {
-        central_object_id = object_id;
-        central_object_model_id = int(object_model_id);
-        depth = gl_FragCoord.z;
+    if (abs(gl_FragCoord.x - check_point.x) <= 1 && abs(gl_FragCoord.y - check_point.y) <= 1 && gl_FragCoord.z < depth[camera_id]) {
+        central_object_id[camera_id] = object_id;
+        central_object_model_id[camera_id] = int(object_model_id);
+        depth[camera_id] = gl_FragCoord.z;
     }
 
     Material material = object_material;
@@ -172,8 +175,8 @@ void main() {
 
     vec3 result_color = vec3(0.0);
     for(int i = 0; i < NR_LIGHTS; i++) {
-        if (!lights[i].exist)
-            continue;
+        if (i == number_lights)
+            break;
 
         if (lights[i].type == 0)
   	        result_color += calc_dir_light(lights[i], normal, view_dir, material, i);

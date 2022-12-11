@@ -7,10 +7,11 @@
 #include <vector>
 
 
-namespace eng {
+namespace gre {
     const double EPS = 1e-7;
     const double FI = (sqrt(5.0) - 1.0) / 2.0;
     const double PI = acos(-1.0);
+
 
     template <typename T>  // Operators required: <(T, T), ==(T, T)
     int32_t sgn(const T& x, const T& zero = T(0)) {
@@ -25,7 +26,7 @@ namespace eng {
 
     template <typename T>  // T - numeric type
     bool equality(const T& left, const T& right, const T& eps = T(EPS)) {
-        return std::abs(left - right) < eps;
+        return std::abs(left - right) <= eps;
     }
 
     template <typename T>  // T - numeric type
@@ -80,27 +81,27 @@ namespace eng {
     }
 
 
-    class EngDomainError : public std::domain_error {
+    class GreDomainError : public std::domain_error {
     public:
-        EngDomainError(const char* filename, uint32_t line, std::string message) : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreDomainError(const char* filename, uint32_t line, std::string message) : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 
-    class EngInvalidArgument : public std::invalid_argument {
+    class GreInvalidArgument : public std::invalid_argument {
     public:
-        EngInvalidArgument(const char* filename, uint32_t line, std::string message) : invalid_argument("Invalid argument error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreInvalidArgument(const char* filename, uint32_t line, std::string message) : invalid_argument("Invalid argument error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 
-    class EngOutOfRange : public std::out_of_range {
+    class GreOutOfRange : public std::out_of_range {
     public:
-        EngOutOfRange(const char* filename, uint32_t line, std::string message) : out_of_range("Out of range error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreOutOfRange(const char* filename, uint32_t line, std::string message) : out_of_range("Out of range error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 
-    class EngRuntimeError : public std::runtime_error {
+    class GreRuntimeError : public std::runtime_error {
     public:
-        EngRuntimeError(const char* filename, uint32_t line, std::string message) : runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreRuntimeError(const char* filename, uint32_t line, std::string message) : runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 }

@@ -3,7 +3,7 @@
 #include "Mesh.h"
 
 
-namespace eng {
+namespace gre {
 	class MeshStorage {
 		friend class GraphObject;
 
@@ -12,6 +12,32 @@ namespace eng {
 		std::vector<size_t> meshes_index_;
 		std::vector<size_t> free_mesh_id_;
 		std::vector<std::pair<size_t, Mesh>> meshes_;
+
+		MeshStorage() noexcept {
+		}
+
+		MeshStorage(const MeshStorage& other) {
+			meshes_index_ = other.meshes_index_;
+			free_mesh_id_ = other.free_mesh_id_;
+			meshes_ = other.meshes_;
+
+			set_matrix_buffer(other.matrix_buffer_);
+		}
+
+		MeshStorage(MeshStorage&& other) noexcept {
+			swap(other);
+		}
+
+		MeshStorage& operator=(const MeshStorage& other)& {
+			MeshStorage object(other);
+			swap(object);
+			return *this;
+		}
+
+		MeshStorage& operator=(MeshStorage&& other)& noexcept {
+			swap(other);
+			return *this;
+		}
 
 		void set_mesh_matrix_buffer(Mesh& mesh) const {
 			if (matrix_buffer_ == 0) {
@@ -46,7 +72,11 @@ namespace eng {
 			}
 		}
 
-		MeshStorage() {
+		void swap(MeshStorage& other) noexcept {
+			std::swap(matrix_buffer_, other.matrix_buffer_);
+			std::swap(meshes_index_, other.meshes_index_);
+			std::swap(free_mesh_id_, other.free_mesh_id_);
+			std::swap(meshes_, other.meshes_);
 		}
 
 	public:
@@ -54,7 +84,7 @@ namespace eng {
 
 		const Mesh& operator[](size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
 			}
 
 			return meshes_[meshes_index_[id]].second;
@@ -62,7 +92,7 @@ namespace eng {
 
 		Mesh get(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get, invalid mesh id.\n\n");
 			}
 
 			return meshes_[meshes_index_[id]].second;
@@ -70,7 +100,7 @@ namespace eng {
 
 		size_t get_memory_id(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid mesh id.\n\n");
 			}
 
 			return meshes_index_[id];
@@ -78,7 +108,7 @@ namespace eng {
 
 		size_t get_id(size_t memory_id) const {
 			if (meshes_.size() <= memory_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
 
 			return meshes_[memory_id].first;
@@ -110,7 +140,7 @@ namespace eng {
 
 		MeshStorage& erase(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid mesh id.\n\n");
 			}
 
 			free_mesh_id_.push_back(id);
@@ -147,7 +177,7 @@ namespace eng {
 
 		MeshStorage& modify(size_t id, const Mesh& mesh) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "modify, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "modify, invalid mesh id.\n\n");
 			}
 
 			set_mesh_matrix_buffer(meshes_[meshes_index_[id]].second = mesh);
@@ -156,7 +186,7 @@ namespace eng {
 
 		MeshStorage& apply_func(size_t id, std::function<void(Mesh&)> func) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "apply_func, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "apply_func, invalid mesh id.\n\n");
 			}
 
 			Mesh object(meshes_[meshes_index_[id]].second);
@@ -178,10 +208,10 @@ namespace eng {
 			std::vector<Mesh> new_meshes;
 			while (!meshes_.empty()) {
 				Mesh current_mesh = meshes_[0].second;
-				std::vector<Vect3> positions;
-				std::vector<Vect3> normals;
-				std::vector<Vect2> tex_coords;
-				std::vector<Vect3> colors;
+				std::vector<Vec3> positions;
+				std::vector<Vec3> normals;
+				std::vector<Vec2> tex_coords;
+				std::vector<Vec3> colors;
 				std::vector<GLuint> indices;
 				for (size_t i = 0; i < meshes_.size(); ++i) {
 					if (meshes_[i].second != current_mesh) {
@@ -191,16 +221,16 @@ namespace eng {
 					for (GLuint index : meshes_[i].second.get_indices()) {
 						indices.push_back(static_cast<GLuint>(positions.size()) + index);
 					}
-					for (const Vect3& position : meshes_[i].second.get_positions()) {
+					for (const Vec3& position : meshes_[i].second.get_positions()) {
 						positions.push_back(position);
 					}
-					for (const Vect3& normal : meshes_[i].second.get_normals()) {
+					for (const Vec3& normal : meshes_[i].second.get_normals()) {
 						normals.push_back(normal);
 					}
-					for (const Vect2& tex_coord : meshes_[i].second.get_tex_coords()) {
+					for (const Vec2& tex_coord : meshes_[i].second.get_tex_coords()) {
 						tex_coords.push_back(tex_coord);
 					}
-					for (const Vect3& color : meshes_[i].second.get_colors()) {
+					for (const Vec3& color : meshes_[i].second.get_colors()) {
 						colors.push_back(color);
 					}
 

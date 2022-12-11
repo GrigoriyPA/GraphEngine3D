@@ -2,13 +2,11 @@
 
 #include <algorithm>
 #include "MatrixLine.h"
-#include "Vect3.h"
+#include "Vec3.h"
 
 
-namespace eng {
+namespace gre {
 	class Matrix {
-		inline static double eps_ = 1e-5;
-
 		std::vector<MatrixLine> matrix_;
 
 	public:
@@ -38,7 +36,7 @@ namespace eng {
 			matrix_.reserve(init.size());
 			for (const auto& line : init) {
 				if (columns != line.size()) {
-					throw EngInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
+					throw GreInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
 				}
 
 				matrix_.push_back(MatrixLine(line));
@@ -55,14 +53,14 @@ namespace eng {
 			matrix_.reserve(init.size());
 			for (const auto& line : init) {
 				if (columns != line.size()) {
-					throw EngInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
+					throw GreInvalidArgument(__FILE__, __LINE__, "Matrix, not all rows are the same size.\n\n");
 				}
 
 				matrix_.push_back(MatrixLine(line));
 			}
 		}
 
-		Matrix(const Vect3& vector_x, const Vect3& vector_y, const Vect3& vector_z) noexcept {
+		Matrix(const Vec3& vector_x, const Vec3& vector_y, const Vec3& vector_z) noexcept {
 			*this = Matrix({
 				{ vector_x.x, vector_y.x, vector_z.x, 0.0 },
 				{ vector_x.y, vector_y.y, vector_z.y, 0.0 },
@@ -115,7 +113,7 @@ namespace eng {
 
 		MatrixLine& operator[](size_t index) {
 			if (matrix_.size() <= index) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return matrix_[index];
@@ -123,7 +121,7 @@ namespace eng {
 
 		const MatrixLine& operator[](size_t index) const {
 			if (matrix_.size() <= index) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return matrix_[index];
@@ -136,7 +134,7 @@ namespace eng {
 
 			for (size_t i = 0; i < matrix_.size(); ++i) {
 				for (size_t j = 0; j < matrix_[i].size(); ++j) {
-					if (!equality(matrix_[i][j], other[i][j], eps_)) {
+					if (!equality(matrix_[i][j], other[i][j])) {
 						return false;
 					}
 				}
@@ -150,7 +148,7 @@ namespace eng {
 
 		Matrix& operator+=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator+=, invalid matrix sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator+=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this + other;
@@ -159,7 +157,7 @@ namespace eng {
 
 		Matrix& operator-=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator-=, invalid matrix sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator-=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this - other;
@@ -173,7 +171,7 @@ namespace eng {
 
 		Matrix& operator*=(const Matrix& other)& {
 			if (count_columns() != other.count_strings()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator*=, invalid matrix sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator*=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this * other;
@@ -181,8 +179,8 @@ namespace eng {
 		}
 
 		Matrix& operator/=(double other)& {
-			if (equality(other, 0.0, eps_)) {
-				throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
+			if (equality(other, 0.0)) {
+				throw GreDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
 			*this = *this / other;
@@ -191,7 +189,7 @@ namespace eng {
 
 		Matrix& operator^=(uint32_t other)& {
 			if (matrix_.size() != count_columns()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator^=, invalid matrix size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator^=, invalid matrix size.\n\n");
 			}
 
 			*this = *this ^ other;
@@ -200,7 +198,7 @@ namespace eng {
 
 		Matrix& operator|=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator|=, invalid matrix sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator|=, invalid matrix sizes.\n\n");
 			}
 
 			*this = *this | other;
@@ -217,7 +215,7 @@ namespace eng {
 
 		Matrix operator+(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator+, invalid matrix sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator+, invalid matrix sizes.\n\n");
 			}
 
 			Matrix result = *this;
@@ -229,7 +227,7 @@ namespace eng {
 
 		Matrix operator-(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator-, invalid matrix sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator-, invalid matrix sizes.\n\n");
 			}
 
 			return *this + (-other);
@@ -245,7 +243,7 @@ namespace eng {
 
 		Matrix operator*(const Matrix& other) const {
 			if (count_columns() != other.count_strings()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix sizes.\n\n");
 			}
 
 			Matrix transposed = other.transpose();
@@ -258,12 +256,12 @@ namespace eng {
 			return result;
 		}
 
-		Vect3 operator*(const Vect3& other) const {
+		Vec3 operator*(const Vec3& other) const {
 			if (matrix_.size() != 4 || matrix_[0].size() != 4) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix size.\n\n");
 			}
 
-			Vect3 result;
+			Vec3 result;
 			for (size_t i = 0; i < 3; ++i) {
 				for (size_t j = 0; j < 3; ++j) {
 					result[i] += matrix_[i][j] * other[j];
@@ -274,8 +272,8 @@ namespace eng {
 		}
 
 		Matrix operator/(double other) const {
-			if (equality(other, 0.0, eps_)) {
-				throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
+			if (equality(other, 0.0)) {
+				throw GreDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
 			return *this * (1.0 / other);
@@ -283,7 +281,7 @@ namespace eng {
 
 		Matrix operator^(uint32_t other) const {
 			if (matrix_.size() != count_columns()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator^, invalid matrix size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator^, invalid matrix size.\n\n");
 			}
 
 			return binary_exponentiation(*this, other, one_matrix(matrix_.size()));
@@ -291,7 +289,7 @@ namespace eng {
 
 		Matrix operator|(const Matrix& other) const {
 			if (matrix_.size() != other.count_strings()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator|, invalid matrix sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator|, invalid matrix sizes.\n\n");
 			}
 
 			Matrix result(matrix_.size(), count_columns() + other.count_columns(), *this);
@@ -364,7 +362,7 @@ namespace eng {
 
 		Matrix submatrix(size_t line, size_t column, size_t height, size_t width) const {
 			if (line + height > matrix_.size() || column + width > count_columns()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "submatrix, invalid submatrix size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "submatrix, invalid submatrix size.\n\n");
 			}
 
 			Matrix result(height, width);
@@ -381,7 +379,7 @@ namespace eng {
 			for (size_t j = 0, i0 = 0; j < count_columns() && i0 < matrix_.size(); ++j) {
 				size_t k = matrix_.size();
 				for (size_t i = i0; i < matrix_.size(); ++i) {
-					if (!equality(result[i][j], 0.0, eps_)) {
+					if (!equality(result[i][j], 0.0)) {
 						k = i;
 						break;
 					}
@@ -407,7 +405,7 @@ namespace eng {
 
 		double determinant() const {
 			if (matrix_.size() != count_columns()) {
-				throw EngDomainError(__FILE__, __LINE__, "determinant, not a square matrix.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "determinant, not a square matrix.\n\n");
 			}
 
 			double result = 1.0;
@@ -415,7 +413,7 @@ namespace eng {
 			for (size_t j = 0, i0 = 0; j < count_columns(); ++j) {
 				size_t k = matrix_.size();
 				for (size_t i = i0; i < matrix_.size(); ++i) {
-					if (!equality(cur_matrix[i][j], 0.0, eps_)) {
+					if (!equality(cur_matrix[i][j], 0.0)) {
 						k = i;
 						break;
 					}
@@ -441,25 +439,25 @@ namespace eng {
 
 		Matrix inverse() const {
 			if (matrix_.size() != count_columns()) {
-				throw EngDomainError(__FILE__, __LINE__, "inverse, not a square matrix.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "inverse, not a square matrix.\n\n");
 			}
 
 			Matrix result = (*this | one_matrix(matrix_.size())).improved_step_view();
 			if (result.submatrix(0, 0, matrix_.size(), matrix_.size()) != one_matrix(matrix_.size())) {
-				throw EngDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
 			}
 			return result.submatrix(0, matrix_.size(), matrix_.size(), matrix_.size());
 		}
 
 		Matrix solve_equation(const Matrix& value) const {
 			if (value.count_columns() != 1 || matrix_.size() != value.count_strings()) {
-				throw EngDomainError(__FILE__, __LINE__, "solve_equation, invalid matrix size.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "solve_equation, invalid matrix size.\n\n");
 			}
 
 			Matrix isv_matrix = (*this | Matrix(value)).improved_step_view();
 			Matrix result(count_columns(), 1, 0);
 			for (size_t i = 0, j = 0; i < matrix_.size(); ++i) {
-				for (; j <= count_columns() && !equality(isv_matrix[i][j], 1.0, eps_); ++j) {}
+				for (; j <= count_columns() && !equality(isv_matrix[i][j], 1.0); ++j) {}
 
 				if (j == count_columns()) {
 					return Matrix(0, 0);
@@ -471,14 +469,6 @@ namespace eng {
 				result[j][0] = isv_matrix[i].back();
 			}
 			return result;
-		}
-
-		static void set_epsilon(double eps) {
-			if (eps <= 0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_epsilon, not positive epsilon value.\n\n");
-			}
-
-			eps_ = eps;
 		}
 
 		static Matrix zip_map(const Matrix& matrix1, const Matrix& matrix2, std::function<double(double, double)> zip_func) {
@@ -499,7 +489,7 @@ namespace eng {
 			return result;
 		}
 
-		static Matrix scale_matrix(const Vect3& scale) noexcept {
+		static Matrix scale_matrix(const Vec3& scale) noexcept {
 			return Matrix({
 				{ scale.x,     0.0,     0.0, 0.0 },
 				{     0.0, scale.y,     0.0, 0.0 },
@@ -517,7 +507,7 @@ namespace eng {
 				});
 		}
 
-		static Matrix translation_matrix(const Vect3& translation) noexcept {
+		static Matrix translation_matrix(const Vec3& translation) noexcept {
 			return Matrix({
 				{ 1.0, 0.0, 0.0, translation.x },
 				{ 0.0, 1.0, 0.0, translation.y },
@@ -526,12 +516,12 @@ namespace eng {
 				});
 		}
 
-		static Matrix rotation_matrix(const Vect3& axis, double angle) {
+		static Matrix rotation_matrix(const Vec3& axis, double angle) {
 			if (equality(axis.length(), 0.0)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "rotation_matrix, the axis vector has zero length.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "rotation_matrix, the axis vector has zero length.\n\n");
 			}
 
-			Vect3 norm_axis = axis.normalize();
+			Vec3 norm_axis = axis.normalize();
 			double x = norm_axis.x;
 			double y = norm_axis.y;
 			double z = norm_axis.z;
@@ -548,14 +538,14 @@ namespace eng {
 
 		static Matrix normal_transform(const Matrix& transform) {
 			if (transform.count_strings() != 4 || transform.count_columns() != 4) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "normal_transform, invalid matrix size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "normal_transform, invalid matrix size.\n\n");
 			}
 
 			try {
 				return transform.inverse().transpose();
 			}
-			catch (EngDomainError) {
-				throw EngDomainError(__FILE__, __LINE__, "normal_transform, the matrix is not invertible.\n\n");
+			catch (GreDomainError) {
+				throw GreDomainError(__FILE__, __LINE__, "normal_transform, the matrix is not invertible.\n\n");
 			}
 		}
 	};

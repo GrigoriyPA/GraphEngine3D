@@ -3,13 +3,14 @@
 #include "Material.h"
 
 
-namespace eng {
+namespace gre {
 	class Mesh {
 		inline static const std::vector<GLint> MEMORY_CONFIGURATION = { 3, 3, 2, 3 };
 
 		GLuint vertex_array_ = 0;
 		GLuint vertex_buffer_ = 0;
 		GLuint index_buffer_ = 0;
+
 		GLfloat border_width_ = 1.0;
 
 		size_t count_points_;
@@ -76,7 +77,7 @@ namespace eng {
 
 		Mesh() {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
 
 			count_points_ = 0;
@@ -86,10 +87,10 @@ namespace eng {
 		// Default polygon shape
 		explicit Mesh(size_t count_points) {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
 			if (count_points < 2) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Mesh, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "Mesh, invalid number of points.\n\n");
 			}
 
 			count_points_ = count_points;
@@ -145,7 +146,7 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& operator=(Mesh&& other)& {
+		Mesh& operator=(Mesh&& other)& noexcept {
 			deallocate();
 			swap(other);
 			return *this;
@@ -161,16 +162,16 @@ namespace eng {
 
 		Mesh& set_border_width(GLfloat border_width) {
 			if (border_width < 0.0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_border_width, invalid border width value.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_border_width, invalid border width value.\n\n");
 			}
 
 			border_width_ = border_width;
 			return *this;
 		}
 
-		Mesh& set_positions(const std::vector<Vect3>& positions, bool update_normals = false) {
+		Mesh& set_positions(const std::vector<Vec3>& positions, bool update_normals = false) {
 			if (positions.size() != count_points_) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points.\n\n");
 			}
 
 			std::vector<GLfloat> converted_positions(count_points_ * 3);
@@ -188,17 +189,17 @@ namespace eng {
 
 			if (update_normals) {
 				if (positions.size() < 3) {
-					throw EngInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points for automatic calculation of normals.\n\n");
+					throw GreInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points for automatic calculation of normals.\n\n");
 				}
 
-				set_normals(std::vector<Vect3>(count_points_, (positions[2] - positions[0]) ^ (positions[1] - positions[0])));
+				set_normals(std::vector<Vec3>(count_points_, (positions[2] - positions[0]) ^ (positions[1] - positions[0])));
 			}
 			return *this;
 		}
 
-		Mesh& set_normals(const std::vector<Vect3>& normals) {
+		Mesh& set_normals(const std::vector<Vec3>& normals) {
 			if (normals.size() != count_points_) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_normals, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_normals, invalid number of points.\n\n");
 			}
 
 			std::vector<GLfloat> converted_normals(count_points_ * 3);
@@ -216,9 +217,9 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& set_tex_coords(const std::vector<Vect2>& tex_coords) {
+		Mesh& set_tex_coords(const std::vector<Vec2>& tex_coords) {
 			if (tex_coords.size() != count_points_) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_tex_coords, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_tex_coords, invalid number of points.\n\n");
 			}
 
 			std::vector<GLfloat> converted_tex_coords(count_points_ * 2);
@@ -236,9 +237,9 @@ namespace eng {
 			return *this;
 		}
 
-		Mesh& set_colors(const std::vector<Vect3>& colors) {
+		Mesh& set_colors(const std::vector<Vec3>& colors) {
 			if (colors.size() != count_points_) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_colors, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_colors, invalid number of points.\n\n");
 			}
 
 			std::vector<GLfloat> converted_colors(count_points_ * 3);
@@ -286,44 +287,44 @@ namespace eng {
 			return count_indices_;
 		}
 
-		std::vector<Vect3> get_positions() const {
+		std::vector<Vec3> get_positions() const {
 			GLvoid* buffer = new GLfloat[3 * count_points_];
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
 			glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 3 * count_points_, buffer);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return Vect3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
+			return Vec3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
 		}
 
-		std::vector<Vect3> get_normals() const {
+		std::vector<Vec3> get_normals() const {
 			GLvoid* buffer = new GLfloat[3 * count_points_];
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
 			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * count_points_, sizeof(GLfloat) * 3 * count_points_, buffer);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return Vect3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
+			return Vec3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
 		}
 
-		std::vector<Vect2> get_tex_coords() const {
+		std::vector<Vec2> get_tex_coords() const {
 			GLvoid* buffer = new GLfloat[2 * count_points_];
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
 			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * count_points_, sizeof(GLfloat) * 2 * count_points_, buffer);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return Vect2::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
+			return Vec2::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
 		}
 
-		std::vector<Vect3> get_colors() const {
+		std::vector<Vec3> get_colors() const {
 			GLvoid* buffer = new GLfloat[3 * count_points_];
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
 			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8 * count_points_, sizeof(GLfloat) * 3 * count_points_, buffer);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return Vect3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
+			return Vec3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
 		}
 
 		std::vector<GLuint> get_indices() const {
@@ -343,9 +344,9 @@ namespace eng {
 			return result;
 		}
 
-		Vect3 get_center() const {
-			std::vector<Vect3> positions = get_positions();
-			return get_value<Vect3>(positions.begin(), positions.end(), Vect3(0, 0, 0), [&](auto element, auto* result) { *result += element; }) / static_cast<double>(positions.size());
+		Vec3 get_center() const {
+			std::vector<Vec3> positions = get_positions();
+			return get_value<Vec3>(positions.begin(), positions.end(), Vec3(0, 0, 0), [&](auto element, auto* result) { *result += element; }) / static_cast<double>(positions.size());
 		}
 
 		void swap(Mesh& other) noexcept {
@@ -361,8 +362,8 @@ namespace eng {
 
 		Mesh& apply_matrix(const Matrix& transform) {
 			Matrix normal_transform = Matrix::normal_transform(transform);
-			std::vector<Vect3> positions = get_positions();
-			std::vector<Vect3> normals = get_normals();
+			std::vector<Vec3> positions = get_positions();
+			std::vector<Vec3> normals = get_normals();
 			for (size_t i = 0; i < count_points_; ++i) {
 				positions[i] = transform * positions[i];
 				normals[i] = normal_transform * normals[i];
@@ -373,7 +374,7 @@ namespace eng {
 		}
 
 		Mesh& invert_points_order(bool update_normals = false) {
-			std::vector<Vect3> positions = get_positions();
+			std::vector<Vec3> positions = get_positions();
 			std::reverse(positions.begin(), positions.end());
 			set_positions(positions, update_normals);
 			return *this;

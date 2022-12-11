@@ -2,10 +2,10 @@
 
 #include <GL/glew.h>
 #include "../CommonClasses/Functions.h"
-#include "../CommonClasses/Vect3.h"
+#include "../CommonClasses/Vec3.h"
 
 
-namespace eng {
+namespace gre {
 	bool GLEW_IS_OK = false;
 
 	enum ShaderType : size_t { NONE = 0, MAIN = 1, DEPTH = 2, POST = 3 };
@@ -33,12 +33,12 @@ namespace eng {
 			default:                               error = "UNKNOWN"; break;
 		}
 
-		throw EngRuntimeError(filename, line, std::string(func_name) + ", GL error with name \"" + error + "\".\n\n");
+		throw GreRuntimeError(filename, line, std::string(func_name) + ", GL error with name \"" + error + "\".\n\n");
 	}
 
-	void check_color_value(const char* filename, uint32_t line, const char* func_name, const Vect3& color) {
+	void check_color_value(const char* filename, uint32_t line, const char* func_name, const Vec3& color) {
 		if (color.get_value<bool>(false, [](auto coord, auto* result) { *result = *result || coord < 0.0 || 1.0 < coord; })) {
-			throw EngInvalidArgument(filename, line, std::string(func_name) + ", invalid color value.\n\n");
+			throw GreInvalidArgument(filename, line, std::string(func_name) + ", invalid color value.\n\n");
 		}
 	}
 }
