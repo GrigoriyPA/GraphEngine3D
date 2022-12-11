@@ -3,7 +3,7 @@
 #include "../Light/Light.h"
 
 
-namespace eng {
+namespace gre {
 	class LightStorage {
 		friend class GraphEngine;
 
@@ -51,7 +51,7 @@ namespace eng {
 
 		void set_uniforms(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
 
 			shader.set_uniform_i("number_lights", static_cast<GLint>(lights_.size()));
@@ -98,7 +98,7 @@ namespace eng {
 			glReadBuffer(GL_NONE);
 
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-				throw EngRuntimeError(__FILE__, __LINE__, "create_depth_map_frame_buffer, framebuffer is not complete.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "create_depth_map_frame_buffer, framebuffer is not complete.\n\n");
 			}
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -131,7 +131,7 @@ namespace eng {
 
 		Light*& operator[](size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid light id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid light id.\n\n");
 			}
 
 			return lights_[lights_index_[id]].second;
@@ -139,7 +139,7 @@ namespace eng {
 
 		const Light* const& operator[](size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid light id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid light id.\n\n");
 			}
 
 			return lights_[lights_index_[id]].second;
@@ -158,7 +158,7 @@ namespace eng {
 
 		size_t get_memory_id(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid light id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid light id.\n\n");
 			}
 
 			return lights_index_[id];
@@ -166,7 +166,7 @@ namespace eng {
 
 		size_t get_id(size_t memory_id) const {
 			if (lights_.size() <= memory_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
 
 			return lights_[memory_id].first;
@@ -214,7 +214,7 @@ namespace eng {
 
 		LightStorage& erase(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid light id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid light id.\n\n");
 			}
 
 			free_light_id_.push_back(id);
@@ -236,7 +236,7 @@ namespace eng {
 
 		size_t insert(Light* light) {
 			if (lights_.size() == max_count_lights_) {
-				throw EngRuntimeError(__FILE__, __LINE__, "insert, too many lights created.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "insert, too many lights created.\n\n");
 			}
 
 			size_t free_light_id = lights_index_.size();

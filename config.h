@@ -9,7 +9,7 @@ const double SPEED_DELT = 2;
 
 const double GAMMA = 2.2;
 
-const double FOV = eng::PI / 2;
+const double FOV = gre::PI / 2;
 const double MIN_DIST = 0.1;
 const double MAX_DIST = 250;
 
@@ -25,4 +25,4 @@ const sf::Color INTERFACE_TEXT_COLOR = sf::Color(255, 255, 255);
 const double INTERFACE_SIZE = 70;
 const double INTERFACE_WIDTH = 2;
 const double INTERFACE_SPEED = 5;
-const double INTERFACE_DELTA = (1.0 - eng::FI) / 2;
+const double INTERFACE_DELTA = (1.0 - gre::FI) / 2;

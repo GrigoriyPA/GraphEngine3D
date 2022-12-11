@@ -3,7 +3,7 @@
 #include "Line.h"
 
 
-namespace eng {
+namespace gre {
 	class Cut {
 		Line line_;
 		Vec3 point1_;
@@ -14,8 +14,8 @@ namespace eng {
 			try {
 				line_ = Line(point1_, point2_);
 			}
-			catch (EngInvalidArgument) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Cut, points for initialization are the same.\n\n");
+			catch (GreInvalidArgument) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "Cut, points for initialization are the same.\n\n");
 			}
 
 			point1_ = point1;

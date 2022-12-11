@@ -3,7 +3,7 @@
 #include "Camera.h"
 
 
-namespace eng {
+namespace gre {
 	struct ObjectDesc {
 		bool exist = false;
 		size_t object_id = 0;
@@ -81,7 +81,7 @@ namespace eng {
 
 		ObjectDesc get_check_object(size_t id, Vec3& intersect_point) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
 
 			load_buffer_data();
@@ -96,7 +96,7 @@ namespace eng {
 
 		ObjectDesc get_check_object(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
 
 			load_buffer_data();
@@ -108,7 +108,7 @@ namespace eng {
 
 		void create_shader_storage_buffer(size_t max_count_cameras, Shader<size_t>& shader) {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "create_shader_storage_buffer, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "create_shader_storage_buffer, invalid shader type.\n\n");
 			}
 
 			shader_ = &shader;
@@ -205,7 +205,7 @@ namespace eng {
 
 		Camera& operator[](size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid camera id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid camera id.\n\n");
 			}
 
 			return cameras_[cameras_index_[id]].second;
@@ -213,7 +213,7 @@ namespace eng {
 
 		const Camera& operator[](size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid camera id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid camera id.\n\n");
 			}
 
 			return cameras_[cameras_index_[id]].second;
@@ -221,7 +221,7 @@ namespace eng {
 
 		size_t get_memory_id(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid camera id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid camera id.\n\n");
 			}
 
 			return cameras_index_[id];
@@ -229,7 +229,7 @@ namespace eng {
 
 		size_t get_id(size_t memory_id) const {
 			if (cameras_.size() <= memory_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
 
 			return cameras_[memory_id].first;
@@ -273,7 +273,7 @@ namespace eng {
 
 		CamerasStorage& erase(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid camera id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid camera id.\n\n");
 			}
 
 			free_camera_id_.push_back(id);

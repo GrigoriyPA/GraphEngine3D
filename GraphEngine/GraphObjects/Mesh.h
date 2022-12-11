@@ -3,7 +3,7 @@
 #include "Material.h"
 
 
-namespace eng {
+namespace gre {
 	class Mesh {
 		inline static const std::vector<GLint> MEMORY_CONFIGURATION = { 3, 3, 2, 3 };
 
@@ -77,7 +77,7 @@ namespace eng {
 
 		Mesh() {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
 
 			count_points_ = 0;
@@ -87,10 +87,10 @@ namespace eng {
 		// Default polygon shape
 		explicit Mesh(size_t count_points) {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
 			if (count_points < 2) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Mesh, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "Mesh, invalid number of points.\n\n");
 			}
 
 			count_points_ = count_points;
@@ -162,7 +162,7 @@ namespace eng {
 
 		Mesh& set_border_width(GLfloat border_width) {
 			if (border_width < 0.0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_border_width, invalid border width value.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_border_width, invalid border width value.\n\n");
 			}
 
 			border_width_ = border_width;
@@ -171,7 +171,7 @@ namespace eng {
 
 		Mesh& set_positions(const std::vector<Vec3>& positions, bool update_normals = false) {
 			if (positions.size() != count_points_) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points.\n\n");
 			}
 
 			std::vector<GLfloat> converted_positions(count_points_ * 3);
@@ -189,7 +189,7 @@ namespace eng {
 
 			if (update_normals) {
 				if (positions.size() < 3) {
-					throw EngInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points for automatic calculation of normals.\n\n");
+					throw GreInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points for automatic calculation of normals.\n\n");
 				}
 
 				set_normals(std::vector<Vec3>(count_points_, (positions[2] - positions[0]) ^ (positions[1] - positions[0])));
@@ -199,7 +199,7 @@ namespace eng {
 
 		Mesh& set_normals(const std::vector<Vec3>& normals) {
 			if (normals.size() != count_points_) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_normals, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_normals, invalid number of points.\n\n");
 			}
 
 			std::vector<GLfloat> converted_normals(count_points_ * 3);
@@ -219,7 +219,7 @@ namespace eng {
 
 		Mesh& set_tex_coords(const std::vector<Vec2>& tex_coords) {
 			if (tex_coords.size() != count_points_) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_tex_coords, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_tex_coords, invalid number of points.\n\n");
 			}
 
 			std::vector<GLfloat> converted_tex_coords(count_points_ * 2);
@@ -239,7 +239,7 @@ namespace eng {
 
 		Mesh& set_colors(const std::vector<Vec3>& colors) {
 			if (colors.size() != count_points_) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_colors, invalid number of points.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_colors, invalid number of points.\n\n");
 			}
 
 			std::vector<GLfloat> converted_colors(count_points_ * 3);

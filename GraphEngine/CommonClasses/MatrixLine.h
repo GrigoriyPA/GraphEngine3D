@@ -3,7 +3,7 @@
 #include "Functions.h"
 
 
-namespace eng {
+namespace gre {
 	class MatrixLine {
 		friend class Matrix;
 
@@ -32,7 +32,7 @@ namespace eng {
 	public:
 		double& operator[](size_t index) {
 			if (line_.size() <= index) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return line_[index];
@@ -40,7 +40,7 @@ namespace eng {
 
 		const double& operator[](size_t index) const {
 			if (line_.size() <= index) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return line_[index];
@@ -65,7 +65,7 @@ namespace eng {
 
 		MatrixLine& operator+=(const MatrixLine& other)& {
 			if (line_.size() != other.size()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator+=, invalid line sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator+=, invalid line sizes.\n\n");
 			}
 
 			*this = *this + other;
@@ -74,7 +74,7 @@ namespace eng {
 
 		MatrixLine& operator-=(const MatrixLine& other)& {
 			if (line_.size() != other.size()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator-=, invalid line sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator-=, invalid line sizes.\n\n");
 			}
 
 			*this = *this - other;
@@ -88,7 +88,7 @@ namespace eng {
 
 		MatrixLine& operator/=(double other)& {
 			if (equality(other, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
 			*this = *this * (1.0 / other);
@@ -101,7 +101,7 @@ namespace eng {
 
 		MatrixLine operator+(const MatrixLine& other) const {
 			if (line_.size() != other.size()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator+, invalid line sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator+, invalid line sizes.\n\n");
 			}
 
 			MatrixLine result = *this;
@@ -114,7 +114,7 @@ namespace eng {
 
 		MatrixLine operator-(const MatrixLine& other) const {
 			if (line_.size() != other.size()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator-, invalid line sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator-, invalid line sizes.\n\n");
 			}
 
 			MatrixLine result = *this;
@@ -135,7 +135,7 @@ namespace eng {
 
 		MatrixLine operator/(double other) const {
 			if (equality(other, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
 			return *this * (1.0 / other);
@@ -143,7 +143,7 @@ namespace eng {
 
 		double operator*(const MatrixLine& other) const {
 			if (line_.size() != other.size()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "operator*, invalid line sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "operator*, invalid line sizes.\n\n");
 			}
 
 			double result = 0;
@@ -155,7 +155,7 @@ namespace eng {
 
 		double& back() {
 			if (line_.empty()) {
-				throw EngOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
 			}
 
 			return line_.back();
@@ -163,7 +163,7 @@ namespace eng {
 
 		const double& back() const {
 			if (line_.empty()) {
-				throw EngOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "back, called from empty line.\n\n");
 			}
 
 			return line_.back();
@@ -179,7 +179,7 @@ namespace eng {
 
 		void swap(MatrixLine& other) noexcept {
 			if (line_.size() != other.size()) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "swap, invalid line sizes.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "swap, invalid line sizes.\n\n");
 			}
 
 			std::swap(line_, other.line_);

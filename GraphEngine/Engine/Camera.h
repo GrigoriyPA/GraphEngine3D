@@ -3,7 +3,7 @@
 #include "../GraphicClasses/Shader.h"
 
 
-namespace eng {
+namespace gre {
 	class Camera {
 		uint8_t active_state_ = 0;
 		Vec2 check_point_ = Vec2(0.0);
@@ -22,7 +22,7 @@ namespace eng {
 
 		void set_projection_matrix() {
 			if (equality(tan(fov_ / 2.0), 0.0) || equality(max_distance_, min_distance_) || equality(max_distance_ + min_distance_, 0.0) || equality(viewport_size_.y, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
 			}
 
 			projection_ = Matrix::scale_matrix(Vec3(1.0 / tan(fov_ / 2.0), viewport_size_.x / (viewport_size_.y * tan(fov_ / 2.0)), (max_distance_ + min_distance_) / (max_distance_ - min_distance_)));
@@ -60,20 +60,20 @@ namespace eng {
 
 		Camera(sf::RenderWindow* window, const Vec2& viewport_position, const Vec2& viewport_size, const Vec3& position, const Vec3& direction, double fov, double min_distance, double max_distance) : projection_(4, 4) {
 			if (less_equality(fov, 0.0) || less_equality(PI, fov)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid FOV value.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "Camera, invalid FOV value.\n\n");
 			}
 			if (less_equality(min_distance, 0.0) || less_equality(max_distance, min_distance)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid distance value.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "Camera, invalid distance value.\n\n");
 			}
 			if (less_equality(viewport_size.x, 0.0) || less_equality(viewport_size.y, 0.0)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, invalid viewport size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "Camera, invalid viewport size.\n\n");
 			}
 			
 			try {
 				direction_ = direction.normalize();
 			}
-			catch (EngDomainError) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Camera, the direction vector has zero length.\n\n");
+			catch (GreDomainError) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "Camera, the direction vector has zero length.\n\n");
 			}
 
 			fov_ = fov;
@@ -92,7 +92,7 @@ namespace eng {
 
 		void set_viewport(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::POST) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_viewport, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_viewport, invalid shader type.\n\n");
 			}
 
 			glViewport(static_cast<GLint>(viewport_position.x), static_cast<GLint>(window_->getSize().y - viewport_size_.y - viewport_position.y), static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
@@ -103,7 +103,7 @@ namespace eng {
 
 		void set_uniforms(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
 
 			glViewport(0, 0, static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
@@ -118,7 +118,7 @@ namespace eng {
 
 		Camera& set_check_point(const Vec2& point) {
 			if (point.x < 0.0 || 1.0 < point.x || point.y < 0.0 || 1.0 < point.y) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_check_point, invalid point coordinate.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_check_point, invalid point coordinate.\n\n");
 			}
 
 			check_point_ = Vec2(point.x, 1.0 - point.y);
@@ -127,7 +127,7 @@ namespace eng {
 
 		Camera& set_fov(double fov) {
 			if (less_equality(fov, 0.0) || less_equality(PI, fov)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_fov, invalid FOV value.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_fov, invalid FOV value.\n\n");
 			}
 
 			fov_ = fov;
@@ -137,7 +137,7 @@ namespace eng {
 
 		Camera& set_distance(double min_distance, double max_distance) {
 			if (less_equality(min_distance, 0.0) || less_equality(max_distance, min_distance)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_distance, invalid distance value.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_distance, invalid distance value.\n\n");
 			}
 
 			min_distance_ = min_distance;
@@ -148,7 +148,7 @@ namespace eng {
 
 		Camera& set_viewport_size(const Vec2& viewport_size) {
 			if (less_equality(viewport_size.x, 0.0) || less_equality(viewport_size.y, 0.0)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_viewport_size, invalid viewport size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_viewport_size, invalid viewport size.\n\n");
 			}
 
 			viewport_size_ = viewport_size;
@@ -160,8 +160,8 @@ namespace eng {
 			try {
 				direction_ = direction.normalize();
 			}
-			catch (EngDomainError) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
+			catch (GreDomainError) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
 			}
 
 			horizont_ = direction.horizont();
@@ -237,8 +237,8 @@ namespace eng {
 				horizont_ = rotate * horizont_;
 				change_matrix_ = rotate * change_matrix_;
 			}
-			catch (EngInvalidArgument) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "rotate, the axis vector has zero length.\n\n");
+			catch (GreInvalidArgument) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "rotate, the axis vector has zero length.\n\n");
 			}
 			return *this;
 		}
@@ -318,11 +318,11 @@ namespace eng {
 		Vec3 convert_point(double distance) const {
 			double divisor = max_distance_ - distance * (max_distance_ - min_distance_);
 			if (equality(divisor, 0.0)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "convert_point, invalid point coordinate.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "convert_point, invalid point coordinate.\n\n");
 			}
 
 			if (equality(viewport_size_.y, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "convert_point, invalid matrix settings.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "convert_point, invalid matrix settings.\n\n");
 			}
 
 			double tg = tan(fov_ / 2.0);

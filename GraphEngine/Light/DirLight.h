@@ -4,7 +4,7 @@
 #include "../GraphObjects/GraphObject.h"
 
 
-namespace eng {
+namespace gre {
     class DirLight : public Light {
         static const uint8_t LIGHT_TYPE = 0;
 
@@ -17,7 +17,7 @@ namespace eng {
 
         void set_projection_matrix() {
             if (equality(shadow_width_, 0.0) || equality(shadow_height_, 0.0) || equality(shadow_depth_, 0.0)) {
-                throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
+                throw GreDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
             projection_ = Matrix::scale_matrix(Vec3(2.0 / shadow_width_, 2.0 / shadow_height_, 2.0 / shadow_depth_));
@@ -34,14 +34,14 @@ namespace eng {
 
         DirLight(const Vec3& direction) : projection_(4, 4) {
             if (!glew_is_ok()) {
-                throw EngRuntimeError(__FILE__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
             }
 
             try {
                 direction_ = direction.normalize();
             }
-            catch (EngDomainError) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "DirLight, the direction vector has zero length.\n\n");
+            catch (GreDomainError) {
+                throw GreInvalidArgument(__FILE__, __LINE__, "DirLight, the direction vector has zero length.\n\n");
             }
             
             set_projection_matrix();
@@ -49,7 +49,7 @@ namespace eng {
 
         void set_uniforms(size_t id, const Shader<size_t>& shader) const override {
             if (shader.description != ShaderType::MAIN) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
             }
 
             std::string name = "lights[" + std::to_string(id) + "].";
@@ -64,7 +64,7 @@ namespace eng {
 
         DirLight& set_shadow_width(double shadow_width) {
             if (shadow_width < 0.0 || equality(shadow_width, 0.0)) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_width, not a positive shadow width.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_shadow_width, not a positive shadow width.\n\n");
             }
 
             shadow_width_ = shadow_width;
@@ -74,7 +74,7 @@ namespace eng {
 
         DirLight& set_shadow_height(double shadow_height) {
             if (shadow_height < 0.0 || equality(shadow_height, 0.0)) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_height, not a positive shadow height.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_shadow_height, not a positive shadow height.\n\n");
             }
 
             shadow_height_ = shadow_height;
@@ -84,7 +84,7 @@ namespace eng {
 
         DirLight& set_shadow_depth(double shadow_depth) {
             if (shadow_depth < 0.0 || equality(shadow_depth, 0.0)) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_depth, not a positive shadow depth.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_shadow_depth, not a positive shadow depth.\n\n");
             }
 
             shadow_depth_ = shadow_depth;
@@ -96,8 +96,8 @@ namespace eng {
             try {
                 direction_ = direction.normalize();
             }
-            catch (EngDomainError) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
+            catch (GreDomainError) {
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
             }
             return *this;
         }

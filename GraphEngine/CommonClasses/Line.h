@@ -3,7 +3,7 @@
 #include "Vec3.h"
 
 
-namespace eng {
+namespace gre {
 	class Line {
 		Vec3 direction_ = Vec3(1, 0, 0);
 
@@ -17,8 +17,8 @@ namespace eng {
 			try {
 				direction_ = (point2 - point1).normalize();
 			}
-			catch (EngDomainError) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Line, points for initialization are the same.\n\n");
+			catch (GreDomainError) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "Line, points for initialization are the same.\n\n");
 			}
 
 			start_point = point1;
@@ -28,8 +28,8 @@ namespace eng {
 			try {
 				direction_ = direction.normalize();
 			}
-			catch (EngDomainError) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
+			catch (GreDomainError) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
 			}
 			return *this;
 		}
@@ -50,7 +50,7 @@ namespace eng {
 			try {
 				return equality((direction_ ^ line.direction_).normalize() * (start_point - line.start_point), 0.0);
 			}
-			catch (EngDomainError) {
+			catch (GreDomainError) {
 				return false;
 			}
 		}
@@ -64,7 +64,7 @@ namespace eng {
 				double alf = (k - normal * line.start_point) / (line.direction_ * normal);
 				return line.start_point + alf * line.direction_;
 			}
-			catch (EngDomainError) {
+			catch (GreDomainError) {
 				return line.start_point;
 			}
 		}

@@ -4,7 +4,7 @@
 #include "../GraphicClasses/GraphicFunctions.h"
 
 
-namespace eng {
+namespace gre {
 	class ModelStorage {
 		friend class GraphObject;
 
@@ -96,7 +96,7 @@ namespace eng {
 
 		const Matrix& operator[](size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid model id.\n\n");
 			}
 
 			return models_[models_index_[id]].second;
@@ -104,7 +104,7 @@ namespace eng {
 
 		ModelStorage& set(size_t id, const Matrix& matrix) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "set, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "set, invalid model id.\n\n");
 			}
 
 			models_[models_index_[id]].second = matrix;
@@ -119,7 +119,7 @@ namespace eng {
 
 		Matrix get(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get, invalid model id.\n\n");
 			}
 
 			return models_[models_index_[id]].second;
@@ -127,7 +127,7 @@ namespace eng {
 
 		size_t get_memory_id(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid model id.\n\n");
 			}
 
 			return models_index_[id];
@@ -135,7 +135,7 @@ namespace eng {
 
 		size_t get_id(size_t memory_id) const {
 			if (models_.size() <= memory_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
 
 			return models_[memory_id].first;
@@ -171,7 +171,7 @@ namespace eng {
 
 		ModelStorage& erase(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
 			}
 
 			free_model_id_.push_back(id);
@@ -195,7 +195,7 @@ namespace eng {
 
 		size_t insert(const Matrix& matrix) {
 			if (models_.size() == max_count_models_) {
-				throw EngRuntimeError(__FILE__, __LINE__, "insert, too many instances created.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "insert, too many instances created.\n\n");
 			}
 
 			size_t free_model_id = models_index_.size();
@@ -214,7 +214,7 @@ namespace eng {
 
 		ModelStorage& change_left(size_t id, const Matrix& matrix) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
 			}
 
 			models_[models_index_[id]].second = matrix * models_[models_index_[id]].second;
@@ -224,7 +224,7 @@ namespace eng {
 
 		ModelStorage& change_right(size_t id, const Matrix& matrix) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
 			}
 
 			models_[models_index_[id]].second *= matrix;

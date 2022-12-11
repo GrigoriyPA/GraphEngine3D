@@ -4,7 +4,7 @@
 #include "../GraphicClasses/Texture.h"
 
 
-namespace eng {
+namespace gre {
 	class Material {
 		friend class Mesh;
 
@@ -17,7 +17,7 @@ namespace eng {
 
 		void set_uniforms(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
 
 			shader.set_uniform_i("use_diffuse_map", diffuse_map.get_id() != 0);
@@ -49,7 +49,7 @@ namespace eng {
 
 		void delete_uniforms(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
 
 			shader.use();
@@ -68,7 +68,7 @@ namespace eng {
 
 		Material() {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Material, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Material, failed to initialize GLEW.\n\n");
 			}
 		}
 
@@ -91,7 +91,7 @@ namespace eng {
 
 		void set_shininess(double shininess) {
 			if (shininess < 0.0) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_shininess, invalid shininess value.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_shininess, invalid shininess value.\n\n");
 			}
 
 			shininess_ = shininess;
@@ -99,7 +99,7 @@ namespace eng {
 
 		void set_alpha(double alpha) {
 			if (alpha < 0.0 || 1.0 < alpha) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_alpha, invalid alpha value.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_alpha, invalid alpha value.\n\n");
 			}
 
 			alpha_ = alpha;

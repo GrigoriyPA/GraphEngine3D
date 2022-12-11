@@ -3,7 +3,7 @@
 
 class Object : public RenderObject {
 public:
-    Object(std::pair<int, int> scene_id, eng::GraphEngine* scene) {
+    Object(std::pair<int, int> scene_id, gre::GraphEngine* scene) {
         type = 0;
         action = -1;
         this->scene = scene;

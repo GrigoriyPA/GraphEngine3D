@@ -3,7 +3,7 @@
 #include "Shader.h"
 
 
-namespace eng {
+namespace gre {
 	class Kernel {
 		GLuint offset_ = 0;
 		Matrix kernel_ = Matrix(3, 3, 0.0);
@@ -16,7 +16,7 @@ namespace eng {
 		template <typename T>  // Casts required: double(T)
 		Kernel(GLuint offset, const std::initializer_list<std::initializer_list<T>>& init) {
 			if (init.size() != 3 || init.begin()->size() != 3) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Kernel, invalid kernel size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "Kernel, invalid kernel size.\n\n");
 			}
 
 			offset_ = offset;
@@ -25,7 +25,7 @@ namespace eng {
 
 		auto& operator[](size_t index) {
 			if (kernel_.count_strings() <= index) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return kernel_[index];
@@ -33,7 +33,7 @@ namespace eng {
 
 		const auto& operator[](size_t index) const {
 			if (kernel_.count_strings() <= index) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
 			return kernel_[index];
@@ -53,7 +53,7 @@ namespace eng {
 
 		void set_uniforms(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::POST) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
 
 			shader.set_uniform_i("offset", offset_);

@@ -3,7 +3,7 @@
 #include "Mesh.h"
 
 
-namespace eng {
+namespace gre {
 	class MeshStorage {
 		friend class GraphObject;
 
@@ -84,7 +84,7 @@ namespace eng {
 
 		const Mesh& operator[](size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
 			}
 
 			return meshes_[meshes_index_[id]].second;
@@ -92,7 +92,7 @@ namespace eng {
 
 		Mesh get(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get, invalid mesh id.\n\n");
 			}
 
 			return meshes_[meshes_index_[id]].second;
@@ -100,7 +100,7 @@ namespace eng {
 
 		size_t get_memory_id(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid mesh id.\n\n");
 			}
 
 			return meshes_index_[id];
@@ -108,7 +108,7 @@ namespace eng {
 
 		size_t get_id(size_t memory_id) const {
 			if (meshes_.size() <= memory_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
 
 			return meshes_[memory_id].first;
@@ -140,7 +140,7 @@ namespace eng {
 
 		MeshStorage& erase(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid mesh id.\n\n");
 			}
 
 			free_mesh_id_.push_back(id);
@@ -177,7 +177,7 @@ namespace eng {
 
 		MeshStorage& modify(size_t id, const Mesh& mesh) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "modify, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "modify, invalid mesh id.\n\n");
 			}
 
 			set_mesh_matrix_buffer(meshes_[meshes_index_[id]].second = mesh);
@@ -186,7 +186,7 @@ namespace eng {
 
 		MeshStorage& apply_func(size_t id, std::function<void(Mesh&)> func) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "apply_func, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "apply_func, invalid mesh id.\n\n");
 			}
 
 			Mesh object(meshes_[meshes_index_[id]].second);

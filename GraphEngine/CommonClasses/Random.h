@@ -4,7 +4,7 @@
 #include <random>
 
 
-namespace eng {
+namespace gre {
 	class Random {
 		std::mt19937_64 generator;
 
@@ -24,7 +24,7 @@ namespace eng {
 
 		int64_t rand_int(int64_t left, int64_t right) {
 			if (right < left) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "rand_int, invalid range.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "rand_int, invalid range.\n\n");
 			}
 
 			return static_cast<int64_t>(generator() % static_cast<uint64_t>(right - left + 1)) + left;
@@ -32,7 +32,7 @@ namespace eng {
 
 		double rand_float(double left, double right) {
 			if (right < left) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "rand_float, invalid range.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "rand_float, invalid range.\n\n");
 			}
 
 			return (right - left) * rand() + left;

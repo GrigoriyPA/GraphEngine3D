@@ -8,7 +8,7 @@
 #include "ModelStorage.h"
 
 
-namespace eng {
+namespace gre {
 	class GraphObject {
 		// ...
 		std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
@@ -139,10 +139,10 @@ namespace eng {
 
 		void draw_meshes(size_t model_id, const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
 			}
 			if (!models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "draw_meshes, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "draw_meshes, invalid model id.\n\n");
 			}
 
 			shader.set_uniform_i("model_id", static_cast<GLint>(models.get_memory_id(model_id)));
@@ -155,7 +155,7 @@ namespace eng {
 
 		void draw_meshes(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
 			}
 			shader.set_uniform_i("model_id", -1);
 
@@ -173,13 +173,13 @@ namespace eng {
 
 		GraphObject() {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
 			}
 		}
 
 		explicit GraphObject(size_t max_count_models) {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
 			}
 
 			meshes.set_matrix_buffer(models.create_matrix_buffer(max_count_models));
@@ -211,10 +211,10 @@ namespace eng {
 
 		std::vector<Vec3> get_mesh_positions(size_t model_id, size_t mesh_id) const {
 			if (!models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid mesh id.\n\n");
 			}
 
 			const Matrix& transform = models[model_id];
@@ -227,10 +227,10 @@ namespace eng {
 
 		std::vector<Vec3> get_mesh_normals(size_t model_id, size_t mesh_id) const {
 			if (!models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid mesh id.\n\n");
 			}
 
 			const Matrix& transform = Matrix::normal_transform(models[model_id]);
@@ -243,10 +243,10 @@ namespace eng {
 
 		Vec3 get_mesh_center(size_t model_id, size_t mesh_id) const {
 			if (!models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid mesh id.\n\n");
 			}
 
 			return models[model_id] * meshes[mesh_id].get_center();
@@ -254,10 +254,10 @@ namespace eng {
 
 		Vec3 get_center(size_t model_id) const {
 			if (!models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_center, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_center, invalid model id.\n\n");
 			}
 			if (meshes.size() == 0) {
-				throw EngDomainError(__FILE__, __LINE__, "get_center, object does not contain vertices.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "get_center, object does not contain vertices.\n\n");
 			}
 
 			Vec3 center(0, 0, 0);
@@ -325,13 +325,13 @@ namespace eng {
 
 		void draw(size_t model_id, size_t mesh_id, const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
 			}
 			if (!models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid mesh id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "draw, invalid mesh id.\n\n");
 			}
 
 			shader.set_uniform_i("model_id", static_cast<GLint>(models.get_memory_id(model_id)));
@@ -351,10 +351,10 @@ namespace eng {
 
 		void draw(size_t model_id, const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
 			}
 			if (!models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
 
 			if (border_mask > 0) {
@@ -371,7 +371,7 @@ namespace eng {
 
 		void draw(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::MAIN) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
 			}
 
 			if (border_mask > 0) {
@@ -425,7 +425,7 @@ namespace eng {
 
 		static GraphObject cylinder(size_t count_points, bool real_normals, size_t max_count_models) {
 			if (count_points < 3) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "cylinder, the number of points is less than three.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "cylinder, the number of points is less than three.\n\n");
 			}
 
 			GraphObject cylinder(max_count_models);
@@ -471,7 +471,7 @@ namespace eng {
 
 		static GraphObject cone(size_t count_points, bool real_normals, size_t max_count_models) {
 			if (count_points < 3) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "cone, the number of points is less than three.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "cone, the number of points is less than three.\n\n");
 			}
 
 			GraphObject cone(max_count_models);
@@ -513,7 +513,7 @@ namespace eng {
 
 		static GraphObject sphere(size_t count_points, bool real_normals, size_t max_count_models) {
 			if (count_points < 3) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "sphere, the number of points is less than three.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "sphere, the number of points is less than three.\n\n");
 			}
 
 			GraphObject sphere(max_count_models);

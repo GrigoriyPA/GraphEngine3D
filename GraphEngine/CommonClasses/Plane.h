@@ -3,7 +3,7 @@
 #include "Cut.h"
 
 
-namespace eng {
+namespace gre {
 	class Plane {
 		Vec3 normal_ = Vec3(0, 1, 0);
 
@@ -17,8 +17,8 @@ namespace eng {
 			try {
 				normal_ = ((point1 - point2) ^ (point1 - point3)).normalize();
 			}
-			catch (EngDomainError) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Plane, points to initialize are collinear.\n\n");
+			catch (GreDomainError) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "Plane, points to initialize are collinear.\n\n");
 			}
 
 			distance = normal_ * point1;
@@ -26,7 +26,7 @@ namespace eng {
 
 		Plane(const std::initializer_list<Vec3>& points) {
 			if (points.size() < 3) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Plane, the number of points is less than three.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "Plane, the number of points is less than three.\n\n");
 			}
 
 			std::vector<Vec3> init;
@@ -42,7 +42,7 @@ namespace eng {
 
 		explicit Plane(const std::vector<Vec3>& points) {
 			if (points.size() < 3) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "Plane, the number of points is less than three.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "Plane, the number of points is less than three.\n\n");
 			}
 
 			*this = Plane(points[0], points[1], points[2]);
@@ -52,8 +52,8 @@ namespace eng {
 			try {
 				normal_ = normal.normalize();
 			}
-			catch (EngDomainError) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_normal, the normal vector has zero length.\n\n");
+			catch (GreDomainError) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_normal, the normal vector has zero length.\n\n");
 			}
 			return *this;
 		}
@@ -114,7 +114,7 @@ namespace eng {
 				Vec3 intersection = plane.intersect(ort_line);
 				return Line(intersection, intersection + direction);
 			}
-			catch (EngDomainError) {
+			catch (GreDomainError) {
 				return Line(plane.distance * plane.get_normal(), plane.distance * plane.get_normal() + plane.get_normal().horizont());
 			}
 		}

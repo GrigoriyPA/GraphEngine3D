@@ -4,7 +4,7 @@
 #include "Vec2.h"
 
 
-namespace eng {
+namespace gre {
 	class Vec3 {
 	public:
 		double x = 0.0;
@@ -82,7 +82,7 @@ namespace eng {
 			if (index == 2) {
 				return z;
 			}
-			throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+			throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 		}
 
 		const double& operator[](size_t index) const {
@@ -95,7 +95,7 @@ namespace eng {
 			if (index == 2) {
 				return z;
 			}
-			throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+			throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 		}
 
 		bool operator==(const Vec3& other) const noexcept {
@@ -129,7 +129,7 @@ namespace eng {
 
 		Vec3& operator/=(double other)& {
 			if (equality(other, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
 
 			x /= other;
@@ -140,7 +140,7 @@ namespace eng {
 
 		Vec3& operator^=(double other)& {
 			if (x < 0 || y < 0 || z < 0) {
-				throw EngDomainError(__FILE__, __LINE__, "operator^=, raising a negative number to a power.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "operator^=, raising a negative number to a power.\n\n");
 			}
 
 			x = pow(x, other);
@@ -178,7 +178,7 @@ namespace eng {
 
 		Vec3 operator/(double other) const {
 			if (equality(other, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
 
 			return Vec3(x / other, y / other, z / other);
@@ -190,7 +190,7 @@ namespace eng {
 
 		Vec3 operator^(double other) const {
 			if (x < 0 || y < 0 || z < 0) {
-				throw EngDomainError(__FILE__, __LINE__, "operator^, raising a negative number to a power.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "operator^, raising a negative number to a power.\n\n");
 			}
 
 			return Vec3(pow(x, other), pow(y, other), pow(z, other));
@@ -219,7 +219,7 @@ namespace eng {
 		Vec3 normalize() const {
 			double vect_length = length();
 			if (equality(vect_length, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
 			}
 
 			return *this / vect_length;
@@ -236,7 +236,7 @@ namespace eng {
 
 		Vec3 reflect_vect(const Vec3& n) const {
 			if (equality(n.length(), 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
 			}
 
 			Vec3 norm = n.normalize();
@@ -251,7 +251,7 @@ namespace eng {
 			try {
 				return equality(cos_angle(v1 ^ *this, v2 ^ *this), -1.0);
 			}
-			catch (EngDomainError) {
+			catch (GreDomainError) {
 				return false;
 			}
 		}
@@ -268,7 +268,7 @@ namespace eng {
 				}
 				return equality(cos_angle(prod1, prod2), -1.0) && equality(cos_angle(prod1, prod3), 1.0);
 			}
-			catch (EngDomainError) {
+			catch (GreDomainError) {
 				return false;
 			}
 		}
@@ -280,7 +280,7 @@ namespace eng {
 		static double cos_angle(const Vec3& v1, const Vec3& v2) {
 			double length_prod = v1.length() * v2.length();
 			if (equality(length_prod, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
 			}
 
 			return (v1 * v2) / length_prod;
@@ -289,7 +289,7 @@ namespace eng {
 		static double sin_angle(const Vec3& v1, const Vec3& v2) {
 			double length_prod = v1.length() * v2.length();
 			if (equality(length_prod, 0.0)) {
-				throw EngDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
+				throw GreDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
 			}
 
 			return (v1 ^ v2).length() / length_prod;
@@ -327,12 +327,12 @@ namespace eng {
 }
 
 template <>
-struct std::hash<eng::Vec3> {
-	size_t operator()(const eng::Vec3& vector) const noexcept {
+struct std::hash<gre::Vec3> {
+	size_t operator()(const gre::Vec3& vector) const noexcept {
 		size_t result = 0;
-		eng::hash_combine(result, vector.x);
-		eng::hash_combine(result, vector.y);
-		eng::hash_combine(result, vector.z);
+		gre::hash_combine(result, vector.x);
+		gre::hash_combine(result, vector.y);
+		gre::hash_combine(result, vector.z);
 		return result;
 	}
 };

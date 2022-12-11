@@ -12,8 +12,8 @@ class RenderingSequence {
 	std::vector < RenderObject* > selected_objects;
 	std::vector < RenderObject* > objects;
 	std::map < std::pair < int, int >, int > object_id;
-	eng::Vec3 stable_point, temp_point, intersect_point;
-	eng::GraphEngine* scene;
+	gre::Vec3 stable_point, temp_point, intersect_point;
+	gre::GraphEngine* scene;
 
 	bool can_switch_to_point() {
 		return is_available(active_button, 0, selected_objects) && (active_button.first != 2 || active_button.second > 1);
@@ -204,7 +204,7 @@ class RenderingSequence {
 	}
 
 public:
-	RenderingSequence(eng::GraphEngine* scene) {
+	RenderingSequence(gre::GraphEngine* scene) {
 		this->scene = scene;
 
 		object_id[std::make_pair(-1, -1)] = -1;
@@ -388,17 +388,17 @@ public:
 			active_object = object_id[{obj_id.object_id, obj_id.model_id}];
 		}
 
-		eng::Matrix trans = eng::Matrix::translation_matrix(scene->cameras[cam_id].get_change_vector(stable_point));
+		gre::Matrix trans = gre::Matrix::translation_matrix(scene->cameras[cam_id].get_change_vector(stable_point));
 		stable_point = trans * stable_point;
 		scene->cameras[cam_id].update();
 
 		double delt = pow(SCROLL_SENSITIVITY, scroll);
-		eng::Vec3 new_point = (stable_point - scene->cameras[cam_id].position) * delt + scene->cameras[cam_id].position;
-		trans = trans * eng::Matrix::translation_matrix(new_point - stable_point);
+		gre::Vec3 new_point = (stable_point - scene->cameras[cam_id].position) * delt + scene->cameras[cam_id].position;
+		trans = trans * gre::Matrix::translation_matrix(new_point - stable_point);
 		stable_point = new_point;
 		scroll = 0;
 
-		if ((trans * eng::Vec3(0, 0, 0)).length() > eps) {
+		if ((trans * gre::Vec3(0, 0, 0)).length() > eps) {
 			for (RenderObject* object : objects) {
 				if (object->connect)
 					object->move(trans);
@@ -406,9 +406,9 @@ public:
 		}
 
 		if (input_state == 1) {
-			eng::Vec3 new_temp_point = scene->cameras[cam_id].position + scene->cameras[cam_id].get_direction() * point_distance;
+			gre::Vec3 new_temp_point = scene->cameras[cam_id].position + scene->cameras[cam_id].get_direction() * point_distance;
 			if ((new_temp_point - temp_point).length() > eps)
-				objects[0]->move(eng::Matrix::translation_matrix(new_temp_point - temp_point));
+				objects[0]->move(gre::Matrix::translation_matrix(new_temp_point - temp_point));
 			temp_point = new_temp_point;
 		}
 

@@ -38,19 +38,19 @@ class Interface : public sf::Drawable {
 
     void init_interface() {
         objects.push_back(new CounterFPS(1, sf::Vector2f(window_width - 80, window_height - 30), &main_font));
-        left_bar = MovingPanel(INTERFACE_SIZE * size, window_height, INTERFACE_SPEED, (1.0 - eng::FI) / size, INTERFACE_WIDTH * 2);
+        left_bar = MovingPanel(INTERFACE_SIZE * size, window_height, INTERFACE_SPEED, (1.0 - gre::FI) / size, INTERFACE_WIDTH * 2);
 
         int tex_id = 0;
         double button_size = INTERFACE_SIZE * (1 - 2 * INTERFACE_DELTA);
         double x_s = INTERFACE_SIZE / 2.0 - button_size / 2;
         double x_e = INTERFACE_SIZE * (1.0 / 2.0 + size - 1) + button_size / 2;
-        double y = INTERFACE_SIZE * (1.5 - eng::FI - INTERFACE_DELTA);
+        double y = INTERFACE_SIZE * (1.5 - gre::FI - INTERFACE_DELTA);
         for (int id = 0; id < count_buttons.size() - 1; id++) {
             for (int i = 0; i < count_buttons[id]; i++) {
                 if (i > 0 && i % size == 0)
                     y += INTERFACE_SIZE;
 
-                Button* button = new Button(sf::Vector2f(INTERFACE_SIZE * (1.0 / 2.0 + float(i % size)), y), button_size, (1.0 - eng::FI) / 2, INTERFACE_WIDTH, &textures[tex_id], &textures[tex_id]);
+                Button* button = new Button(sf::Vector2f(INTERFACE_SIZE * (1.0 / 2.0 + float(i % size)), y), button_size, (1.0 - gre::FI) / 2, INTERFACE_WIDTH, &textures[tex_id], &textures[tex_id]);
                 button->different_states = true;
                 left_bar.buttons.push_back(button);
                 tex_id++;
@@ -65,7 +65,7 @@ class Interface : public sf::Drawable {
         }
 
         for (int i = 0; i < count_buttons.back(); i++) {
-            Button* button = new Button(sf::Vector2f(INTERFACE_SIZE * (1.0 / 2.0 + float(i)), window_height - INTERFACE_SIZE * (1.5 - eng::FI - INTERFACE_DELTA)), button_size, (1.0 - eng::FI) / 2, INTERFACE_WIDTH, &textures[tex_id], &textures[tex_id]);
+            Button* button = new Button(sf::Vector2f(INTERFACE_SIZE * (1.0 / 2.0 + float(i)), window_height - INTERFACE_SIZE * (1.5 - gre::FI - INTERFACE_DELTA)), button_size, (1.0 - gre::FI) / 2, INTERFACE_WIDTH, &textures[tex_id], &textures[tex_id]);
             left_bar.buttons.push_back(button);
             tex_id++;
         }

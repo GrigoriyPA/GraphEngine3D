@@ -5,12 +5,12 @@ class RenderObject {
 protected:
 	bool visibility = true, hide = false;
 	double eps = 0.00005;
-	eng::Matrix save_matrix = eng::Matrix(4, 4, 0);
+	gre::Matrix save_matrix = gre::Matrix(4, 4, 0);
 
 	int type;
-	eng::GraphEngine* scene;
+	gre::GraphEngine* scene;
 
-	void change_matrix(eng::Matrix trans) {
+	void change_matrix(gre::Matrix trans) {
 		if (visibility)
 			(*scene).objects[scene_id.first].models.change_left(scene_id.second, trans);
 		else
@@ -42,9 +42,9 @@ public:
 	}
 
 	void switch_visibility() {
-		eng::Matrix cur_matrix = (*scene).objects[scene_id.first].models[scene_id.second];
+		gre::Matrix cur_matrix = (*scene).objects[scene_id.first].models[scene_id.second];
 		if (visibility)
-			(*scene).objects[scene_id.first].models.set(scene_id.second, eng::Matrix(4, 4, 0));
+			(*scene).objects[scene_id.first].models.set(scene_id.second, gre::Matrix(4, 4, 0));
 		else
 			(*scene).objects[scene_id.first].models.set(scene_id.second, save_matrix);
 		visibility ^= 1;
@@ -66,7 +66,7 @@ public:
 		return true;
 	}
 
-	void move(eng::Matrix trans) {
+	void move(gre::Matrix trans) {
 		if (moved)
 			return;
 

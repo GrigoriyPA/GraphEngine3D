@@ -3,7 +3,7 @@
 #include "GraphicFunctions.h"
 
 
-namespace eng {
+namespace gre {
 	class Texture {
 		inline static GLint max_texture_image_units_ = 0;
 
@@ -36,7 +36,7 @@ namespace eng {
 	public:
 		Texture() {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
 			}
 
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_image_units_);
@@ -44,12 +44,12 @@ namespace eng {
 
 		explicit Texture(const std::string& texture_path, bool gamma = true) {
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
 			}
 
 			sf::Image image;
 			if (!image.loadFromFile(texture_path)) {
-				throw EngRuntimeError(__FILE__, __LINE__, "Texture, texture file loading failed.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "Texture, texture file loading failed.\n\n");
 			}
 
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_image_units_);
@@ -111,7 +111,7 @@ namespace eng {
 
 		Texture& set_wrapping(GLint wrapping) {
 			if (wrapping != GL_REPEAT && wrapping != GL_MIRRORED_REPEAT && wrapping != GL_CLAMP_TO_EDGE && wrapping != GL_CLAMP_TO_BORDER) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_wrapping, invalid wrapping type.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_wrapping, invalid wrapping type.\n\n");
 			}
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapping);
@@ -152,7 +152,7 @@ namespace eng {
 
 		void activate(GLenum unit_id) const {
 			if (max_texture_image_units_ <= static_cast<GLint>(unit_id)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "activate, invalid texture unit id.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "activate, invalid texture unit id.\n\n");
 			}
 
 			if (texture_id_ == 0) {
@@ -168,7 +168,7 @@ namespace eng {
 
 		void deactive(GLenum unit_id) const {
 			if (max_texture_image_units_ <= static_cast<GLint>(unit_id)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "deactive, invalid texture unit id.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "deactive, invalid texture unit id.\n\n");
 			}
 
 			if (texture_id_ == 0) {

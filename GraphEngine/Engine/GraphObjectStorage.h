@@ -3,7 +3,7 @@
 #include "../GraphObjects/GraphObject.h"
 
 
-namespace eng {
+namespace gre {
 	class GraphObjectStorage {
 		friend class GraphEngine;
 
@@ -30,7 +30,7 @@ namespace eng {
 
 		GraphObject& operator[](size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
 			}
 
 			return objects_[objects_index_[id]].second;
@@ -38,7 +38,7 @@ namespace eng {
 
 		const GraphObject& operator[](size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
 			}
 
 			return objects_[objects_index_[id]].second;
@@ -46,7 +46,7 @@ namespace eng {
 
 		size_t get_memory_id(size_t id) const {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid object id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid object id.\n\n");
 			}
 
 			return objects_index_[id];
@@ -54,7 +54,7 @@ namespace eng {
 
 		size_t get_id(size_t memory_id) const {
 			if (objects_.size() <= memory_id) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
 
 			return objects_[memory_id].first;
@@ -94,10 +94,10 @@ namespace eng {
 
 		bool erase(size_t id, size_t model_id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
 			}
 			if (!objects_[objects_index_[id]].second.models.contains(model_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
 			}
 
 			objects_[objects_index_[id]].second.models.erase(model_id);
@@ -110,7 +110,7 @@ namespace eng {
 
 		GraphObjectStorage& erase(size_t id) {
 			if (!contains(id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
 			}
 
 			free_object_id_.push_back(id);

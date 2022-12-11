@@ -6,7 +6,7 @@
 #include "../GraphicClasses/Kernel.h"
 
 
-namespace eng {
+namespace gre {
 	class GraphEngine {
 		class TransparentObject {
 			double distance_;
@@ -48,7 +48,7 @@ namespace eng {
 		
 		void set_active() const {
 			if (!window_->setActive(true)) {
-				throw EngRuntimeError(__FILE__, __LINE__, "set_active, failed to activate window.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "set_active, failed to activate window.\n\n");
 			}
 		}
 
@@ -105,7 +105,7 @@ namespace eng {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depth_stencil_texture_id_, 0);
 
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-				throw EngRuntimeError(__FILE__, __LINE__, "create_primary_frame_buffer, framebuffer is not complete.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "create_primary_frame_buffer, framebuffer is not complete.\n\n");
 			}
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -253,16 +253,16 @@ namespace eng {
 			set_active();
 
 			if (!glew_is_ok()) {
-				throw EngRuntimeError(__FILE__, __LINE__, "GraphEngine, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, failed to initialize GLEW.\n\n");
 			}
 
-			depth_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth", eng::ShaderType::DEPTH);
-			post_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post", eng::ShaderType::POST);
-			main_shader_ = eng::Shader<size_t>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main", eng::ShaderType::MAIN);
+			depth_shader_ = gre::Shader<size_t>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth", gre::ShaderType::DEPTH);
+			post_shader_ = gre::Shader<size_t>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post", gre::ShaderType::POST);
+			main_shader_ = gre::Shader<size_t>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main", gre::ShaderType::MAIN);
 			
 			const sf::ContextSettings& settings = window->getSettings();
 			if (!depth_shader_.check_window_settings(settings) || !post_shader_.check_window_settings(settings) || !main_shader_.check_window_settings(settings)) {
-				throw EngRuntimeError(__FILE__, __LINE__, "GraphEngine, invalid OpenGL version.\n\n");
+				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, invalid OpenGL version.\n\n");
 			}
 			set_uniforms();
 
@@ -332,7 +332,7 @@ namespace eng {
 
 		GraphEngine& set_gamma(double gamma) {
 			if (less_equality(gamma, 0.0)) {
-				throw EngInvalidArgument(__FILE__, __LINE__, "set_gamma, not positive gamma.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_gamma, not positive gamma.\n\n");
 			}
 
 			set_active();
@@ -392,7 +392,7 @@ namespace eng {
 
 		ObjectDesc get_check_object(size_t camera_id, Vec3& intersect_point) {
 			if (!cameras.contains(camera_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
 
 			ObjectDesc result = cameras.get_check_object(camera_id, intersect_point);
@@ -403,7 +403,7 @@ namespace eng {
 
 		ObjectDesc get_check_object(size_t camera_id) {
 			if (!cameras.contains(camera_id)) {
-				throw EngOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
+				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
 
 			ObjectDesc result = cameras.get_check_object(camera_id);

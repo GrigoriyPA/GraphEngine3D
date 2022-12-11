@@ -4,7 +4,7 @@
 #include "../GraphObjects/GraphObject.h"
 
 
-namespace eng {
+namespace gre {
     class SpotLight : public Light {
         static const uint8_t LIGHT_TYPE = 2;
 
@@ -21,7 +21,7 @@ namespace eng {
 
         void set_projection_matrix() {
             if (equality(tan(border_out_), 0.0) || equality(shadow_max_distance_, shadow_min_distance_) || equality(shadow_max_distance_ + shadow_min_distance_, 0.0)) {
-                throw EngDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
+                throw GreDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
             projection_ = Matrix::scale_matrix(Vec3(1.0 / tan(border_out_), 1.0 / tan(border_out_), (shadow_max_distance_ + shadow_min_distance_) / (shadow_max_distance_ - shadow_min_distance_)));
@@ -40,17 +40,17 @@ namespace eng {
 
         SpotLight(const Vec3& position, const Vec3& direction, double border_in, double border_out) : projection_(4, 4) {
             if (!glew_is_ok()) {
-                throw EngRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
             }
             if (border_in < 0.0 || less_equality(PI / 2.0, border_out) || less_equality(border_out, border_in)) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "SpotLight, invalid values of the external and internal angles of the spotlight.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "SpotLight, invalid values of the external and internal angles of the spotlight.\n\n");
             }
 
             try {
                 direction_ = direction.normalize();
             }
-            catch (EngDomainError) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "SpotLight, the direction vector has zero length.\n\n");
+            catch (GreDomainError) {
+                throw GreInvalidArgument(__FILE__, __LINE__, "SpotLight, the direction vector has zero length.\n\n");
             }
 
             border_in_ = border_in;
@@ -62,7 +62,7 @@ namespace eng {
 
         void set_uniforms(size_t id, const Shader<size_t>& shader) const override {
             if (shader.description != ShaderType::MAIN) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
             }
 
             std::string name = "lights[" + std::to_string(id) + "].";
@@ -83,7 +83,7 @@ namespace eng {
 
         SpotLight& set_shadow_distance(double shadow_min_distance, double shadow_max_distance) {
             if (less_equality(shadow_min_distance, 0.0) || less_equality(shadow_max_distance, shadow_min_distance)) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_shadow_distance, invalid shadow distance.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_shadow_distance, invalid shadow distance.\n\n");
             }
 
             shadow_min_distance_ = shadow_min_distance;
@@ -94,7 +94,7 @@ namespace eng {
 
         SpotLight& set_constant(double coefficient) {
             if (coefficient < 0.0) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_constant, negative coefficient value.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_constant, negative coefficient value.\n\n");
             }
 
             constant_ = coefficient;
@@ -103,7 +103,7 @@ namespace eng {
 
         SpotLight& set_linear(double coefficient) {
             if (coefficient < 0.0) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_linear, negative coefficient value.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_linear, negative coefficient value.\n\n");
             }
 
             linear_ = coefficient;
@@ -112,7 +112,7 @@ namespace eng {
 
         SpotLight& set_quadratic(double coefficient) {
             if (coefficient < 0.0) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_quadratic, negative coefficient value.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_quadratic, negative coefficient value.\n\n");
             }
 
             quadratic_ = coefficient;
@@ -121,7 +121,7 @@ namespace eng {
 
         SpotLight& set_angle(double border_in, double border_out) {
             if (border_in < 0.0 || less_equality(PI / 2.0, border_out) || less_equality(border_out, border_in)) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_angle, invalid values of the external and internal angles of the spotlight.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_angle, invalid values of the external and internal angles of the spotlight.\n\n");
             }
 
             border_in_ = border_in;
@@ -133,8 +133,8 @@ namespace eng {
             try {
                 direction_ = direction.normalize();
             }
-            catch (EngDomainError) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
+            catch (GreDomainError) {
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
             }
             return *this;
         }
@@ -145,7 +145,7 @@ namespace eng {
 
         GraphObject get_shadow_box() const {
             if (equality(shadow_max_distance_, 0.0)) {
-                throw EngDomainError(__FILE__, __LINE__, "get_shadow_box, invalid matrix settings.\n\n");
+                throw GreDomainError(__FILE__, __LINE__, "get_shadow_box, invalid matrix settings.\n\n");
             }
 
             GraphObject shadow_box(1);

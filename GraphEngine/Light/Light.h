@@ -3,7 +3,7 @@
 #include "../GraphicClasses/Shader.h"
 
 
-namespace eng {
+namespace gre {
     class Light {
     protected:
         Vec3 ambient_ = Vec3(0.0, 0.0, 0.0);
@@ -12,7 +12,7 @@ namespace eng {
 
         void set_light_uniforms(const std::string& name, const Shader<size_t>& shader) const {
             if (shader.description != ShaderType::MAIN) {
-                throw EngInvalidArgument(__FILE__, __LINE__, "set_light_uniforms, invalid shader type.\n\n");
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_light_uniforms, invalid shader type.\n\n");
             }
 
             shader.set_uniform_f((name + "ambient").c_str(), ambient_);
@@ -26,7 +26,7 @@ namespace eng {
 
         Light() {
             if (!glew_is_ok()) {
-                throw EngRuntimeError(__FILE__, __LINE__, "Light, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __LINE__, "Light, failed to initialize GLEW.\n\n");
             }
         }
 
