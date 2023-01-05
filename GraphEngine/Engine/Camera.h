@@ -113,7 +113,7 @@ namespace gre {
             glViewport(static_cast<GLint>(viewport_position_.x), static_cast<GLint>(window_->getSize().y - viewport_size_.y - viewport_position_.y), static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
             check_gl_errors(__FILE__, __LINE__, __func__);
 
-            shader.set_uniform_f("screen_texture_size", viewport_size_.x / window_->getSize().x, viewport_size_.y / window_->getSize().y);
+            shader.set_uniform_f("screen_texture_size", static_cast<GLfloat>(viewport_size_.x / window_->getSize().x), static_cast<GLfloat>(viewport_size_.y / window_->getSize().y));
         }
 
         void set_uniforms(const Shader<size_t>& shader) const {

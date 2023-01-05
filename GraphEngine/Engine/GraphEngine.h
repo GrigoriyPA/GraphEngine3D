@@ -461,7 +461,7 @@ namespace gre {
 			cameras.update_storage();
 			lights.set_uniforms(main_shader_);
 			for (const auto& [id, camera] : cameras) {
-				main_shader_.set_uniform_i("camera_id", cameras.get_memory_id(id));
+				main_shader_.set_uniform_i("camera_id", static_cast<GLint>(cameras.get_memory_id(id)));
 
 				draw_primary_frame_buffer(camera);
 				draw_mainbuffer(camera);

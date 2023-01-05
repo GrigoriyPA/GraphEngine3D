@@ -177,7 +177,7 @@ namespace gre {
 		}
 
 		Vec2 get_shadow_resolution() const noexcept {
-			return Vec2(shadow_width_, shadow_height_);
+			return Vec2(static_cast<double>(shadow_width_), static_cast<double>(shadow_height_));
 		}
 
 		bool contains(size_t id) const noexcept {

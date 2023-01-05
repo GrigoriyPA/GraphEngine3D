@@ -45,7 +45,7 @@ signed main() {
         circle_tex.loadFromFile("Interface/Resources/Textures/circle.png");
         circle_tex.setSmooth(true);
 
-        gre::Vec2 cross_position(0.25, 0.5);
+        gre::Vec2 cross_position(0.5, 0.5);
         sf::Sprite cross(cross_tex);
         cross.setScale(sf::Vector2f(INTERFACE_SIZE * gre::FI / cross_tex.getSize().x, INTERFACE_SIZE * gre::FI / cross_tex.getSize().y));
         cross.setPosition(sf::Vector2f(window_width * cross_position.x - INTERFACE_SIZE * gre::FI / 2, window_height * cross_position.y - INTERFACE_SIZE * gre::FI / 2));
@@ -68,14 +68,6 @@ signed main() {
         scene.cameras[0].set_check_point(gre::Vec2(0.5, 0.5));
         scene.cameras[0].set_fov(FOV);
         scene.cameras[0].set_distance(MIN_DIST, MAX_DIST);
-        scene.cameras[0].set_viewport_size(window_width / 2, window_height);
-
-        scene.cameras.insert(scene.cameras[0]);
-        scene.cameras[1].set_viewport_position(window_width / 2, 0);
-        gre::DefaultControlSystem second_control_system;
-        scene.cameras[1].set_control_system(&second_control_system);
-        scene.cameras[1].position = gre::Vec3(0.0, 0.0, 10.0);
-        scene.cameras[1].set_direction(gre::Vec3(0.0, 0.0, -1.0));
 
         double ratio = scene.cameras[0].get_viewport_size().x / scene.cameras[0].get_viewport_size().y;
         double angle = atan(tan(FOV / 2) * sqrt(1 + ratio * ratio));
@@ -87,15 +79,6 @@ signed main() {
         spot_light0.shadow = true;
         spot_light0.set_shadow_distance(1, 100);
         int spot_light_id0 = scene.lights.insert(&spot_light0);
-
-        gre::SpotLight spot_light1(gre::Vec3(0, 0, 0), gre::Vec3(0, 0, 1), angle, 1.1 * angle);
-        spot_light1.set_ambient(gre::Vec3(0.4));
-        spot_light1.set_diffuse(gre::Vec3(0.3, 0.3, 0.3));
-        spot_light1.set_specular(gre::Vec3(0.4, 0.4, 0.4));
-        spot_light1.set_quadratic(0.1);
-        spot_light1.shadow = true;
-        spot_light1.set_shadow_distance(1, 100);
-        int spot_light_id1 = scene.lights.insert(&spot_light1);
 
         gre::SpotLight light(gre::Vec3(0, 5, 5), gre::Vec3(0, -1, 0), gre::PI / 4.0, 1.1 * gre::PI / 4.0);
         light.set_ambient(gre::Vec3(0.2, 0.2, 0.2));
@@ -112,11 +95,11 @@ signed main() {
         RenderingSequence render(&scene);
 
         int obj_id = scene.objects.insert(gre::GraphObject(1));
-        scene.objects[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
-        int model_id = scene.objects[obj_id].models.insert(gre::Matrix::scale_matrix(gre::Vec3(-1, 1, 1)) * gre::Matrix::translation_matrix(gre::Vec3(0, -0.5, 5)) * gre::Matrix::rotation_matrix(gre::Vec3(0, 1, 0), gre::PI));
-        render.add_object(new Object({ obj_id, model_id }, &scene));
-        //scene[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
-        //scene[obj_id].models.insert(gre::Matrix::scale_matrix(gre::Vec3(-1, 1, 1) * 0.03));
+        //scene.objects[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
+        //int model_id = scene.objects[obj_id].models.insert(gre::Matrix::scale_matrix(gre::Vec3(-1, 1, 1)) * gre::Matrix::translation_matrix(gre::Vec3(0, -0.5, 5)) * gre::Matrix::rotation_matrix(gre::Vec3(0, 1, 0), gre::PI));
+        //render.add_object(new Object({ obj_id, model_id }, &scene));
+        scene.objects[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
+        scene.objects[obj_id].models.insert(gre::Matrix::scale_matrix(gre::Vec3(-1, 1, 1) * 0.03));
 
         gre::Mesh mesh(4);
         mesh.set_positions({
@@ -130,16 +113,7 @@ signed main() {
         gre::GraphObject obj(1);
         obj.meshes.insert(mesh);
         obj.models.insert(gre::Matrix::translation_matrix(gre::Vec3(0, -1.5, 5)) * gre::Matrix::scale_matrix(10));
-        scene.objects.insert(obj);
-
-        gre::GraphObject sph = gre::GraphObject::cube(2);
-        gre::Texture face_tex("Resources/Textures/diffuse/face.jpg");
-        sph.meshes.apply_func([&](gre::Mesh& m) {
-            m.material.diffuse_map = face_tex;
-        });
-        sph.models.insert(gre::Matrix::one_matrix(4));
-        sph.models.insert(gre::Matrix::one_matrix(4));
-        int sph_id = scene.objects.insert(sph);
+        //scene.objects.insert(obj);
 
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {
@@ -180,15 +154,6 @@ signed main() {
 
             spot_light0.position = scene.cameras[0].position;
             spot_light0.set_direction(scene.cameras[0].get_direction());
-            spot_light1.position = scene.cameras[1].position;
-            spot_light1.set_direction(scene.cameras[1].get_direction());
-
-
-            //
-            scene.objects[sph_id].models.set(0, scene.cameras[0].get_view_matrix().inverse());
-            scene.objects[sph_id].models.set(1, scene.cameras[1].get_view_matrix().inverse());
-            //
-
 
             scene.draw();
 
