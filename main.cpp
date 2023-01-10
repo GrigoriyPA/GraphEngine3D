@@ -115,6 +115,9 @@ signed main() {
         obj.models.insert(gre::Matrix::translation_matrix(gre::Vec3(0, -1.5, 5)) * gre::Matrix::scale_matrix(10));
         scene.objects.insert(obj);
 
+        sf::Font arial;
+        arial.loadFromFile("Interface/Resources/Fonts/arial.ttf");
+
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {
                 switch (event.type) {
@@ -158,6 +161,8 @@ signed main() {
             scene.draw();
 
             window.pushGLStates();
+
+            window.draw(sf::Text("FPS: " + std::to_string(scene.cameras[0].get_fps()), arial));
 
             window.draw(window_interface);
             int cross_state = render.get_cross_state();

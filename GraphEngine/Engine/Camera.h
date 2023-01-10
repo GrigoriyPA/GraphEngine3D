@@ -24,6 +24,56 @@ namespace gre {
     };
 
     class Camera {
+        class FPS_counter {
+            double fps_sum_ = 0.0;
+            double time_elapsed_ = 0.0;
+            double minimal_update_time_ = 0.25;
+            uint64_t current_fps_ = 0;
+            uint64_t number_of_flips_ = 0;
+
+            sf::Clock timer_;
+
+            void check_fps_value() {
+                if (number_of_flips_ == 0 || time_elapsed_ < minimal_update_time_) {
+                    return;
+                }
+
+                current_fps_ = static_cast<uint64_t>(fps_sum_ / static_cast<double>(number_of_flips_));
+                fps_sum_ = 0;
+                time_elapsed_ = 0;
+                number_of_flips_ = 0;
+            }
+
+        public:
+            void set_minimal_update_time(double minimal_update_time) {
+                if (minimal_update_time < 0.0) {
+                    throw GreInvalidArgument(__FILE__, __LINE__, "set_minimal_update_time, invalid minimal update time value.");
+                }
+
+                minimal_update_time_ = minimal_update_time;
+                check_fps_value();
+            }
+
+            double get_minimal_update_time() const noexcept {
+                return minimal_update_time_;
+            }
+
+            uint64_t get_fps() const noexcept {
+                return current_fps_;
+            }
+
+            double update() {
+                double delta_time = timer_.restart().asSeconds();
+                fps_sum_ += 1.0 / delta_time;
+                time_elapsed_ += delta_time;
+                ++number_of_flips_;
+
+                check_fps_value();
+
+                return delta_time;
+            }
+        };
+
         Vec2 check_point_ = Vec2(0.5);
         Matrix change_matrix_ = Matrix::one_matrix(4);
 
@@ -37,7 +87,7 @@ namespace gre {
         Vec3 last_position_;
         Matrix projection_;
         ControlSystem* control_system_;
-        sf::Clock timer_;
+        FPS_counter fps_counter_;
         sf::RenderWindow* window_;
 
         void set_projection_matrix() {
@@ -208,6 +258,15 @@ namespace gre {
             return *this;
         }
 
+        Camera& set_minimal_fps_update_time(double minimal_update_time) {
+            if (minimal_update_time < 0.0) {
+                throw GreInvalidArgument(__FILE__, __LINE__, "set_minimal_fps_update_time, invalid minimal update time value.");
+            }
+
+            fps_counter_.set_minimal_update_time(minimal_update_time);
+            return *this;
+        }
+
         Vec2 get_check_point() const noexcept {
             return check_point_;
         }
@@ -256,6 +315,14 @@ namespace gre {
             return projection_;
         }
 
+        double get_minimal_fps_update_time() const noexcept {
+            return fps_counter_.get_minimal_update_time();
+        }
+
+        uint64_t get_fps() const noexcept {
+            return fps_counter_.get_fps();
+        }
+
         Matrix get_view_matrix() const noexcept {
             return Matrix(horizont_, get_vertical(), direction_).transpose() * Matrix::translation_matrix(-position);
         }
@@ -296,7 +363,7 @@ namespace gre {
         }
 
         double update() {
-            double delta_time = timer_.restart().asSeconds();
+            double delta_time = fps_counter_.update();
             control_system_->on_update(*this, delta_time, window_);
             return delta_time;
         }
