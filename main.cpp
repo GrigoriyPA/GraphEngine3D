@@ -32,7 +32,7 @@ void screenshot(sf::RenderWindow& window) {
 
 signed main() {
     try {
-        sf::RenderWindow window(sf::VideoMode::getFullscreenModes()[0], "Editor", sf::Style::None);
+        sf::RenderWindow window = gre::GraphEngine::create_fullscreen_window("Editor");
         //window.setVerticalSyncEnabled(true);
 
         int window_width = window.getSize().x, window_height = window.getSize().y;
@@ -95,11 +95,11 @@ signed main() {
         RenderingSequence render(&scene);
 
         int obj_id = scene.objects.insert(gre::GraphObject(1));
-        //scene.objects[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
-        //int model_id = scene.objects[obj_id].models.insert(gre::Matrix::scale_matrix(gre::Vec3(-1, 1, 1)) * gre::Matrix::translation_matrix(gre::Vec3(0, -0.5, 5)) * gre::Matrix::rotation_matrix(gre::Vec3(0, 1, 0), gre::PI));
-        //render.add_object(new Object({ obj_id, model_id }, &scene));
-        scene.objects[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
-        scene.objects[obj_id].models.insert(gre::Matrix::scale_matrix(gre::Vec3(-1, 1, 1) * 0.03));
+        scene.objects[obj_id].importFromFile("Resources/Objects/ships/mjolnir.glb");
+        int model_id = scene.objects[obj_id].models.insert(gre::Matrix::scale_matrix(gre::Vec3(-1, 1, 1)) * gre::Matrix::translation_matrix(gre::Vec3(0, -0.5, 5)) * gre::Matrix::rotation_matrix(gre::Vec3(0, 1, 0), gre::PI));
+        render.add_object(new Object({ obj_id, model_id }, &scene));
+        //scene.objects[obj_id].importFromFile("Resources/Objects/maps/system_velorum_position_processing_rig.glb");
+        //scene.objects[obj_id].models.insert(gre::Matrix::scale_matrix(gre::Vec3(-1, 1, 1) * 0.03));
 
         gre::Mesh mesh(4);
         mesh.set_positions({
@@ -113,7 +113,7 @@ signed main() {
         gre::GraphObject obj(1);
         obj.meshes.insert(mesh);
         obj.models.insert(gre::Matrix::translation_matrix(gre::Vec3(0, -1.5, 5)) * gre::Matrix::scale_matrix(10));
-        //scene.objects.insert(obj);
+        scene.objects.insert(obj);
 
         for (; window_interface.running;) {
             for (sf::Event event; window.pollEvent(event); ) {

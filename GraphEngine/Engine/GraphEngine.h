@@ -471,5 +471,9 @@ namespace gre {
 		~GraphEngine() {
 			deallocate();
 		}
+
+		static sf::RenderWindow create_fullscreen_window(const std::string& title) {
+			return sf::RenderWindow(sf::VideoMode::getFullscreenModes()[0], title, sf::Style::None);
+		}
 	};
 }
