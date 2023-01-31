@@ -312,13 +312,30 @@ namespace gre {
 		}
 
 		std::vector<Vec2> get_tex_coords() const {
-			GLvoid* buffer = new GLfloat[2 * count_points_];
+			GLfloat* buffer = new GLfloat[2 * count_points_];
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
-			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * count_points_, sizeof(GLfloat) * 2 * count_points_, buffer);
+			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * count_points_, sizeof(GLfloat) * 2 * count_points_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return Vec2::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
+
+			std::vector<Vec2> result;
+			result.reserve(count_points_);
+			for (size_t i = 0; i < count_points_; ++i) {
+				result.emplace_back(static_cast<double>(buffer[2 * i]), static_cast<double>(buffer[2 * i + 1]));
+			}
+			return result;
+		}
+
+		template <typename T>  // Casts required: double(T)
+		static std::vector<Vec2> move_in(size_t size, T* data) {
+			std::vector<Vec2> result(size);
+			for (size_t i = 0; i < size; ++i) {
+				result[i] = Vec2(static_cast<double>(data[2 * i]), static_cast<double>(data[2 * i + 1]));
+			}
+
+			delete[] data;
+			return result;
 		}
 
 		std::vector<Vec3> get_colors() const {

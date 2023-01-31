@@ -39,16 +39,6 @@ namespace gre {
     };
 
 
-    int32_t sgn(double x) noexcept {
-        if (x < 0.0) {
-            return -1;
-        }
-        if (x == 0.0) {
-            return 0;
-        }
-        return 1;
-    }
-
     bool equality(double left, double right) noexcept {
         return std::abs(left - right) <= EPS;
     }
