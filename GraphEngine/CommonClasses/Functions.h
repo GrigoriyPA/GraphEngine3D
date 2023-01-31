@@ -1,15 +1,12 @@
 #pragma once
 
 #include <functional>
-#include <math.h>
-#include <stdexcept>
-#include <string>
+//#include <string>
 #include <vector>
 
 
 namespace gre {
     const double EPS = 1e-7;
-    const double FI = (sqrt(5.0) - 1.0) / 2.0;
     const double PI = acos(-1.0);
 
 

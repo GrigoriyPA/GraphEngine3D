@@ -216,7 +216,7 @@ namespace gre {
 			return sqrt(*this * *this);
 		}
 
-		Vec3 normalize() const throw(GreDomainError) {
+		Vec3 normalize() const {
 			double vect_length = length();
 			if (equality(vect_length, 0.0)) {
 				throw GreDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
