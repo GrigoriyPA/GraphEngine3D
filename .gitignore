@@ -1,10 +1,14 @@
-x64
+.vs/
+x64/
 InnerClasses/
 Interface/
 Resources/
+
 *.sln
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
-.vs/
+
+main.cpp
+config.h
 to_do.txt
