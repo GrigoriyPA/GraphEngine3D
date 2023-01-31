@@ -32,6 +32,8 @@ void screenshot(sf::RenderWindow& window) {
 
 signed main() {
     try {
+        gre::Cut(gre::Vec3(1, 1, 1), gre::Vec3(1, 1, 1));
+
         sf::RenderWindow window = gre::GraphEngine::create_fullscreen_window("Editor");
         //window.setVerticalSyncEnabled(true);
 

@@ -60,7 +60,7 @@ namespace gre {
 			}
 		}
 
-		Matrix(const Vec3& vector_x, const Vec3& vector_y, const Vec3& vector_z) noexcept {
+		Matrix(const Vec3& vector_x, const Vec3& vector_y, const Vec3& vector_z) {
 			*this = Matrix({
 				{ vector_x.x, vector_y.x, vector_z.x, 0.0 },
 				{ vector_x.y, vector_y.y, vector_z.y, 0.0 },
@@ -69,7 +69,7 @@ namespace gre {
 				});
 		}
 
-		Matrix(size_t count_lines, size_t count_columns, double value, const Matrix& init) noexcept {
+		Matrix(size_t count_lines, size_t count_columns, double value, const Matrix& init) {
 			matrix_.resize(count_lines, MatrixLine(count_columns, value));
 			for (size_t i = 0; i < std::min(count_lines, init.count_strings()); ++i) {
 				for (size_t j = 0; j < std::min(count_columns, init.count_columns()); ++j) {
@@ -78,16 +78,16 @@ namespace gre {
 			}
 		}
 
-		Matrix(size_t count_lines, size_t count_columns, double value = 0.0) noexcept {
+		Matrix(size_t count_lines, size_t count_columns, double value = 0.0) {
 			matrix_.resize(count_lines, MatrixLine(count_columns, value));
 		}
 
-		Matrix(size_t count_lines, const MatrixLine& value) noexcept {
+		Matrix(size_t count_lines, const MatrixLine& value) {
 			matrix_.resize(count_lines, value);
 		}
 
 		// Identity matrix with init part replaced
-		Matrix(size_t count_lines, size_t count_columns, const Matrix& init) noexcept {
+		Matrix(size_t count_lines, size_t count_columns, const Matrix& init) {
 			matrix_.resize(count_lines, MatrixLine(count_columns, 0));
 			for (size_t i = 0; i < std::min(count_lines, count_columns); ++i) {
 				matrix_[i][i] = 1;
@@ -164,8 +164,10 @@ namespace gre {
 			return *this;
 		}
 
-		Matrix& operator*=(double other) & noexcept {
-			*this = *this * other;
+		Matrix& operator*=(double other)& noexcept {
+			for (size_t i = 0; i < matrix_.size(); i++) {
+				matrix_[i] *= other;
+			}
 			return *this;
 		}
 
@@ -205,7 +207,7 @@ namespace gre {
 			return *this;
 		}
 
-		Matrix operator-() const noexcept {
+		Matrix operator-() const {
 			Matrix result = *this;
 			for (size_t i = 0; i < matrix_.size(); i++) {
 				result[i] *= -1;
@@ -233,7 +235,7 @@ namespace gre {
 			return *this + (-other);
 		}
 
-		Matrix operator*(double other) const noexcept {
+		Matrix operator*(double other) const {
 			Matrix result = *this;
 			for (size_t i = 0; i < matrix_.size(); i++) {
 				result[i] *= other;
@@ -322,7 +324,7 @@ namespace gre {
 			return matrix_[0].size();
 		}
 
-		Matrix transpose() const noexcept {
+		Matrix transpose() const {
 			Matrix result(count_columns(), matrix_.size());
 			for (size_t i = 0; i < matrix_.size(); ++i) {
 				for (size_t j = 0; j < matrix_[i].size(); ++j) {
@@ -332,7 +334,7 @@ namespace gre {
 			return result;
 		}
 
-		Matrix flip_horizontally() const noexcept {
+		Matrix flip_horizontally() const {
 			Matrix result(matrix_.size(), count_columns());
 			for (size_t i = 0; i < matrix_.size(); ++i) {
 				for (size_t j = 0; j < matrix_[i].size(); ++j) {
@@ -342,7 +344,7 @@ namespace gre {
 			return result;
 		}
 
-		Matrix flip_vertically() const noexcept {
+		Matrix flip_vertically() const {
 			Matrix result(matrix_.size(), count_columns());
 			for (size_t i = 0; i < matrix_.size(); ++i) {
 				for (size_t j = 0; j < matrix_[i].size(); ++j) {
@@ -352,11 +354,11 @@ namespace gre {
 			return result;
 		}
 
-		Matrix rotate_clockwise() const noexcept {
+		Matrix rotate_clockwise() const {
 			return flip_horizontally().transpose();
 		}
 
-		Matrix rotate_counterclockwise() const noexcept {
+		Matrix rotate_counterclockwise() const {
 			return flip_vertically().transpose();
 		}
 
@@ -374,7 +376,7 @@ namespace gre {
 			return result;
 		}
 
-		Matrix improved_step_view() const noexcept {
+		Matrix improved_step_view() const {
 			Matrix result = *this;
 			for (size_t j = 0, i0 = 0; j < count_columns() && i0 < matrix_.size(); ++j) {
 				size_t k = matrix_.size();
@@ -481,7 +483,7 @@ namespace gre {
 			return result;
 		}
 
-		static Matrix one_matrix(size_t size) noexcept {
+		static Matrix one_matrix(size_t size) {
 			Matrix result(size, size, 0);
 			for (size_t i = 0; i < size; ++i) {
 				result[i][i] = 1;
@@ -489,7 +491,7 @@ namespace gre {
 			return result;
 		}
 
-		static Matrix scale_matrix(const Vec3& scale) noexcept {
+		static Matrix scale_matrix(const Vec3& scale) {
 			return Matrix({
 				{ scale.x,     0.0,     0.0, 0.0 },
 				{     0.0, scale.y,     0.0, 0.0 },
@@ -498,7 +500,7 @@ namespace gre {
 				});
 		}
 
-		static Matrix scale_matrix(double scale) noexcept {
+		static Matrix scale_matrix(double scale) {
 			return Matrix({
 				{ scale,   0.0,   0.0, 0.0 },
 				{   0.0, scale,   0.0, 0.0 },
@@ -507,7 +509,7 @@ namespace gre {
 				});
 		}
 
-		static Matrix translation_matrix(const Vec3& translation) noexcept {
+		static Matrix translation_matrix(const Vec3& translation) {
 			return Matrix({
 				{ 1.0, 0.0, 0.0, translation.x },
 				{ 0.0, 1.0, 0.0, translation.y },
@@ -559,7 +561,7 @@ namespace gre {
 		return fin;
 	}
 
-	std::ostream& operator<<(std::ostream& fout, const Matrix& matrix) noexcept {
+	std::ostream& operator<<(std::ostream& fout, const Matrix& matrix) {
 		std::vector<std::string> output(matrix.count_strings());
 		for (std::string& line : output) {
 			line += char(179);
@@ -594,7 +596,7 @@ namespace gre {
 		return fout;
 	}
 
-	Matrix operator*(double value, const Matrix& matrix) noexcept {
+	Matrix operator*(double value, const Matrix& matrix) {
 		return matrix * value;
 	}
 }

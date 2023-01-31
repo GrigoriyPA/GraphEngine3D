@@ -68,7 +68,7 @@ namespace gre {
 			return { T(x), T(y), T(z) };
 		}
 
-		explicit operator std::string() const noexcept {
+		explicit operator std::string() const {
 			return std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z);
 		}
 
@@ -212,11 +212,11 @@ namespace gre {
 			return *this * *this;
 		}
 
-		double length() const noexcept {
+		double length() const {
 			return sqrt(*this * *this);
 		}
 
-		Vec3 normalize() const {
+		Vec3 normalize() const throw(GreDomainError) {
 			double vect_length = length();
 			if (equality(vect_length, 0.0)) {
 				throw GreDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
@@ -226,15 +226,15 @@ namespace gre {
 		}
 
 		Vec3 horizont() const noexcept {
-			Vec3 horizont_vect(1.0, 0.0, 0.0);
-			if (!equality(Vec3(z, 0.0, -x).length(), 0.0)) {
-				horizont_vect = Vec3(z, 0.0, -x).normalize();
+			try {
+				return Vec3(z, 0.0, -x).normalize();
 			}
-
-			return horizont_vect;
+			catch (GreDomainError) {
+				return Vec3(1.0, 0.0, 0.0);
+			}
 		}
 
-		Vec3 reflect_vect(const Vec3& n) const {
+		Vec3 reflect_vect(const Vec3& n) const throw(GreDomainError) {
 			if (equality(n.length(), 0.0)) {
 				throw GreDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
 			}
@@ -256,7 +256,7 @@ namespace gre {
 			}
 		}
 
-		bool in_angle(const Vec3& v1, const Vec3& v2) const noexcept {
+		bool in_angle(const Vec3& v1, const Vec3& v2) const {
 			Vec3 prod1 = v1 ^ *this, prod2 = v2 ^ *this, prod3 = v1 ^ v2;
 			if (equality(prod1.length() * prod3.length(), 0.0)) {
 				return false;
@@ -273,11 +273,11 @@ namespace gre {
 			}
 		}
 
-		bool in_triangle(const Vec3& v1, const Vec3& v2, const Vec3& v3) const noexcept {
+		bool in_triangle(const Vec3& v1, const Vec3& v2, const Vec3& v3) const {
 			return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
 		}
 
-		static double cos_angle(const Vec3& v1, const Vec3& v2) {
+		static double cos_angle(const Vec3& v1, const Vec3& v2) throw(GreDomainError) {
 			double length_prod = v1.length() * v2.length();
 			if (equality(length_prod, 0.0)) {
 				throw GreDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
@@ -286,7 +286,7 @@ namespace gre {
 			return (v1 * v2) / length_prod;
 		}
 
-		static double sin_angle(const Vec3& v1, const Vec3& v2) {
+		static double sin_angle(const Vec3& v1, const Vec3& v2) throw(GreDomainError) {
 			double length_prod = v1.length() * v2.length();
 			if (equality(length_prod, 0.0)) {
 				throw GreDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");

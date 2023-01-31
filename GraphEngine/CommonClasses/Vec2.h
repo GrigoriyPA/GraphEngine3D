@@ -54,11 +54,11 @@ namespace gre {
             return { T(x), T(y) };
         }
 
-        explicit operator sf::Vector2f() const noexcept {
+        explicit operator sf::Vector2f() const {
             return sf::Vector2f(static_cast<float>(x), static_cast<float>(y));
         }
 
-        explicit operator std::string() const noexcept {
+        explicit operator std::string() const {
             return std::to_string(x) + " " + std::to_string(y);
         }
 
@@ -189,8 +189,8 @@ namespace gre {
             return *this * *this;
         }
 
-        double length() const noexcept {
-            return sqrt(*this * *this);
+        double length() const {
+            return std::sqrt(*this * *this);
         }
 
         Vec2 normalize() const {
@@ -202,7 +202,7 @@ namespace gre {
             return *this / vect_length;
         }
 
-        Vec2 reflect_vect(const Vec2& n) const {
+        Vec2 reflect_vect(const Vec2& n) const throw(GreDomainError) {
             if (equality(n.length(), 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
             }
@@ -222,7 +222,7 @@ namespace gre {
             return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
         }
 
-        static double cos_angle(const Vec2& v1, const Vec2& v2) {
+        static double cos_angle(const Vec2& v1, const Vec2& v2) throw(GreDomainError) {
             double length_prod = v1.length() * v2.length();
             if (equality(length_prod, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
@@ -231,7 +231,7 @@ namespace gre {
             return (v1 * v2) / length_prod;
         }
 
-        static double sin_angle(const Vec2& v1, const Vec2& v2) {
+        static double sin_angle(const Vec2& v1, const Vec2& v2) throw(GreDomainError) {
             double length_prod = v1.length() * v2.length();
             if (equality(length_prod, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");

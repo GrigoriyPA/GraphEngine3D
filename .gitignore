@@ -1,5 +1,7 @@
 x64
-Resources
+InnerClasses/
+Interface/
+Resources/
 *.sln
 *.vcxproj
 *.vcxproj.filters

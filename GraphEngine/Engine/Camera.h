@@ -106,7 +106,7 @@ namespace gre {
 
         explicit Camera(sf::RenderWindow* window, ControlSystem* control_system) : projection_(4, 4) {
             fov_ = PI / 2.0;
-            min_distance_ = 1.0;
+            min_distance_ = 0.1;
             max_distance_ = 10.0;
 
             direction_ = Vec3(0, 0, 1);
@@ -323,11 +323,11 @@ namespace gre {
             return fps_counter_.get_fps();
         }
 
-        Matrix get_view_matrix() const noexcept {
+        Matrix get_view_matrix() const {
             return Matrix(horizont_, get_vertical(), direction_).transpose() * Matrix::translation_matrix(-position);
         }
 
-        Vec3 get_change_vector(const Vec3& stable_point) const noexcept {
+        Vec3 get_change_vector(const Vec3& stable_point) const {
             return change_matrix_ * (stable_point - last_position_) + position - stable_point;
         }
 
@@ -335,7 +335,7 @@ namespace gre {
             return position - last_position_;
         }
 
-        Camera& drop_change_matrix_state() noexcept {
+        Camera& drop_change_matrix_state() {
             change_matrix_ = Matrix::one_matrix(4);
             last_position_ = position;
             return *this;

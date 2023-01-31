@@ -169,7 +169,7 @@ namespace gre {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void swap(CamerasStorage& other) noexcept {
+		void swap(CamerasStorage& other) {
 			std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
 			std::swap(is_actual_, other.is_actual_);
 			std::swap(intersect_id_, other.intersect_id_);
@@ -178,9 +178,9 @@ namespace gre {
 			std::swap(init_float_, other.init_float_);
 			std::swap(shader_, other.shader_);
 			std::swap(max_count_cameras_, other.max_count_cameras_);
-			std::swap(cameras_index_, other.cameras_index_);
-			std::swap(free_camera_id_, other.free_camera_id_);
-			std::swap(cameras_, other.cameras_);
+			cameras_index_.swap(other.cameras_index_);
+			free_camera_id_.swap(other.free_camera_id_);
+			cameras_.swap(other.cameras_);
 		}
 
 		void deallocate() {
@@ -293,7 +293,7 @@ namespace gre {
 			return *this;
 		}
 
-		size_t insert(const Camera& camera) noexcept {
+		size_t insert(const Camera& camera) {
 			size_t free_camera_id = cameras_index_.size();
 			if (free_camera_id_.empty()) {
 				cameras_index_.push_back(cameras_.size());

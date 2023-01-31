@@ -83,25 +83,25 @@ namespace gre {
 
     class GreDomainError : public std::domain_error {
     public:
-        GreDomainError(const char* filename, uint32_t line, std::string message) : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreDomainError(const char* filename, uint32_t line, std::string message) noexcept : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 
     class GreInvalidArgument : public std::invalid_argument {
     public:
-        GreInvalidArgument(const char* filename, uint32_t line, std::string message) : invalid_argument("Invalid argument error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreInvalidArgument(const char* filename, uint32_t line, std::string message) noexcept : invalid_argument("Invalid argument error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 
     class GreOutOfRange : public std::out_of_range {
     public:
-        GreOutOfRange(const char* filename, uint32_t line, std::string message) : out_of_range("Out of range error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreOutOfRange(const char* filename, uint32_t line, std::string message) noexcept : out_of_range("Out of range error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 
     class GreRuntimeError : public std::runtime_error {
     public:
-        GreRuntimeError(const char* filename, uint32_t line, std::string message) : runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreRuntimeError(const char* filename, uint32_t line, std::string message) noexcept : runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 }

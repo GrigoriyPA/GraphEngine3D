@@ -25,7 +25,7 @@ namespace gre {
 			}
 		}
 
-		explicit MatrixLine(size_t count_columns, double value = 0.0) noexcept {
+		explicit MatrixLine(size_t count_columns, double value = 0.0) {
 			line_.resize(count_columns, value);
 		}
 
@@ -81,8 +81,10 @@ namespace gre {
 			return *this;
 		}
 
-		MatrixLine& operator*=(double other) & noexcept {
-			*this = *this * other;
+		MatrixLine& operator*=(double other)& noexcept {
+			for (double& element : line_) {
+				element *= other;
+			}
 			return *this;
 		}
 
@@ -95,7 +97,7 @@ namespace gre {
 			return *this;
 		}
 
-		MatrixLine operator-() const noexcept {
+		MatrixLine operator-() const {
 			return *this * -1;
 		}
 
@@ -125,7 +127,7 @@ namespace gre {
 			return result;
 		}
 
-		MatrixLine operator*(double other) const noexcept {
+		MatrixLine operator*(double other) const {
 			MatrixLine result = *this;
 			for (double& element : result.line_) {
 				element *= other;
@@ -182,11 +184,11 @@ namespace gre {
 				throw GreInvalidArgument(__FILE__, __LINE__, "swap, invalid line sizes.\n\n");
 			}
 
-			std::swap(line_, other.line_);
+			line_.swap(other.line_);
 		}
 	};
 
-	MatrixLine operator*(double value, const MatrixLine& matrix) noexcept {
+	MatrixLine operator*(double value, const MatrixLine& matrix) {
 		return matrix * value;
 	}
 }
