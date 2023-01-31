@@ -37,7 +37,7 @@ namespace gre {
 	}
 
 	void check_color_value(const char* filename, uint32_t line, const char* func_name, const Vec3& color) {
-		if (color.get_value<bool>(false, [](auto coord, auto* result) { *result = *result || coord < 0.0 || 1.0 < coord; })) {
+		if (color.x < 0.0 || 1.0 < color.x || color.y < 0.0 || 1.0 < color.y || color.z < 0.0 || 1.0 < color.z) {
 			throw GreInvalidArgument(filename, line, std::string(func_name) + ", invalid color value.\n\n");
 		}
 	}

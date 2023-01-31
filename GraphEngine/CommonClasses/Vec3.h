@@ -40,20 +40,15 @@ namespace gre {
 
 		template <typename T>  // Casts required: double(T)
 		Vec3(const std::initializer_list<T>& init) {
+#ifdef _DEBUG
+			if (init.size() != 3) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "Vec3, invalid initializer list size.\n\n");
+			}
+#endif // _DEBUG
+
 			size_t comp_id = 0;
 			for (const T& element : init) {
-				(*this)[comp_id] = static_cast<double>(element);
-
-				if (++comp_id == 3) {
-					break;
-				}
-			}
-		}
-
-		template <typename T>  // Casts required: double(T)
-		explicit Vec3(const std::vector<T>& init) {
-			for (size_t comp_id = 0; comp_id < std::min(static_cast<size_t>(3), init.size()); ++comp_id) {
-				(*this)[comp_id] = static_cast<double>(init[comp_id]);
+				(*this)[comp_id++] = static_cast<double>(element);
 			}
 		}
 
@@ -63,15 +58,6 @@ namespace gre {
 			z = color.b;
 		}
 
-		template <typename T>  // Constructors required: T(T), T(double)
-		explicit operator std::vector<T>() const {
-			return { T(x), T(y), T(z) };
-		}
-
-		explicit operator std::string() const {
-			return std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z);
-		}
-
 		double& operator[](size_t index) {
 			if (index == 0) {
 				return x;
@@ -79,10 +65,15 @@ namespace gre {
 			if (index == 1) {
 				return y;
 			}
+
+#ifdef _DEBUG
 			if (index == 2) {
 				return z;
 			}
 			throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+#endif // _DEBUG
+
+			return z;
 		}
 
 		const double& operator[](size_t index) const {
@@ -92,10 +83,15 @@ namespace gre {
 			if (index == 1) {
 				return y;
 			}
+
+#ifdef _DEBUG
 			if (index == 2) {
 				return z;
 			}
 			throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
+#endif // _DEBUG
+
+			return z;
 		}
 
 		bool operator==(const Vec3& other) const noexcept {
@@ -103,7 +99,7 @@ namespace gre {
 		}
 
 		bool operator!=(const Vec3& other) const noexcept {
-			return !(*this == other);
+			return !equality(x, other.x) || !equality(y, other.y) || !equality(z, other.z);
 		}
 
 		Vec3& operator+=(const Vec3& other)& noexcept {
@@ -128,9 +124,11 @@ namespace gre {
 		}
 
 		Vec3& operator/=(double other)& {
+#ifdef _DEBUG
 			if (equality(other, 0.0)) {
 				throw GreDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
 			}
+#endif // _DEBUG
 
 			x /= other;
 			y /= other;
@@ -139,13 +137,15 @@ namespace gre {
 		}
 
 		Vec3& operator^=(double other)& {
-			if (x < 0 || y < 0 || z < 0) {
+#ifdef _DEBUG
+			if (x < 0.0 || y < 0.0 || z < 0.0) {
 				throw GreDomainError(__FILE__, __LINE__, "operator^=, raising a negative number to a power.\n\n");
 			}
+#endif // _DEBUG
 
-			x = pow(x, other);
-			y = pow(y, other);
-			z = pow(z, other);
+			x = std::pow(x, other);
+			y = std::pow(y, other);
+			z = std::pow(z, other);
 			return *this;
 		}
 
@@ -170,9 +170,11 @@ namespace gre {
 		}
 
 		Vec3 operator/(double other) const {
+#ifdef _DEBUG
 			if (equality(other, 0.0)) {
 				throw GreDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
 			}
+#endif // _DEBUG
 
 			return Vec3(x / other, y / other, z / other);
 		}
@@ -182,128 +184,40 @@ namespace gre {
 		}
 
 		Vec3 operator^(double other) const {
-			if (x < 0 || y < 0 || z < 0) {
+#ifdef _DEBUG
+			if (x < 0.0 || y < 0.0 || z < 0.0) {
 				throw GreDomainError(__FILE__, __LINE__, "operator^, raising a negative number to a power.\n\n");
 			}
+#endif // _DEBUG
 
-			return Vec3(pow(x, other), pow(y, other), pow(z, other));
-		}
-
-		template <typename T>
-		T get_value(T value, std::function<void(double, T*)> func) const {
-			func(x, &value);
-			func(y, &value);
-			func(z, &value);
-			return value;
-		}
-
-		double length_sqr() const noexcept {
-			return *this * *this;
+			return Vec3(std::pow(x, other), std::pow(y, other), std::pow(z, other));
 		}
 
 		double length() const {
-			return sqrt(*this * *this);
+			return std::sqrt(x * x + y * y + z * z);
 		}
 
 		Vec3 normalize() const {
 			double vect_length = length();
+
+#ifdef _DEBUG
 			if (equality(vect_length, 0.0)) {
 				throw GreDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
 			}
+#endif // _DEBUG
 
 			return *this / vect_length;
 		}
 
 		Vec3 horizont() const noexcept {
-			try {
-				return Vec3(z, 0.0, -x).normalize();
-			}
-			catch (GreDomainError) {
+			double vect_length = z * z + x * x;
+
+			if (equality(vect_length, 0.0)) {
 				return Vec3(1.0, 0.0, 0.0);
 			}
-		}
-
-		Vec3 reflect_vect(const Vec3& n) const throw(GreDomainError) {
-			if (equality(n.length(), 0.0)) {
-				throw GreDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
-			}
-
-			Vec3 norm = n.normalize();
-			return norm * (norm * *this) * 2 - *this;
-		}
-
-		Vec3 symmetry(const Vec3& center) const noexcept {
-			return (center - *this) * 2 + *this;
-		}
-
-		bool in_two_side_angle(const Vec3& v1, const Vec3& v2) const noexcept {
-			try {
-				return equality(cos_angle(v1 ^ *this, v2 ^ *this), -1.0);
-			}
-			catch (GreDomainError) {
-				return false;
-			}
-		}
-
-		bool in_angle(const Vec3& v1, const Vec3& v2) const {
-			Vec3 prod1 = v1 ^ *this, prod2 = v2 ^ *this, prod3 = v1 ^ v2;
-			if (equality(prod1.length() * prod3.length(), 0.0)) {
-				return false;
-			}
-
-			try {
-				if (equality(prod1.length() * prod2.length(), 0.0)) {
-					return equality(cos_angle(*this, v1), 1.0) || equality(cos_angle(*this, v2), 1.0);
-				}
-				return equality(cos_angle(prod1, prod2), -1.0) && equality(cos_angle(prod1, prod3), 1.0);
-			}
-			catch (GreDomainError) {
-				return false;
-			}
-		}
-
-		bool in_triangle(const Vec3& v1, const Vec3& v2, const Vec3& v3) const {
-			return (*this - v1).in_angle(v2 - v1, v3 - v1) && (*this - v2).in_angle(v1 - v2, v3 - v2);
-		}
-
-		static double cos_angle(const Vec3& v1, const Vec3& v2) throw(GreDomainError) {
-			double length_prod = v1.length() * v2.length();
-			if (equality(length_prod, 0.0)) {
-				throw GreDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
-			}
-
-			return (v1 * v2) / length_prod;
-		}
-
-		static double sin_angle(const Vec3& v1, const Vec3& v2) throw(GreDomainError) {
-			double length_prod = v1.length() * v2.length();
-			if (equality(length_prod, 0.0)) {
-				throw GreDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
-			}
-
-			return (v1 ^ v2).length() / length_prod;
-		}
-
-		static Vec3 zip_map(const Vec3& v1, const Vec3& v2, std::function<double(double, double)> zip_func) {
-			return Vec3(zip_func(v1.x, v2.x), zip_func(v1.y, v2.y), zip_func(v1.z, v2.z));
-		}
-
-		template <typename T>  // Casts required: double(T)
-		static std::vector<Vec3> move_in(size_t size, T* data) {
-			std::vector<Vec3> result(size);
-			for (size_t i = 0; i < size; ++i) {
-				result[i] = Vec3(static_cast<double>(data[3 * i]), static_cast<double>(data[3 * i + 1]), static_cast<double>(data[3 * i + 2]));
-			}
-
-			delete[] data;
-			return result;
+			return Vec3(z / vect_length, 0.0, -x / vect_length);
 		}
 	};
-
-	std::istream& operator>>(std::istream& fin, Vec3& vector) noexcept {
-		fin >> vector.x >> vector.y >> vector.z;
-		return fin;
-	}
 
 	std::ostream& operator<<(std::ostream& fout, const Vec3& vector) noexcept {
 		fout << '(' << vector.x << ", " << vector.y << ", " << vector.z << ')';

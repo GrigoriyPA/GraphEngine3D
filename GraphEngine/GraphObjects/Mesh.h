@@ -292,23 +292,35 @@ namespace gre {
 		}
 
 		std::vector<Vec3> get_positions() const {
-			GLvoid* buffer = new GLfloat[3 * count_points_];
+			GLfloat* buffer = new GLfloat[3 * count_points_];
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
-			glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 3 * count_points_, buffer);
+			glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return Vec3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
+
+			std::vector<Vec3> result;
+			result.reserve(count_points_);
+			for (size_t i = 0; i < count_points_; ++i) {
+				result.emplace_back(static_cast<double>(buffer[3 * i]), static_cast<double>(buffer[3 * i + 1]), static_cast<double>(buffer[3 * i + 2]));
+			}
+			return result;
 		}
 
 		std::vector<Vec3> get_normals() const {
-			GLvoid* buffer = new GLfloat[3 * count_points_];
+			GLfloat* buffer = new GLfloat[3 * count_points_];
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
-			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * count_points_, sizeof(GLfloat) * 3 * count_points_, buffer);
+			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * count_points_, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return Vec3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
+
+			std::vector<Vec3> result;
+			result.reserve(count_points_);
+			for (size_t i = 0; i < count_points_; ++i) {
+				result.emplace_back(static_cast<double>(buffer[3 * i]), static_cast<double>(buffer[3 * i + 1]), static_cast<double>(buffer[3 * i + 2]));
+			}
+			return result;
 		}
 
 		std::vector<Vec2> get_tex_coords() const {
@@ -327,25 +339,20 @@ namespace gre {
 			return result;
 		}
 
-		template <typename T>  // Casts required: double(T)
-		static std::vector<Vec2> move_in(size_t size, T* data) {
-			std::vector<Vec2> result(size);
-			for (size_t i = 0; i < size; ++i) {
-				result[i] = Vec2(static_cast<double>(data[2 * i]), static_cast<double>(data[2 * i + 1]));
-			}
-
-			delete[] data;
-			return result;
-		}
-
 		std::vector<Vec3> get_colors() const {
-			GLvoid* buffer = new GLfloat[3 * count_points_];
+			GLfloat* buffer = new GLfloat[3 * count_points_];
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
-			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8 * count_points_, sizeof(GLfloat) * 3 * count_points_, buffer);
+			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8 * count_points_, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return Vec3::move_in(count_points_, reinterpret_cast<GLfloat*>(buffer));
+
+			std::vector<Vec3> result;
+			result.reserve(count_points_);
+			for (size_t i = 0; i < count_points_; ++i) {
+				result.emplace_back(static_cast<double>(buffer[3 * i]), static_cast<double>(buffer[3 * i + 1]), static_cast<double>(buffer[3 * i + 2]));
+			}
+			return result;
 		}
 
 		std::vector<GLuint> get_indices() const {

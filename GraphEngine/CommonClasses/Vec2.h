@@ -118,7 +118,7 @@ namespace gre {
 
         Vec2& operator^=(double other)& {
 #ifdef _DEBUG
-            if (x < 0 || y < 0) {
+            if (x < 0.0 || y < 0.0) {
                 throw GreDomainError(__FILE__, __LINE__, "operator^=, raising a negative number to a power.\n\n");
             }
 #endif // _DEBUG
@@ -154,12 +154,12 @@ namespace gre {
 
         Vec2 operator^(double other) const {
 #ifdef _DEBUG
-            if (x < 0 || y < 0) {
+            if (x < 0.0 || y < 0.0) {
                 throw GreDomainError(__FILE__, __LINE__, "operator^, raising a negative number to a power.\n\n");
             }
 #endif // _DEBUG
 
-            return Vec2(pow(x, other), pow(y, other));
+            return Vec2(std::pow(x, other), std::pow(y, other));
         }
 
         Vec2 operator/(double other) const {
@@ -173,7 +173,7 @@ namespace gre {
         }
 
         double length() const {
-            return std::sqrt(*this * *this);
+            return std::sqrt(x * x + y * y);
         }
 
         Vec2 normalize() const {
@@ -186,41 +186,6 @@ namespace gre {
 #endif // _DEBUG
 
             return *this / vect_length;
-        }
-
-        Vec2 reflect_vect(const Vec2& n) const {
-#ifdef _DEBUG
-            if (equality(n.length(), 0.0)) {
-                throw GreDomainError(__FILE__, __LINE__, "reflect_vect, the normal vector has zero length.\n\n");
-            }
-#endif // _DEBUG
-
-            const Vec2& norm = n.normalize();
-            return norm * (norm * *this) * 2 - *this;
-        }
-
-        static double cos_angle(const Vec2& v1, const Vec2& v2) {
-            double length_prod = v1.length() * v2.length();
-
-#ifdef _DEBUG
-            if (equality(length_prod, 0.0)) {
-                throw GreDomainError(__FILE__, __LINE__, "cos_angle, one of the vectors has zero length.\n\n");
-            }
-#endif // _DEBUG
-
-            return (v1 * v2) / length_prod;
-        }
-
-        static double sin_angle(const Vec2& v1, const Vec2& v2) {
-            double length_prod = v1.length() * v2.length();
-
-#ifdef _DEBUG
-            if (equality(length_prod, 0.0)) {
-                throw GreDomainError(__FILE__, __LINE__, "sin_angle, one of the vectors has zero length.\n\n");
-            }
-#endif // _DEBUG
-
-            return (v1 ^ v2) / length_prod;
         }
     };
 
