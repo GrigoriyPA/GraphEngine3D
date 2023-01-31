@@ -128,12 +128,6 @@ namespace gre {
             return *this;
         }
 
-        Vec2& operator^=(uint32_t other)& noexcept {
-            x = binary_exponentiation(x, other);
-            y = binary_exponentiation(y, other);
-            return *this;
-        }
-
         Vec2 operator-() const noexcept {
             return Vec2(-x, -y);
         }
@@ -164,10 +158,6 @@ namespace gre {
             }
 
             return Vec2(pow(x, other), pow(y, other));
-        }
-
-        Vec2 operator^(uint32_t other) const noexcept {
-            return Vec2(binary_exponentiation(x, other), binary_exponentiation(y, other));
         }
 
         Vec2 operator/(double other) const {

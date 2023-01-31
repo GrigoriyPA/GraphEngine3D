@@ -189,15 +189,6 @@ namespace gre {
 			return *this;
 		}
 
-		Matrix& operator^=(uint32_t other)& {
-			if (matrix_.size() != count_columns()) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "operator^=, invalid matrix size.\n\n");
-			}
-
-			*this = *this ^ other;
-			return *this;
-		}
-
 		Matrix& operator|=(const Matrix& other)& {
 			if (matrix_.size() != other.count_strings()) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "operator|=, invalid matrix sizes.\n\n");
@@ -279,14 +270,6 @@ namespace gre {
 			}
 
 			return *this * (1.0 / other);
-		}
-
-		Matrix operator^(uint32_t other) const {
-			if (matrix_.size() != count_columns()) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "operator^, invalid matrix size.\n\n");
-			}
-
-			return binary_exponentiation(*this, other, one_matrix(matrix_.size()));
 		}
 
 		Matrix operator|(const Matrix& other) const {

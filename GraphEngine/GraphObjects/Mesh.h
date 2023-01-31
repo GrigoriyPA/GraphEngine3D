@@ -41,7 +41,9 @@ namespace gre {
 			glGenBuffers(1, &vertex_buffer_);
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
 
-			size_t memory_size = get_value<size_t>(MEMORY_CONFIGURATION.begin(), MEMORY_CONFIGURATION.end(), 0, [](auto element, auto* result) { *result += element; });
+			size_t memory_size = 0;
+			for (size_t element : MEMORY_CONFIGURATION)
+				memory_size += element;
 			glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * memory_size * count_points_, NULL, GL_STATIC_DRAW);
 
 			memory_size = 0;
@@ -120,7 +122,9 @@ namespace gre {
 			glBindBuffer(GL_COPY_READ_BUFFER, other.vertex_buffer_);
 			glBindBuffer(GL_COPY_WRITE_BUFFER, vertex_buffer_);
 
-			size_t memory_size = get_value<size_t>(MEMORY_CONFIGURATION.begin(), MEMORY_CONFIGURATION.end(), 0, [](auto element, auto* result) { *result += element; });
+			size_t memory_size = 0;
+			for (size_t element : MEMORY_CONFIGURATION)
+				memory_size += element; 
 			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * memory_size * count_points_);
 
 			glBindBuffer(GL_COPY_READ_BUFFER, other.index_buffer_);
@@ -346,7 +350,12 @@ namespace gre {
 
 		Vec3 get_center() const {
 			std::vector<Vec3> positions = get_positions();
-			return get_value<Vec3>(positions.begin(), positions.end(), Vec3(0, 0, 0), [&](auto element, auto* result) { *result += element; }) / static_cast<double>(positions.size());
+			Vec3 center(0.0);
+			for (const Vec3& position : get_positions()) {
+				center += position;
+			}
+
+			return center / static_cast<double>(positions.size());
 		}
 
 		void swap(Mesh& other) noexcept {

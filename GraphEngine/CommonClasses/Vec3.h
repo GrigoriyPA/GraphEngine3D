@@ -149,13 +149,6 @@ namespace gre {
 			return *this;
 		}
 
-		Vec3& operator^=(uint32_t other)& noexcept {
-			x = binary_exponentiation(x, other);
-			y = binary_exponentiation(y, other);
-			z = binary_exponentiation(z, other);
-			return *this;
-		}
-
 		Vec3 operator-() const noexcept {
 			return Vec3(-x, -y, -z);
 		}
@@ -194,10 +187,6 @@ namespace gre {
 			}
 
 			return Vec3(pow(x, other), pow(y, other), pow(z, other));
-		}
-
-		Vec3 operator^(uint32_t other) const noexcept {
-			return Vec3(binary_exponentiation(x, other), binary_exponentiation(y, other), binary_exponentiation(z, other));
 		}
 
 		template <typename T>
