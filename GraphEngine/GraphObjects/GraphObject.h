@@ -119,7 +119,7 @@ namespace gre {
 
 		// ...
 		void processNode(aiNode* node, const aiScene* scene, std::string& directory, Matrix transform) {
-			Matrix trans(4, 4, 0);
+			Matrix trans(0);
 			aiMatrix4x4 cur_transform = node->mTransformation;
 			for (int i = 0; i < 4; i++) {
 				for (int j = 0; j < 4; j++)
@@ -310,7 +310,7 @@ namespace gre {
 				}
 			}
 
-			processNode(scene->mRootNode, scene, directory, Matrix::one_matrix(4));
+			processNode(scene->mRootNode, scene, directory, Matrix::one_matrix());
 		}
 
 		void draw_depth_map() const {

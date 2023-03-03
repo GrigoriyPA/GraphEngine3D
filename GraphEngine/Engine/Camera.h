@@ -75,7 +75,7 @@ namespace gre {
         };
 
         Vec2 check_point_ = Vec2(0.5);
-        Matrix change_matrix_ = Matrix::one_matrix(4);
+        Matrix change_matrix_ = Matrix::one_matrix();
 
         double fov_;
         double min_distance_;
@@ -336,7 +336,7 @@ namespace gre {
         }
 
         Camera& drop_change_matrix_state() {
-            change_matrix_ = Matrix::one_matrix(4);
+            change_matrix_ = Matrix::one_matrix();
             last_position_ = position;
             return *this;
         }

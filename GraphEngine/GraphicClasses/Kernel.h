@@ -1,15 +1,22 @@
 #pragma once
 
+#include <array>
 #include "Shader.h"
 
 
 namespace gre {
 	class Kernel {
 		GLuint offset_ = 10;
-		Matrix kernel_ = Matrix(3, 3, 0.0);
+		std::array<std::array<double, 3>, 3> kernel_;
 
 	public:
 		Kernel() noexcept {
+			for (size_t i = 0; i < 3; ++i) {
+				for (size_t j = 0; j < 3; ++j) {
+					kernel_[i][j] = 0.0;
+				}
+			}
+
 			kernel_[1][1] = 1.0;
 		}
 
@@ -24,7 +31,7 @@ namespace gre {
 		}
 
 		auto& operator[](size_t index) {
-			if (kernel_.count_strings() <= index) {
+			if (3 <= index) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
@@ -32,7 +39,7 @@ namespace gre {
 		}
 
 		const auto& operator[](size_t index) const {
-			if (kernel_.count_strings() <= index) {
+			if (3 <= index) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
 
@@ -49,15 +56,22 @@ namespace gre {
 
 		friend std::istream& operator>>(std::istream& fin, Kernel& kernel) noexcept;
 
-		friend std::ostream& operator<<(std::ostream& fout, const Kernel& kernel) noexcept;
-
 		void set_uniforms(const Shader<size_t>& shader) const {
 			if (shader.description != ShaderType::POST) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
 			}
 
 			shader.set_uniform_i("offset", offset_);
-			shader.set_uniform_fv<1>("kernel", 9, &std::vector<GLfloat>(kernel_)[0]);
+
+			std::vector<GLfloat> data;
+			data.reserve(9);
+			for (size_t j = 0; j < 3; ++j) {
+				for (size_t i = 0; i < 3; ++i) {
+					data.push_back(static_cast<GLfloat>(kernel_[i][j]));
+				}
+			}
+
+			shader.set_uniform_fv<1>("kernel", 9, &(data[0]));
 		}
 
 		Kernel& set_offset(GLuint offset) noexcept {
@@ -78,10 +92,5 @@ namespace gre {
 			}
 		}
 		return fin;
-	}
-
-	std::ostream& operator<<(std::ostream& fout, const Kernel& kernel) noexcept {
-		fout << kernel.offset_ << "\n" << kernel.kernel_;
-		return fout;
 	}
 }
