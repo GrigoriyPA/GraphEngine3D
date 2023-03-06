@@ -27,7 +27,7 @@ namespace gre {
 			}
 
 			offset_ = offset;
-			kernel_ = Matrix(init);
+			kernel_ = Matrix4x4(init);
 		}
 
 		auto& operator[](size_t index) {

@@ -408,11 +408,11 @@ namespace gre {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void set_uniform_matrix(const GLchar* uniform_name, const Matrix& matrix, GLboolean transpose = GL_FALSE) const {
+		void set_uniform_matrix(const GLchar* uniform_name, const Matrix4x4& matrix, GLboolean transpose = GL_FALSE) const {
 			if (get_current_program() != program_id_) {
 				use();
 			}
-			set_uniform_matrix(uniform_name, 1, &std::vector<GLfloat>(matrix)[0], matrix.count_strings(), matrix.count_columns(), transpose);
+			set_uniform_matrix(uniform_name, 1, &std::vector<GLfloat>(matrix)[0], 4, 4, transpose);
 		}
 
 		void set_uniform_matrix(const GLchar* uniform_name, GLsizei count, const GLfloat* value, size_t height, size_t width, GLboolean transpose = GL_FALSE) const {

@@ -75,7 +75,7 @@ namespace gre {
         };
 
         Vec2 check_point_ = Vec2(0.5);
-        Matrix change_matrix_ = Matrix::one_matrix();
+        Matrix4x4 change_matrix_ = Matrix4x4::one_matrix();
 
         double fov_;
         double min_distance_;
@@ -85,7 +85,7 @@ namespace gre {
         Vec3 direction_;
         Vec3 horizont_;
         Vec3 last_position_;
-        Matrix projection_;
+        Matrix4x4 projection_;
         ControlSystem* control_system_;
         FPS_counter fps_counter_;
         sf::RenderWindow* window_;
@@ -95,8 +95,8 @@ namespace gre {
                 throw GreDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
-            projection_ = Matrix::scale_matrix(Vec3(1.0 / tan(fov_ / 2.0), viewport_size_.x / (viewport_size_.y * tan(fov_ / 2.0)), (max_distance_ + min_distance_) / (max_distance_ - min_distance_)));
-            projection_ *= Matrix::translation_matrix(Vec3(0.0, 0.0, -2.0 * max_distance_ * min_distance_ / (max_distance_ + min_distance_)));
+            projection_ = Matrix4x4::scale_matrix(Vec3(1.0 / tan(fov_ / 2.0), viewport_size_.x / (viewport_size_.y * tan(fov_ / 2.0)), (max_distance_ + min_distance_) / (max_distance_ - min_distance_)));
+            projection_ *= Matrix4x4::translation_matrix(Vec3(0.0, 0.0, -2.0 * max_distance_ * min_distance_ / (max_distance_ + min_distance_)));
             projection_[3][3] = 0.0;
             projection_[3][2] = 1.0;
         }
@@ -104,7 +104,7 @@ namespace gre {
     public:
         Vec3 position;
 
-        explicit Camera(sf::RenderWindow* window, ControlSystem* control_system) : projection_(4, 4) {
+        explicit Camera(sf::RenderWindow* window, ControlSystem* control_system) {
             fov_ = PI / 2.0;
             min_distance_ = 0.1;
             max_distance_ = 10.0;
@@ -122,7 +122,7 @@ namespace gre {
             set_projection_matrix();
         }
 
-        Camera(sf::RenderWindow* window, ControlSystem* control_system, const Vec2& viewport_position, const Vec2& viewport_size, const Vec3& position, const Vec3& direction, double fov, double min_distance, double max_distance) : projection_(4, 4) {
+        Camera(sf::RenderWindow* window, ControlSystem* control_system, const Vec2& viewport_position, const Vec2& viewport_size, const Vec3& position, const Vec3& direction, double fov, double min_distance, double max_distance) {
             if (less_equality(fov, 0.0) || less_equality(PI, fov)) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "Camera, invalid FOV value.\n\n");
             }
@@ -271,7 +271,7 @@ namespace gre {
             return check_point_;
         }
 
-        Matrix get_change_matrix() const noexcept {
+        Matrix4x4 get_change_matrix() const noexcept {
             return change_matrix_;
         }
 
@@ -311,7 +311,7 @@ namespace gre {
             return last_position_;
         }
 
-        Matrix get_projection_matrix() const noexcept {
+        Matrix4x4 get_projection_matrix() const noexcept {
             return projection_;
         }
 
@@ -323,8 +323,8 @@ namespace gre {
             return fps_counter_.get_fps();
         }
 
-        Matrix get_view_matrix() const {
-            return Matrix(horizont_, get_vertical(), direction_).transpose() * Matrix::translation_matrix(-position);
+        Matrix4x4 get_view_matrix() const {
+            return Matrix4x4(horizont_, get_vertical(), direction_).transpose() * Matrix4x4::translation_matrix(-position);
         }
 
         Vec3 get_change_vector(const Vec3& stable_point) const {
@@ -336,14 +336,14 @@ namespace gre {
         }
 
         Camera& drop_change_matrix_state() {
-            change_matrix_ = Matrix::one_matrix();
+            change_matrix_ = Matrix4x4::one_matrix();
             last_position_ = position;
             return *this;
         }
 
         Camera& rotate(const Vec3& axis, double angle) {
             try {
-                Matrix rotate = Matrix::rotation_matrix(axis, angle);
+                Matrix4x4 rotate = Matrix4x4::rotation_matrix(axis, angle);
                 direction_ = rotate * direction_;
                 horizont_ = rotate * horizont_;
                 change_matrix_ = rotate * change_matrix_;
@@ -380,7 +380,7 @@ namespace gre {
 
             double tg = tan(fov_ / 2.0);
             double z_coord = max_distance_* min_distance_ / divisor;
-            return Matrix(horizont_, get_vertical(), direction_) * Vec3(z_coord * tg * (2.0 * check_point_.x - 1.0), (z_coord * tg * viewport_size_.y / viewport_size_.x) * (2.0 * check_point_.y - 1.0), z_coord) + position;
+            return Matrix4x4(horizont_, get_vertical(), direction_) * Vec3(z_coord * tg * (2.0 * check_point_.x - 1.0), (z_coord * tg * viewport_size_.y / viewport_size_.x) * (2.0 * check_point_.y - 1.0), z_coord) + position;
         }
     };
 }

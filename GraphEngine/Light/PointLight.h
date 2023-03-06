@@ -65,8 +65,8 @@ namespace gre {
             return *this;
         }
 
-        Matrix get_light_space_matrix() const noexcept override {
-            return Matrix(4, 4);
+        Matrix4x4 get_light_space_matrix() const noexcept override {
+            return Matrix4x4();
         }
 
         GraphObject get_light_object() const {
@@ -77,8 +77,8 @@ namespace gre {
                 mesh.material.shadow = false;
             });
 
-            Matrix model = Matrix::scale_matrix(0.15);
-            model = Matrix::translation_matrix(position) * model;
+            Matrix4x4 model = Matrix4x4::scale_matrix(0.15);
+            model = Matrix4x4::translation_matrix(position) * model;
 
             light_object.models.insert(model);
             return light_object;

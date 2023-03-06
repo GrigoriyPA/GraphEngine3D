@@ -1,33 +1,55 @@
 #pragma once
 
-#include <algorithm>
-#include "MatrixLine.h"
 #include "Vec3.h"
 
 
 namespace gre {
-    class Matrix {
-        std::vector<MatrixLine> matrix_;
+    class Matrix4x4 {
+        double matrix_[4][4];
 
     public:
-        template <typename T>  // Casts required: double(T)
-        Matrix(const std::initializer_list<std::initializer_list<T>>& init) {
-            if (init.size() != 4) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "Matrix, invalid init size.\n\n");
-            }
-
-            matrix_.reserve(init.size());
-            for (const auto& line : init) {
-                if (line.size() != 4) {
-                    throw GreInvalidArgument(__FILE__, __LINE__, "Matrix, invalid init size.\n\n");
+        Matrix4x4() {
+            for (uint32_t i = 0; i < 4; ++i) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    matrix_[i][j] = 0.0;
                 }
-
-                matrix_.push_back(MatrixLine(line));
             }
         }
 
-        Matrix(const Vec3& vector_x, const Vec3& vector_y, const Vec3& vector_z) {
-            *this = Matrix({
+        explicit Matrix4x4(double value) {
+            for (uint32_t i = 0; i < 4; ++i) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    matrix_[i][j] = value;
+                }
+            }
+        }
+
+        template <typename T>  // Casts required: double(T)
+        Matrix4x4(const std::initializer_list<std::initializer_list<T>>& init) {
+#ifdef _DEBUG
+            if (init.size() != 4) {
+                throw GreInvalidArgument(__FILE__, __LINE__, "Matrix4x4, invalid init size.\n\n");
+            }
+#endif // _DEBUG
+
+            uint32_t i = 0;
+            for (const auto& line : init) {
+#ifdef _DEBUG
+                if (line.size() != 4) {
+                    throw GreInvalidArgument(__FILE__, __LINE__, "Matrix4x4, invalid init size.\n\n");
+                }
+#endif // _DEBUG
+
+                uint32_t j = 0;
+                for (const auto& element : line) {
+                    matrix_[i][j++] = double(element);
+                }
+                ++i;
+            }
+        }
+
+        Matrix4x4(const Vec3& vector_x, const Vec3& vector_y, const Vec3& vector_z) {
+            *this = Matrix4x4({
                 { vector_x.x, vector_y.x, vector_z.x, 0.0 },
                 { vector_x.y, vector_y.y, vector_z.y, 0.0 },
                 { vector_x.z, vector_y.z, vector_z.z, 0.0 },
@@ -35,55 +57,41 @@ namespace gre {
             });
         }
 
-        Matrix(double value, const Matrix& init) {
-            size_t count_lines = 4, count_columns = 4;
-            matrix_.resize(count_lines, MatrixLine(count_columns, value));
-            for (size_t i = 0; i < std::min(count_lines, init.count_strings()); ++i) {
-                for (size_t j = 0; j < std::min(count_columns, init.count_columns()); ++j) {
-                    matrix_[i][j] = init[i][j];
-                }
-            }
-        }
-
-        Matrix(double value = 0.0) {
-            matrix_.resize(4, MatrixLine(4, value));
-        }
-
         template <typename T>  // Constructors required: T(double)
         explicit operator std::vector<T>() const {
             std::vector<T> result;
-            result.reserve(matrix_.size() * count_columns());
-            for (size_t j = 0; j < count_columns(); ++j) {
-                for (size_t i = 0; i < matrix_.size(); ++i) {
+            result.reserve(16);
+            for (uint32_t j = 0; j < 4; ++j) {
+                for (uint32_t i = 0; i < 4; ++i) {
                     result.push_back(T(matrix_[i][j]));
                 }
             }
             return result;
         }
 
-        MatrixLine& operator[](size_t index) {
-            if (matrix_.size() <= index) {
+        double* operator[](size_t index) {
+#ifdef _DEBUG
+            if (4 <= index) {
                 throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
             }
+#endif // _DEBUG
 
             return matrix_[index];
         }
 
-        const MatrixLine& operator[](size_t index) const {
-            if (matrix_.size() <= index) {
+        const double* operator[](size_t index) const {
+#ifdef _DEBUG
+            if (4 <= index) {
                 throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
             }
+#endif // _DEBUG
 
             return matrix_[index];
         }
 
-        bool operator==(const Matrix& other) const noexcept {
-            if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-                return false;
-            }
-
-            for (size_t i = 0; i < matrix_.size(); ++i) {
-                for (size_t j = 0; j < matrix_[i].size(); ++j) {
+        bool operator==(const Matrix4x4& other) const noexcept {
+            for (uint32_t i = 0; i < 4; ++i) {
+                for (uint32_t j = 0; j < 4; ++j) {
                     if (!equality(matrix_[i][j], other[i][j])) {
                         return false;
                     }
@@ -92,112 +100,91 @@ namespace gre {
             return true;
         }
 
-        bool operator!=(const Matrix& other) const noexcept {
+        bool operator!=(const Matrix4x4& other) const noexcept {
             return !(*this == other);
         }
 
-        Matrix& operator+=(const Matrix& other)& {
-            if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "operator+=, invalid matrix sizes.\n\n");
-            }
-
+        Matrix4x4& operator+=(const Matrix4x4& other)& {
             *this = *this + other;
             return *this;
         }
 
-        Matrix& operator-=(const Matrix& other)& {
-            if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "operator-=, invalid matrix sizes.\n\n");
-            }
-
+        Matrix4x4& operator-=(const Matrix4x4& other)& {
             *this = *this - other;
             return *this;
         }
 
-        Matrix& operator*=(double other)& noexcept {
-            for (size_t i = 0; i < matrix_.size(); i++) {
-                matrix_[i] *= other;
-            }
-            return *this;
-        }
-
-        Matrix& operator*=(const Matrix& other)& {
-            if (count_columns() != other.count_strings()) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "operator*=, invalid matrix sizes.\n\n");
-            }
-
+        Matrix4x4& operator*=(double other)& noexcept {
             *this = *this * other;
             return *this;
         }
 
-        Matrix& operator/=(double other)& {
+        Matrix4x4& operator*=(const Matrix4x4& other)& {
+            *this = *this * other;
+            return *this;
+        }
+
+        Matrix4x4& operator/=(double other)& {
+#ifdef _DEBUG
             if (equality(other, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
             }
+#endif // _DEBUG
 
             *this = *this / other;
             return *this;
         }
 
-        Matrix operator-() const {
-            Matrix result = *this;
-            for (size_t i = 0; i < matrix_.size(); i++) {
-                result[i] *= -1;
+        Matrix4x4 operator-() const {
+            Matrix4x4 result = *this;
+            for (uint32_t i = 0; i < 4; i++) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    result[i][j] *= -1;
+                }
             }
             return result;
         }
 
-        Matrix operator+(const Matrix& other) const {
-            if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "operator+, invalid matrix sizes.\n\n");
-            }
-
-            Matrix result = *this;
-            for (size_t i = 0; i < matrix_.size(); i++) {
-                result[i] += other[i];
+        Matrix4x4 operator+(const Matrix4x4& other) const {
+            Matrix4x4 result = *this;
+            for (uint32_t i = 0; i < 4; i++) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    result[i][j] += other[i][j];
+                }
             }
             return result;
         }
 
-        Matrix operator-(const Matrix& other) const {
-            if (matrix_.size() != other.count_strings() || count_columns() != other.count_columns()) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "operator-, invalid matrix sizes.\n\n");
-            }
-
+        Matrix4x4 operator-(const Matrix4x4& other) const {
             return *this + (-other);
         }
 
-        Matrix operator*(double other) const {
-            Matrix result = *this;
-            for (size_t i = 0; i < matrix_.size(); i++) {
-                result[i] *= other;
+        Matrix4x4 operator*(double other) const {
+            Matrix4x4 result = *this;
+            for (uint32_t i = 0; i < 4; i++) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    result[i][j] *= other;
+                }
             }
             return result;
         }
 
-        Matrix operator*(const Matrix& other) const {
-            if (count_columns() != other.count_strings()) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix sizes.\n\n");
-            }
-
-            Matrix transposed = other.transpose();
-            Matrix result(0.0);
-            for (size_t i = 0; i < matrix_.size(); ++i) {
-                for (size_t j = 0; j < other.count_columns(); ++j) {
-                    result[i][j] = matrix_[i] * transposed[j];
+        Matrix4x4 operator*(const Matrix4x4& other) const {
+            Matrix4x4 result(0.0);
+            for (uint32_t i = 0; i < 4; ++i) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    for (uint32_t k = 0; k < 4; ++k) {
+                        result[i][j] += matrix_[i][k] * other[k][j];
+                    }
                 }
             }
             return result;
         }
 
         Vec3 operator*(const Vec3& other) const {
-            if (matrix_.size() != 4 || matrix_[0].size() != 4) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "operator*, invalid matrix size.\n\n");
-            }
-
             Vec3 result;
-            for (size_t i = 0; i < 3; ++i) {
-                for (size_t j = 0; j < 3; ++j) {
+            for (uint32_t i = 0; i < 3; ++i) {
+                for (uint32_t j = 0; j < 3; ++j) {
                     result[i] += matrix_[i][j] * other[j];
                 }
                 result[i] += matrix_[i][3];
@@ -205,154 +192,165 @@ namespace gre {
             return result;
         }
 
-        Matrix operator/(double other) const {
+        Matrix4x4 operator/(double other) const {
+#ifdef _DEBUG
             if (equality(other, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
             }
+#endif // _DEBUG
 
             return *this * (1.0 / other);
         }
 
-        size_t count_strings() const noexcept {
-            return matrix_.size();
-        }
-
-        size_t count_columns() const noexcept {
-            if (matrix_.empty()) {
-                return 0;
-            }
-            return matrix_[0].size();
-        }
-
-        Matrix transpose() const {
-            Matrix result(count_columns(), matrix_.size());
-            for (size_t i = 0; i < matrix_.size(); ++i) {
-                for (size_t j = 0; j < matrix_[i].size(); ++j) {
+        Matrix4x4 transpose() const {
+            Matrix4x4 result;
+            for (uint32_t i = 0; i < 4; ++i) {
+                for (uint32_t j = 0; j < 4; ++j) {
                     result[j][i] = matrix_[i][j];
                 }
             }
             return result;
         }
 
-        Matrix inverse() const {
-            Matrix temp = *this;
-            Matrix result = one_matrix();
-            for (uint32_t j = 0; j < 4; ++j) {
-                uint32_t k = 4;
-                for (uint32_t i = j; i < 4; ++i) {
+        Matrix4x4 inverse() const {
+            Matrix4x4 temp = *this;
+            Matrix4x4 result = one_matrix();
+            for (int32_t j = 0; j < 4; ++j) {
+                int32_t k = 4;
+                for (int32_t i = j; i < 4; ++i) {
                     if (!equality(temp[i][j], 0.0)) {
                         k = i;
                         break;
                     }
                 }
 
+#ifdef _DEBUG
                 if (k == 4) {
                     throw GreDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
                 }
+#endif // NO _DEBUG
+                
+                for (uint32_t i = 0; i < 4 && j != k; ++i) {
+                    std::swap(result[j][i], result[k][i]);
+                    std::swap(temp[j][i], temp[k][i]);
+                }
 
-                result[j].swap(result[k]);
-                temp[j].swap(temp[k]);
-
-                result[j] *= 1.0 / temp[j][j];
-                temp[j] *= 1.0 / temp[j][j];
-                for (uint32_t i = 0; i < 4; ++i) {
+                double div = temp[j][j];
+                for (int32_t i = 3; i >= 0; --i) {
+                    result[j][i] /= div;
+                    temp[j][i] /= div;
+                }
+                for (int32_t i = 0; i < 4; ++i) {
                     if (i == j) {
                         continue;
                     }
 
-                    result[i] -= result[j] * temp[i][j];
-                    temp[i] -= temp[j] * temp[i][j];
+                    double val = temp[i][j];
+                    for (int32_t id = 0; id < 4; ++id) {
+                        result[i][id] -= result[j][id] * val;
+                        temp[i][id] -= temp[j][id] * val;
+                    }
                 }
             }
 
             return result;
         }
 
-        static Matrix one_matrix() {
-            Matrix result(0);
-            for (size_t i = 0; i < 4; ++i) {
-                result[i][i] = 1;
-            }
-            return result;
+        static Matrix4x4 one_matrix() noexcept {
+            return Matrix4x4({
+                { 1.0, 0.0, 0.0, 0.0 },
+                { 0.0, 1.0, 0.0, 0.0 },
+                { 0.0, 0.0, 1.0, 0.0 },
+                { 0.0, 0.0, 0.0, 1.0 },
+            });
         }
 
-        static Matrix scale_matrix(const Vec3& scale) {
-            return Matrix({
+        static Matrix4x4 scale_matrix(double scale_x, double scale_y, double scale_z) noexcept {
+            return Matrix4x4({
+                { scale_x,     0.0,     0.0, 0.0 },
+                {     0.0, scale_y,     0.0, 0.0 },
+                {     0.0,     0.0, scale_z, 0.0 },
+                {     0.0,     0.0,     0.0, 1.0 },
+            });
+        }
+
+        static Matrix4x4 scale_matrix(const Vec3& scale) noexcept {
+            return Matrix4x4({
                 { scale.x,     0.0,     0.0, 0.0 },
                 {     0.0, scale.y,     0.0, 0.0 },
                 {     0.0,     0.0, scale.z, 0.0 },
                 {     0.0,     0.0,     0.0, 1.0 },
-                });
+            });
         }
 
-        static Matrix scale_matrix(double scale) {
-            return Matrix({
+        static Matrix4x4 scale_matrix(double scale) noexcept {
+            return Matrix4x4({
                 { scale,   0.0,   0.0, 0.0 },
                 {   0.0, scale,   0.0, 0.0 },
                 {   0.0,   0.0, scale, 0.0 },
                 {   0.0,   0.0,   0.0, 1.0 },
-                });
+            });
         }
 
-        static Matrix translation_matrix(const Vec3& translation) {
-            return Matrix({
+        static Matrix4x4 translation_matrix(const Vec3& translation) noexcept {
+            return Matrix4x4({
                 { 1.0, 0.0, 0.0, translation.x },
                 { 0.0, 1.0, 0.0, translation.y },
                 { 0.0, 0.0, 1.0, translation.z },
                 { 0.0, 0.0, 0.0,           1.0 },
-                });
+            });
         }
 
-        static Matrix rotation_matrix(const Vec3& axis, double angle) {
+        static Matrix4x4 rotation_matrix(const Vec3& axis, double angle) {
+#ifdef _DEBUG
             if (equality(axis.length(), 0.0)) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "rotation_matrix, the axis vector has zero length.\n\n");
             }
+#endif // _DEBUG
 
-            Vec3 norm_axis = axis.normalize();
+            const Vec3& norm_axis = axis.normalize();
             double x = norm_axis.x;
             double y = norm_axis.y;
             double z = norm_axis.z;
             double c = cos(angle);
             double s = sin(angle);
 
-            return Matrix({
-                {     c + x * x * (1 - c), x * y * (1 - c) - z * s, x * z * (1 - c) + y * s, 0.0 },
-                { y * x * (1 - c) + z * s,     c + y * y * (1 - c), y * z * (1 - c) - x * s, 0.0 },
-                { z * x * (1 - c) - y * s, z * y * (1 - c) + x * s,     c + z * z * (1 - c), 0.0 },
-                {                     0.0,                     0.0,                     0.0, 1.0 },
-                });
+            return Matrix4x4({
+                {     c + x * x * (1.0 - c), x * y * (1.0 - c) - z * s, x * z * (1.0 - c) + y * s, 0.0 },
+                { y * x * (1.0 - c) + z * s,     c + y * y * (1.0 - c), y * z * (1.0 - c) - x * s, 0.0 },
+                { z * x * (1.0 - c) - y * s, z * y * (1.0 - c) + x * s,     c + z * z * (1.0 - c), 0.0 },
+                {                       0.0,                       0.0,                       0.0, 1.0 },
+            });
         }
 
-        static Matrix normal_transform(const Matrix& transform) {
-            if (transform.count_strings() != 4 || transform.count_columns() != 4) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "normal_transform, invalid matrix size.\n\n");
-            }
-
+        static Matrix4x4 normal_transform(const Matrix4x4& transform) {
+#ifdef _DEBUG
             try {
                 return transform.inverse().transpose();
             }
             catch (GreDomainError) {
                 throw GreDomainError(__FILE__, __LINE__, "normal_transform, the matrix is not invertible.\n\n");
             }
+#else // _DEBUG
+            return transform.inverse().transpose();
+#endif // NO _DEBUG
         }
     };
 
-    std::ostream& operator<<(std::ostream& fout, const Matrix& matrix) {
-        std::vector<std::string> output(matrix.count_strings());
+    std::ostream& operator<<(std::ostream& fout, const Matrix4x4& matrix) {
+        std::vector<std::string> output(4);
         for (std::string& line : output) {
             line += char(179);
         }
-        for (size_t j = 0; j < matrix.count_columns(); ++j) {
+        for (size_t j = 0; j < 4; ++j) {
             size_t string_size = 0;
-            for (size_t i = 0; i < matrix.count_strings(); ++i) {
+            for (size_t i = 0; i < 4; ++i) {
                 output[i] += std::to_string(matrix[i][j]);
                 string_size = std::max(string_size, output[i].size());
             }
-
-            if (j < matrix.count_columns() - 1) {
-                ++string_size;
-            }
-            for (size_t i = 0; i < matrix.count_strings(); ++i) {
+            
+            string_size += j < 3;
+            for (size_t i = 0; i < 4; ++i) {
                 for (; output[i].size() < string_size; output[i] += ' ') {}
             }
         }
@@ -372,7 +370,7 @@ namespace gre {
         return fout;
     }
 
-    Matrix operator*(double value, const Matrix& matrix) noexcept {
+    Matrix4x4 operator*(double value, const Matrix4x4& matrix) noexcept {
         return matrix * value;
     }
 }

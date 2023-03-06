@@ -13,7 +13,7 @@ namespace gre {
 		size_t max_count_models_;
 		std::vector<size_t> models_index_;
 		std::vector<size_t> free_model_id_;
-		std::vector<std::pair<size_t, Matrix>> models_;
+		std::vector<std::pair<size_t, Matrix4x4>> models_;
 
 		ModelStorage() noexcept {
 			max_count_models_ = 0;
@@ -92,9 +92,9 @@ namespace gre {
 		}
 
 	public:
-		using Iterator = std::vector<std::pair<size_t, Matrix>>::const_iterator;
+		using Iterator = std::vector<std::pair<size_t, Matrix4x4>>::const_iterator;
 
-		const Matrix& operator[](size_t id) const {
+		const Matrix4x4& operator[](size_t id) const {
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid model id.\n\n");
 			}
@@ -102,7 +102,7 @@ namespace gre {
 			return models_[models_index_[id]].second;
 		}
 
-		ModelStorage& set(size_t id, const Matrix& matrix) {
+		ModelStorage& set(size_t id, const Matrix4x4& matrix) {
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "set, invalid model id.\n\n");
 			}
@@ -117,7 +117,7 @@ namespace gre {
 			return *this;
 		}
 
-		Matrix get(size_t id) const {
+		Matrix4x4 get(size_t id) const {
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get, invalid model id.\n\n");
 			}
@@ -193,7 +193,7 @@ namespace gre {
 			return *this;
 		}
 
-		size_t insert(const Matrix& matrix) {
+		size_t insert(const Matrix4x4& matrix) {
 			if (models_.size() == max_count_models_) {
 				throw GreRuntimeError(__FILE__, __LINE__, "insert, too many instances created.\n\n");
 			}
@@ -212,7 +212,7 @@ namespace gre {
 			return free_model_id;
 		}
 
-		ModelStorage& change_left(size_t id, const Matrix& matrix) {
+		ModelStorage& change_left(size_t id, const Matrix4x4& matrix) {
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
 			}
@@ -222,7 +222,7 @@ namespace gre {
 			return *this;
 		}
 
-		ModelStorage& change_right(size_t id, const Matrix& matrix) {
+		ModelStorage& change_right(size_t id, const Matrix4x4& matrix) {
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "change_left, invalid model id.\n\n");
 			}

@@ -393,8 +393,8 @@ namespace gre {
 			std::swap(material, other.material);
 		}
 
-		Mesh& apply_matrix(const Matrix& transform) {
-			Matrix normal_transform = Matrix::normal_transform(transform);
+		Mesh& apply_matrix(const Matrix4x4& transform) {
+			Matrix4x4 normal_transform = Matrix4x4::normal_transform(transform);
 			std::vector<Vec3> positions = get_positions();
 			std::vector<Vec3> normals = get_normals();
 			for (size_t i = 0; i < count_points_; ++i) {

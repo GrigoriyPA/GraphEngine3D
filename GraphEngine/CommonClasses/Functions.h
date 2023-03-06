@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -34,7 +33,8 @@ namespace gre {
 
     class GreRuntimeError : public std::runtime_error {
     public:
-        GreRuntimeError(const char* filename, uint32_t line, const std::string& message) noexcept : runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
+        GreRuntimeError(const char* filename, uint32_t line, const std::string& message) noexcept :
+            runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message) {
         }
     };
 

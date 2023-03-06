@@ -59,7 +59,7 @@ namespace gre {
 
         virtual void set_uniforms(size_t id, const Shader<size_t>& shader) const = 0;
 
-        virtual Matrix get_light_space_matrix() const = 0;
+        virtual Matrix4x4 get_light_space_matrix() const = 0;
 
         virtual ~Light() {
         }

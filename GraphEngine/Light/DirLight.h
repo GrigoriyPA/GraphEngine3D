@@ -13,26 +13,26 @@ namespace gre {
         double shadow_depth_ = 10.0;
 
         Vec3 direction_;
-        Matrix projection_;
+        Matrix4x4 projection_;
 
         void set_projection_matrix() {
             if (equality(shadow_width_, 0.0) || equality(shadow_height_, 0.0) || equality(shadow_depth_, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
-            projection_ = Matrix::scale_matrix(Vec3(2.0 / shadow_width_, 2.0 / shadow_height_, 2.0 / shadow_depth_));
-            projection_ *= Matrix::translation_matrix(Vec3(0, 0, -shadow_depth_ / 2));
+            projection_ = Matrix4x4::scale_matrix(Vec3(2.0 / shadow_width_, 2.0 / shadow_height_, 2.0 / shadow_depth_));
+            projection_ *= Matrix4x4::translation_matrix(Vec3(0, 0, -shadow_depth_ / 2));
         }
 
-        Matrix get_view_matrix() const noexcept {
+        Matrix4x4 get_view_matrix() const noexcept {
             const Vec3& horizont = direction_.horizont();
-            return Matrix(horizont, direction_ ^ horizont, direction_).transpose() * Matrix::translation_matrix(-shadow_position);
+            return Matrix4x4(horizont, direction_ ^ horizont, direction_).transpose() * Matrix4x4::translation_matrix(-shadow_position);
         }
 
     public:
         Vec3 shadow_position = Vec3(0.0, 0.0, 0.0);
 
-        DirLight(const Vec3& direction) : projection_(4, 4) {
+        DirLight(const Vec3& direction) {
             if (!glew_is_ok()) {
                 throw GreRuntimeError(__FILE__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
             }
@@ -102,7 +102,7 @@ namespace gre {
             return *this;
         }
 
-        Matrix get_light_space_matrix() const noexcept override {
+        Matrix4x4 get_light_space_matrix() const noexcept override {
             return projection_ * get_view_matrix();
         }
 
@@ -115,8 +115,8 @@ namespace gre {
                 mesh.material.set_alpha(0.3);
             });
 
-            Matrix model = Matrix::scale_matrix(Vec3(shadow_width_, shadow_height_, shadow_depth_));
-            model = Matrix::translation_matrix(Vec3(0.0, 0.0, (1.0 - EPS) * shadow_depth_ / 2.0)) * model;
+            Matrix4x4 model = Matrix4x4::scale_matrix(Vec3(shadow_width_, shadow_height_, shadow_depth_));
+            model = Matrix4x4::translation_matrix(Vec3(0.0, 0.0, (1.0 - EPS) * shadow_depth_ / 2.0)) * model;
             model = get_view_matrix().inverse() * model;
 
             shadow_box.models.insert(model);

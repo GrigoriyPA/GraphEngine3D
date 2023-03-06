@@ -17,28 +17,28 @@ namespace gre {
         double border_in_;
         double border_out_;
         Vec3 direction_;
-        Matrix projection_;
+        Matrix4x4 projection_;
 
         void set_projection_matrix() {
             if (equality(tan(border_out_), 0.0) || equality(shadow_max_distance_, shadow_min_distance_) || equality(shadow_max_distance_ + shadow_min_distance_, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
 
-            projection_ = Matrix::scale_matrix(Vec3(1.0 / tan(border_out_), 1.0 / tan(border_out_), (shadow_max_distance_ + shadow_min_distance_) / (shadow_max_distance_ - shadow_min_distance_)));
-            projection_ *= Matrix::translation_matrix(Vec3(0.0, 0.0, -2.0 * shadow_max_distance_ * shadow_min_distance_ / (shadow_max_distance_ + shadow_min_distance_)));
+            projection_ = Matrix4x4::scale_matrix(Vec3(1.0 / tan(border_out_), 1.0 / tan(border_out_), (shadow_max_distance_ + shadow_min_distance_) / (shadow_max_distance_ - shadow_min_distance_)));
+            projection_ *= Matrix4x4::translation_matrix(Vec3(0.0, 0.0, -2.0 * shadow_max_distance_ * shadow_min_distance_ / (shadow_max_distance_ + shadow_min_distance_)));
             projection_[3][3] = 0.0;
             projection_[3][2] = 1.0;
         }
 
-        Matrix get_view_matrix() const noexcept {
+        Matrix4x4 get_view_matrix() const noexcept {
             const Vec3& horizont = direction_.horizont();
-            return Matrix(horizont, direction_ ^ horizont, direction_).transpose() * Matrix::translation_matrix(-position);
+            return Matrix4x4(horizont, direction_ ^ horizont, direction_).transpose() * Matrix4x4::translation_matrix(-position);
         }
 
     public:
         Vec3 position;
 
-        SpotLight(const Vec3& position, const Vec3& direction, double border_in, double border_out) : projection_(4, 4) {
+        SpotLight(const Vec3& position, const Vec3& direction, double border_in, double border_out) {
             if (!glew_is_ok()) {
                 throw GreRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
             }
@@ -139,7 +139,7 @@ namespace gre {
             return *this;
         }
 
-        Matrix get_light_space_matrix() const noexcept override {
+        Matrix4x4 get_light_space_matrix() const noexcept override {
             return projection_ * get_view_matrix();
         }
 
@@ -161,7 +161,7 @@ namespace gre {
             shadow_box.meshes.insert(mesh);
 
             double delt = shadow_min_distance_ / shadow_max_distance_;
-            mesh.apply_matrix(Matrix::scale_matrix(delt));
+            mesh.apply_matrix(Matrix4x4::scale_matrix(delt));
             mesh.invert_points_order(true);
             shadow_box.meshes.insert(mesh);
 
@@ -174,13 +174,13 @@ namespace gre {
             }, true);
             shadow_box.meshes.insert(mesh);
 
-            mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
+            mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
             shadow_box.meshes.insert(mesh);
 
-            mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
+            mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
             shadow_box.meshes.insert(mesh);
 
-            mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
+            mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
             shadow_box.meshes.insert(mesh);
 
             shadow_box.meshes.apply_func([](auto& mesh) {
@@ -188,7 +188,7 @@ namespace gre {
                 mesh.material.set_alpha(0.3);
             });
 
-            Matrix model = Matrix::scale_matrix((1.0 - EPS) * shadow_max_distance_ * Vec3(tan(border_out_), tan(border_out_), 1.0));
+            Matrix4x4 model = Matrix4x4::scale_matrix((1.0 - EPS) * shadow_max_distance_ * Vec3(tan(border_out_), tan(border_out_), 1.0));
             model = get_view_matrix().inverse() * model;
 
             shadow_box.models.insert(model);
@@ -203,8 +203,8 @@ namespace gre {
                 mesh.material.shadow = false;
             });
 
-            Matrix model = Matrix::scale_matrix(0.25 * Vec3(tan(border_out_), tan(border_out_), 1.0));
-            model = Matrix::rotation_matrix(Vec3(1.0, 0.0, 0.0), -PI / 2.0) * model;
+            Matrix4x4 model = Matrix4x4::scale_matrix(0.25 * Vec3(tan(border_out_), tan(border_out_), 1.0));
+            model = Matrix4x4::rotation_matrix(Vec3(1.0, 0.0, 0.0), -PI / 2.0) * model;
             model = get_view_matrix().inverse() * model;
 
             light_object.models.insert(model);

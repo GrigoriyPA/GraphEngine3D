@@ -30,13 +30,13 @@ namespace gre {
 		}
 
 		// ...
-		Mesh processMesh(aiMesh* mesh, const aiScene* scene, std::string& directory, Matrix transform) {
+		Mesh processMesh(aiMesh* mesh, const aiScene* scene, std::string& directory, Matrix4x4 transform) {
 			std::vector < Vec2 > tex_coords;
 			std::vector < Vec3 > positions, normals;
 			std::vector < Vec3 > colors;
 			std::vector<unsigned int> indices;
 
-			Matrix norm_transform = transform.inverse().transpose();
+			Matrix4x4 norm_transform = transform.inverse().transpose();
 			for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 				positions.push_back(transform * Vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
 				if (mesh->mNormals)
@@ -118,8 +118,8 @@ namespace gre {
 		}
 
 		// ...
-		void processNode(aiNode* node, const aiScene* scene, std::string& directory, Matrix transform) {
-			Matrix trans(0);
+		void processNode(aiNode* node, const aiScene* scene, std::string& directory, Matrix4x4 transform) {
+			Matrix4x4 trans(0);
 			aiMatrix4x4 cur_transform = node->mTransformation;
 			for (int i = 0; i < 4; i++) {
 				for (int j = 0; j < 4; j++)
@@ -217,7 +217,7 @@ namespace gre {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid mesh id.\n\n");
 			}
 
-			const Matrix& transform = models[model_id];
+			const Matrix4x4& transform = models[model_id];
 			std::vector<Vec3> positions;
 			for (const Vec3& position : meshes[mesh_id].get_positions()) {
 				positions.push_back(transform * position);
@@ -233,7 +233,7 @@ namespace gre {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid mesh id.\n\n");
 			}
 
-			const Matrix& transform = Matrix::normal_transform(models[model_id]);
+			const Matrix4x4& transform = Matrix4x4::normal_transform(models[model_id]);
 			std::vector<Vec3> normals;
 			for (const Vec3& normal : meshes[mesh_id].get_normals()) {
 				normals.push_back(transform * normal);
@@ -310,7 +310,7 @@ namespace gre {
 				}
 			}
 
-			processNode(scene->mRootNode, scene, directory, Matrix::one_matrix());
+			processNode(scene->mRootNode, scene, directory, Matrix4x4::one_matrix());
 		}
 
 		void draw_depth_map() const {
@@ -404,19 +404,19 @@ namespace gre {
 			});
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 1.0, 0.0), PI / 2.0));
+			mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 1.0, 0.0), PI / 2.0));
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 1.0, 0.0), PI / 2.0));
+			mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 1.0, 0.0), PI / 2.0));
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 1.0, 0.0), PI / 2.0));
+			mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 1.0, 0.0), PI / 2.0));
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
+			mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
 			cube.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI));
+			mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI));
 			cube.meshes.insert(mesh);
 
 			cube.meshes.compress();
@@ -440,7 +440,7 @@ namespace gre {
 			mesh.invert_points_order(true);
 			cylinder.meshes.insert(mesh);
 
-			mesh.apply_matrix(Matrix::translation_matrix(Vec3(0.0, 1.0, 0.0)));
+			mesh.apply_matrix(Matrix4x4::translation_matrix(Vec3(0.0, 1.0, 0.0)));
 			mesh.invert_points_order(true);
 			cylinder.meshes.insert(mesh);
 
