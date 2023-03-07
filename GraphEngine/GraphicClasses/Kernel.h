@@ -1,13 +1,12 @@
 #pragma once
 
-#include <array>
 #include "Shader.h"
 
 
 namespace gre {
 	class Kernel {
 		GLuint offset_ = 10;
-		std::array<std::array<double, 3>, 3> kernel_;
+		double kernel_[3][3];
 
 	public:
 		Kernel() noexcept {
@@ -20,42 +19,72 @@ namespace gre {
 			kernel_[1][1] = 1.0;
 		}
 
-		template <typename T>  // Casts required: double(T)
-		Kernel(GLuint offset, const std::initializer_list<std::initializer_list<T>>& init) {
-			if (init.size() != 3 || init.begin()->size() != 3) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "Kernel, invalid kernel size.\n\n");
-			}
-
+		explicit Kernel(GLuint offset) noexcept : Kernel() {
 			offset_ = offset;
-			kernel_ = Matrix4x4(init);
 		}
 
-		auto& operator[](size_t index) {
+		template <typename T>  // Casts required: double(T)
+		Kernel(GLuint offset, const std::initializer_list<std::initializer_list<T>>& init) {
+#ifdef _DEBUG
+			if (init.size() != 3) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "Matrix4x4, invalid init size.\n\n");
+			}
+#endif // _DEBUG
+
+			offset_ = offset;
+
+			uint32_t i = 0;
+			for (const auto& line : init) {
+#ifdef _DEBUG
+				if (line.size() != 3) {
+					throw GreInvalidArgument(__FILE__, __LINE__, "Matrix4x4, invalid init size.\n\n");
+				}
+#endif // _DEBUG
+
+				uint32_t j = 0;
+				for (const auto& element : line) {
+					kernel_[i][j++] = double(element);
+				}
+				++i;
+			}
+		}
+
+		double* operator[](size_t index) {
+#ifdef _DEBUG
 			if (3 <= index) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
+#endif // _DEBUG
 
 			return kernel_[index];
 		}
 
-		const auto& operator[](size_t index) const {
+		const double* operator[](size_t index) const {
+#ifdef _DEBUG
 			if (3 <= index) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
 			}
+#endif // _DEBUG
 
 			return kernel_[index];
 		}
 
 		bool operator==(const Kernel& other) const noexcept {
-			return kernel_ == other.kernel_;
+			for (uint32_t i = 0; i < 3; ++i) {
+				for (uint32_t j = 0; j < 3; ++j) {
+					if (!equality(kernel_[i][j], other[i][j])) {
+						return false;
+					}
+				}
+			}
+			return true;
 		}
 
 		bool operator!=(const Kernel& other) const noexcept {
 			return !(*this == other);
 		}
 
-		friend std::istream& operator>>(std::istream& fin, Kernel& kernel) noexcept;
-
+		// POST shader expected
 		void set_uniforms(const Shader& shader) const {
 			shader.set_uniform_i("offset", offset_);
 
@@ -70,14 +99,15 @@ namespace gre {
 			shader.set_uniform_1fv("kernel", 9, &(data[0]));
 		}
 
-		Kernel& set_offset(GLuint offset) noexcept {
+		void set_offset(GLuint offset) noexcept {
 			offset_ = offset;
-			return *this;
 		}
 
 		GLuint get_offset() const noexcept {
 			return offset_;
 		}
+
+		friend std::istream& operator>>(std::istream& fin, Kernel& kernel) noexcept;
 	};
 
 	std::istream& operator>>(std::istream& fin, Kernel& kernel) noexcept {
