@@ -42,9 +42,9 @@ namespace gre {
 		Vec3 clear_color_ = Vec3(0.0);
 		Kernel kernel_ = Kernel();
 
-		Shader<size_t> main_shader_;
-		Shader<size_t> depth_shader_;
-		Shader<size_t> post_shader_;
+		Shader<size_t> main_shader_ = Shader<size_t>(gre::ShaderType::MAIN);
+		Shader<size_t> depth_shader_ = Shader<size_t>(gre::ShaderType::DEPTH);
+		Shader<size_t> post_shader_ = Shader<size_t>(gre::ShaderType::POST);
 		sf::RenderWindow* window_;
 		
 		void set_active() const {
@@ -259,14 +259,17 @@ namespace gre {
 				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, failed to initialize GLEW.\n\n");
 			}
 
-			depth_shader_ = gre::Shader<size_t>("GraphEngine/Shaders/Vertex/Depth", "GraphEngine/Shaders/Fragment/Depth", gre::ShaderType::DEPTH);
-			post_shader_ = gre::Shader<size_t>("GraphEngine/Shaders/Vertex/Post", "GraphEngine/Shaders/Fragment/Post", gre::ShaderType::POST);
-			main_shader_ = gre::Shader<size_t>("GraphEngine/Shaders/Vertex/Main", "GraphEngine/Shaders/Fragment/Main", gre::ShaderType::MAIN);
+			depth_shader_.load_from_file("GraphEngine/Shaders/Vertex/Depth.vert", "GraphEngine/Shaders/Fragment/Depth.frag");
+			post_shader_.load_from_file("GraphEngine/Shaders/Vertex/Post.vert", "GraphEngine/Shaders/Fragment/Post.frag");
+			main_shader_.load_from_file("GraphEngine/Shaders/Vertex/Main.vert", "GraphEngine/Shaders/Fragment/Main.frag");
 			
 			const sf::ContextSettings& settings = window->getSettings();
 			if (!depth_shader_.check_window_settings(settings) || !post_shader_.check_window_settings(settings) || !main_shader_.check_window_settings(settings)) {
 				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, invalid OpenGL version.\n\n");
 			}
+			
+			// Validate programs
+
 			set_uniforms();
 
 			cameras.insert(Camera(window, &default_control_system));

@@ -8,55 +8,22 @@
 namespace gre {
 	template <typename T = void*>  // Constructors required: T(), T(T); Operators required: =(T, T)
 	class Shader {
-		inline static const char* VERTEX_SHADER_EXTENSION = ".vert";
-		inline static const char* FRAGMENT_SHADER_EXTENSION = ".frag";
-
 		size_t* count_links_ = nullptr;
 		std::string* vertex_shader_code_ = nullptr;
 		std::string* fragment_shader_code_ = nullptr;
 		GLuint program_id_ = 0;
 
-		void load_vertex_shader(const std::string& vertex_shader_path) {
-			std::ifstream vertex_shader_file(vertex_shader_path + VERTEX_SHADER_EXTENSION);
-			if (vertex_shader_file.fail()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "load_vertex_shader, the vertex shader file does not exist.\n\n");
+		std::string load_shader(const std::string& shader_path) {
+			std::ifstream shader_file(shader_path);
+			if (shader_file.fail()) {
+				throw GreRuntimeError(__FILE__, __LINE__, "load_shader, the shader file does not exist.\n\n");
 			}
 
-			vertex_shader_code_ = new std::string();
-			for (std::string line; std::getline(vertex_shader_file, line);) {
-				*vertex_shader_code_ += line + "\n";
+			std::string shader_code;
+			for (std::string line; std::getline(shader_file, line);) {
+				shader_code += line + "\n";
 			}
-		}
-
-		void load_fragment_shader(const std::string& fragment_shader_path) {
-			std::ifstream fragment_shader_file(fragment_shader_path + FRAGMENT_SHADER_EXTENSION);
-			if (fragment_shader_file.fail()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "load_fragment_shader, the fragment shader file does not exist.\n\n");
-			}
-
-			fragment_shader_code_ = new std::string();
-			for (std::string line; std::getline(fragment_shader_file, line);) {
-				*fragment_shader_code_ += line + "\n";
-			}
-		}
-
-		void deallocate() {
-			if (count_links_ != nullptr) {
-				--(*count_links_);
-				if (*count_links_ == 0) {
-					delete count_links_;
-					delete vertex_shader_code_;
-					delete fragment_shader_code_;
-				}
-			}
-			count_links_ = nullptr;
-			vertex_shader_code_ = nullptr;
-			fragment_shader_code_ = nullptr;
-
-			glDeleteProgram(program_id_);
-			check_gl_errors(__FILE__, __LINE__, __func__);
-
-			program_id_ = 0;
+			return shader_code;
 		}
 
 		static GLuint create_vertex_shader(const std::string& code) {
@@ -65,13 +32,15 @@ namespace gre {
 			glShaderSource(vertex_shader, 1, &vertex_shader_code_c, NULL);
 			glCompileShader(vertex_shader);
 
+#ifdef _DEBUG
 			GLint success;
 			glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 			if (success == GL_FALSE) {
 				throw GreRuntimeError(__FILE__, __LINE__, "create_vertex_shader, compilation failed, description \\/\n" + load_shader_info_log(vertex_shader) + "\n\n");
 			}
-
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+
 			return vertex_shader;
 		}
 
@@ -81,13 +50,15 @@ namespace gre {
 			glShaderSource(fragment_shader, 1, &fragment_shader_code_c, NULL);
 			glCompileShader(fragment_shader);
 
+#ifdef _DEBUG
 			GLint success;
 			glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
 			if (success == GL_FALSE) {
 				throw GreRuntimeError(__FILE__, __LINE__, "create_fragment_shader, compilation failed, description \\/\n" + load_shader_info_log(fragment_shader) + "\n\n");
 			}
-
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+
 			return fragment_shader;
 		}
 
@@ -100,23 +71,29 @@ namespace gre {
 			glAttachShader(program, fragment_shader);
 			glLinkProgram(program);
 
+#ifdef _DEBUG
 			GLint success;
 			glGetProgramiv(program, GL_LINK_STATUS, &success);
 			if (success == GL_FALSE) {
 				throw GreRuntimeError(__FILE__, __LINE__, "link_shaders, linking failed, description \\/\n" + load_program_info_log(program) + "\n\n");
 			}
+#endif // _DEBUG
 
 			glDeleteShader(vertex_shader);
 			glDeleteShader(fragment_shader);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 			return program;
 		}
 
 		static std::string find_value(const std::string& code, const std::string& variable_name) {
 			std::vector<std::string> split_code = split(code, [](const char c) { return c == ' ' || c == '\n'; });
+#ifdef _DEBUG
 			if (split_code.size() < 3) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
 			}
+#endif // _DEBUG
 
 			for (size_t i = 0; i < split_code.size() - 2; ++i) {
 				if (split_code[i] == variable_name && split_code[i + 1] == "=") {
@@ -129,9 +106,11 @@ namespace gre {
 
 		static uint64_t find_version(const std::string& code) {
 			std::vector<std::string> split_code = split(code, [](const char c) { return c == ' ' || c == '\n'; });
+#ifdef _DEBUG
 			if (split_code.size() < 2) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "find_version, version not found.\n\n");
 			}
+#endif // _DEBUG
 
 			for (size_t i = 0; i < split_code.size() - 1; ++i) {
 				if (split_code[i] == "#version") {
@@ -148,7 +127,9 @@ namespace gre {
 			GLchar* info_log = new GLchar[info_log_size];
 			glGetShaderInfoLog(shader, info_log_size, NULL, info_log);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			std::string result(info_log);
 			delete[] info_log;
@@ -162,7 +143,9 @@ namespace gre {
 			GLchar* info_log = new GLchar[info_log_size];
 			glGetProgramInfoLog(program, info_log_size, NULL, info_log);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			std::string result(info_log);
 			delete[] info_log;
@@ -178,19 +161,17 @@ namespace gre {
 			}
 		}
 
-		Shader(const std::string& vertex_shader_path, const std::string& fragment_shader_path, T desc_value = T()) {
+		explicit Shader(const T& desc_value) {
+			description = desc_value;
+		}
+
+		Shader(const std::string& vertex_shader_code, const std::string& fragment_shader_code, const T& desc_value = T()) {
 			if (!glew_is_ok()) {
 				throw GreRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
 			}
 
-			load_vertex_shader(vertex_shader_path);
-			load_fragment_shader(fragment_shader_path);
-
-			count_links_ = new size_t(1);
 			description = desc_value;
-			if (vertex_shader_code_ != nullptr && fragment_shader_code_ != nullptr) {
-				program_id_ = link_shaders(*vertex_shader_code_, *fragment_shader_code_);
-			}
+			set_shader_code(vertex_shader_code, fragment_shader_code);
 		}
 
 		Shader(const Shader<T>& other) noexcept {
@@ -216,9 +197,18 @@ namespace gre {
 		}
 
 		Shader<T>& operator=(Shader<T>&& other)& noexcept {
-			deallocate();
+			clear();
 			swap(other);
 			return *this;
+		}
+
+		void set_shader_code(const std::string& vertex_shader_code, const std::string& fragment_shader_code) {
+			clear();
+
+			count_links_ = new size_t(1);
+			vertex_shader_code_ = new std::string(vertex_shader_code);
+			fragment_shader_code_ = new std::string(fragment_shader_code);
+			program_id_ = link_shaders(*vertex_shader_code_, *fragment_shader_code_);
 		}
 
 		void set_uniform_f(const GLchar* uniform_name, GLfloat v0) const {
@@ -483,23 +473,19 @@ namespace gre {
 			return find_value(*fragment_shader_code_, variable_name);
 		}
 
-		GLint get_uniform_location(const GLchar* uniform_name) const noexcept {
-			return glGetUniformLocation(program_id_, uniform_name);
+		GLint get_uniform_location(const GLchar* uniform_name) const {
+			GLint uniform_location = glGetUniformLocation(program_id_, uniform_name);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+			return uniform_location;
 		}
 
 		GLuint get_program_id() const noexcept {
 			return program_id_;
 		}
 
-		void swap(Shader<T>& other) noexcept {
-			std::swap(description, other.description);
-			std::swap(count_links_, other.count_links_);
-			std::swap(program_id_, other.program_id_);
-			std::swap(vertex_shader_code_, other.vertex_shader_code_);
-			std::swap(fragment_shader_code_, other.fragment_shader_code_);
-		}
-
-		bool check_window_settings(const sf::ContextSettings& settings) const noexcept {
+		bool check_window_settings(const sf::ContextSettings& settings) const {
 			uint64_t vert_version = find_version(*vertex_shader_code_);
 			uint64_t frag_version = find_version(*fragment_shader_code_);
 			if (vert_version / 100 > settings.majorVersion || (vert_version / 100 == settings.majorVersion && (vert_version % 100) / 10 > settings.minorVersion)) {
@@ -510,30 +496,75 @@ namespace gre {
 
 		void use() const {
 			glUseProgram(program_id_);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
-		void validate_program() const {
+		bool validate_program(std::string& validate_status_description) const {
 			glValidateProgram(program_id_);
 
 			GLint validate_status;
 			glGetProgramiv(program_id_, GL_VALIDATE_STATUS, &validate_status);
 
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+
 			if (validate_status == GL_TRUE) {
-				std::cout << "Validate status: success\n\n";
-			} else {
-				std::cout << "Validate status: fail\n";
-				std::cout << "Reason:\n" << load_program_info_log(program_id_) << "\n\n";
+				validate_status_description = "Validate status: success\n\n";
+				return true;
 			}
+
+			validate_status_description = "Validate status: fail\nReason:\n" + load_program_info_log(program_id_) + "\n\n";
+			return false;
+		}
+
+		void load_from_file(const std::string& vertex_shader_path, const std::string& fragment_shader_path) {
+			const std::string& vertex_shader_code = load_shader(vertex_shader_path);
+			const std::string& fragment_shader_code = load_shader(fragment_shader_path);
+			set_shader_code(vertex_shader_code, fragment_shader_code);
+		}
+
+		void swap(Shader<T>& other) noexcept {
+			std::swap(description, other.description);
+			std::swap(count_links_, other.count_links_);
+			std::swap(program_id_, other.program_id_);
+			std::swap(vertex_shader_code_, other.vertex_shader_code_);
+			std::swap(fragment_shader_code_, other.fragment_shader_code_);
+		}
+
+		void clear() {
+			if (count_links_ != nullptr) {
+				--(*count_links_);
+				if (*count_links_ == 0) {
+					delete count_links_;
+					delete vertex_shader_code_;
+					delete fragment_shader_code_;
+				}
+			}
+			count_links_ = nullptr;
+			vertex_shader_code_ = nullptr;
+			fragment_shader_code_ = nullptr;
+
+			glDeleteProgram(program_id_);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+
+			program_id_ = 0;
 		}
 
 		~Shader() {
-			deallocate();
+			clear();
 		}
 
 		static GLint get_current_program() {
 			GLint result = 0;
 			glGetIntegerv(GL_CURRENT_PROGRAM, &result);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 			return result;
 		}
 	};
