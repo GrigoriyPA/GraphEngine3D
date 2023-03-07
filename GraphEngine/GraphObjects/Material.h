@@ -15,6 +15,7 @@ namespace gre {
         Vec3 specular_ = Vec3(0.0);
         Vec3 emission_ = Vec3(0.0);
 
+        // MAIN shader expected
         void set_uniforms(const Shader& shader) const {
             shader.set_uniform_i("use_diffuse_map", diffuse_map.get_id() != 0);
             shader.set_uniform_i("use_specular_map", specular_map.get_id() != 0);
@@ -43,6 +44,7 @@ namespace gre {
             emission_map.activate(2);
         }
 
+        // MAIN shader expected
         void delete_uniforms(const Shader& shader) const {
             shader.use();
             diffuse_map.deactive(0);
@@ -82,17 +84,21 @@ namespace gre {
         }
 
         void set_shininess(double shininess) {
+#ifdef _DEBUG
             if (shininess < 0.0) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_shininess, invalid shininess value.\n\n");
             }
+#endif // _DEBUG
 
             shininess_ = shininess;
         }
 
         void set_alpha(double alpha) {
+#ifdef _DEBUG
             if (alpha < 0.0 || 1.0 < alpha) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_alpha, invalid alpha value.\n\n");
             }
+#endif // _DEBUG
 
             alpha_ = alpha;
         }
@@ -102,7 +108,9 @@ namespace gre {
         }
 
         void set_ambient(const Vec3& ambient) {
+#ifdef _DEBUG
             check_color_value(__FILE__, __LINE__, __func__, ambient);
+#endif // _DEBUG
             ambient_ = ambient;
         }
 
@@ -111,7 +119,9 @@ namespace gre {
         }
 
         void set_diffuse(const Vec3& diffuse) {
+#ifdef _DEBUG
             check_color_value(__FILE__, __LINE__, __func__, diffuse);
+#endif // _DEBUG
             diffuse_ = diffuse;
         }
 
@@ -120,7 +130,9 @@ namespace gre {
         }
 
         void set_specular(const Vec3& specular) {
+#ifdef _DEBUG
             check_color_value(__FILE__, __LINE__, __func__, specular);
+#endif // _DEBUG
             specular_ = specular;
         }
 
@@ -129,7 +141,9 @@ namespace gre {
         }
 
         void set_emission(const Vec3& emission) {
+#ifdef _DEBUG
             check_color_value(__FILE__, __LINE__, __func__, emission);
+#endif // _DEBUG
             emission_ = emission;
         }
     };
