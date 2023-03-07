@@ -209,12 +209,14 @@ namespace gre {
 			return *this / vect_length;
 		}
 
-		Vec3 horizont() const noexcept {
+		Vec3 horizont() const {
 			double vect_length = z * z + x * x;
 
 			if (equality(vect_length, 0.0)) {
 				return Vec3(1.0, 0.0, 0.0);
 			}
+
+			vect_length = sqrt(vect_length);
 			return Vec3(z / vect_length, 0.0, -x / vect_length);
 		}
 	};

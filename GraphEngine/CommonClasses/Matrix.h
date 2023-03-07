@@ -7,8 +7,20 @@ namespace gre {
     class Matrix4x4 {
         double matrix_[4][4];
 
+        double algebraic_addition(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t y1, uint32_t y2, uint32_t y3) const noexcept {
+            double result = 0.0;
+            result += matrix_[x1][y1] * matrix_[x2][y2] * matrix_[x3][y3];
+            result += matrix_[x1][y2] * matrix_[x2][y3] * matrix_[x3][y1];
+            result += matrix_[x1][y3] * matrix_[x2][y1] * matrix_[x3][y2];
+
+            result -= matrix_[x1][y1] * matrix_[x2][y3] * matrix_[x3][y2];
+            result -= matrix_[x1][y2] * matrix_[x2][y1] * matrix_[x3][y3];
+            result -= matrix_[x1][y3] * matrix_[x2][y2] * matrix_[x3][y1];
+            return result;
+        }
+
     public:
-        Matrix4x4() {
+        Matrix4x4() noexcept {
             for (uint32_t i = 0; i < 4; ++i) {
                 for (uint32_t j = 0; j < 4; ++j) {
                     matrix_[i][j] = 0.0;
@@ -16,7 +28,7 @@ namespace gre {
             }
         }
 
-        explicit Matrix4x4(double value) {
+        explicit Matrix4x4(double value) noexcept {
             for (uint32_t i = 0; i < 4; ++i) {
                 for (uint32_t j = 0; j < 4; ++j) {
                     matrix_[i][j] = value;
@@ -48,7 +60,7 @@ namespace gre {
             }
         }
 
-        Matrix4x4(const Vec3& vector_x, const Vec3& vector_y, const Vec3& vector_z) {
+        Matrix4x4(const Vec3& vector_x, const Vec3& vector_y, const Vec3& vector_z) noexcept {
             *this = Matrix4x4({
                 { vector_x.x, vector_y.x, vector_z.x, 0.0 },
                 { vector_x.y, vector_y.y, vector_z.y, 0.0 },
@@ -104,22 +116,34 @@ namespace gre {
             return !(*this == other);
         }
 
-        Matrix4x4& operator+=(const Matrix4x4& other)& {
-            *this = *this + other;
+        Matrix4x4& operator+=(const Matrix4x4& other)& noexcept {
+            for (uint32_t i = 0; i < 4; i++) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    matrix_[i][j] += other[i][j];
+                }
+            }
             return *this;
         }
 
-        Matrix4x4& operator-=(const Matrix4x4& other)& {
-            *this = *this - other;
+        Matrix4x4& operator-=(const Matrix4x4& other)& noexcept {
+            for (uint32_t i = 0; i < 4; i++) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    matrix_[i][j] -= other[i][j];
+                }
+            }
             return *this;
         }
 
         Matrix4x4& operator*=(double other)& noexcept {
-            *this = *this * other;
+            for (uint32_t i = 0; i < 4; i++) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    matrix_[i][j] *= other;
+                }
+            }
             return *this;
         }
 
-        Matrix4x4& operator*=(const Matrix4x4& other)& {
+        Matrix4x4& operator*=(const Matrix4x4& other)& noexcept {
             *this = *this * other;
             return *this;
         }
@@ -131,45 +155,35 @@ namespace gre {
             }
 #endif // _DEBUG
 
-            *this = *this / other;
+            for (uint32_t i = 0; i < 4; i++) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    matrix_[i][j] /= other;
+                }
+            }
             return *this;
         }
 
-        Matrix4x4 operator-() const {
+        Matrix4x4 operator-() const noexcept {
             Matrix4x4 result = *this;
-            for (uint32_t i = 0; i < 4; i++) {
-                for (uint32_t j = 0; j < 4; ++j) {
-                    result[i][j] *= -1;
-                }
-            }
-            return result;
+            return result *= -1.0;
         }
 
-        Matrix4x4 operator+(const Matrix4x4& other) const {
+        Matrix4x4 operator+(const Matrix4x4& other) const noexcept {
             Matrix4x4 result = *this;
-            for (uint32_t i = 0; i < 4; i++) {
-                for (uint32_t j = 0; j < 4; ++j) {
-                    result[i][j] += other[i][j];
-                }
-            }
-            return result;
+            return result += other;
         }
 
-        Matrix4x4 operator-(const Matrix4x4& other) const {
-            return *this + (-other);
-        }
-
-        Matrix4x4 operator*(double other) const {
+        Matrix4x4 operator-(const Matrix4x4& other) const noexcept {
             Matrix4x4 result = *this;
-            for (uint32_t i = 0; i < 4; i++) {
-                for (uint32_t j = 0; j < 4; ++j) {
-                    result[i][j] *= other;
-                }
-            }
-            return result;
+            return result -= other;
         }
 
-        Matrix4x4 operator*(const Matrix4x4& other) const {
+        Matrix4x4 operator*(double other) const noexcept {
+            Matrix4x4 result = *this;
+            return result *= other;
+        }
+
+        Matrix4x4 operator*(const Matrix4x4& other) const noexcept {
             Matrix4x4 result(0.0);
             for (uint32_t i = 0; i < 4; ++i) {
                 for (uint32_t j = 0; j < 4; ++j) {
@@ -181,14 +195,11 @@ namespace gre {
             return result;
         }
 
-        Vec3 operator*(const Vec3& other) const {
-            Vec3 result;
-            for (uint32_t i = 0; i < 3; ++i) {
-                for (uint32_t j = 0; j < 3; ++j) {
-                    result[i] += matrix_[i][j] * other[j];
-                }
-                result[i] += matrix_[i][3];
-            }
+        Vec3 operator*(const Vec3& other) const noexcept {
+            Vec3 result(0.0);
+            result.x = matrix_[0][0] * other[0] + matrix_[0][1] * other[1] + matrix_[0][2] * other[2] + matrix_[0][3];
+            result.y = matrix_[1][0] * other[0] + matrix_[1][1] * other[1] + matrix_[1][2] * other[2] + matrix_[1][3];
+            result.z = matrix_[2][0] * other[0] + matrix_[2][1] * other[1] + matrix_[2][2] * other[2] + matrix_[2][3];
             return result;
         }
 
@@ -199,10 +210,11 @@ namespace gre {
             }
 #endif // _DEBUG
 
-            return *this * (1.0 / other);
+            Matrix4x4 result = *this;
+            return result *= 1.0 / other;
         }
 
-        Matrix4x4 transpose() const {
+        Matrix4x4 transpose() const noexcept {
             Matrix4x4 result;
             for (uint32_t i = 0; i < 4; ++i) {
                 for (uint32_t j = 0; j < 4; ++j) {
@@ -213,47 +225,37 @@ namespace gre {
         }
 
         Matrix4x4 inverse() const {
-            Matrix4x4 temp = *this;
-            Matrix4x4 result = one_matrix();
-            for (int32_t j = 0; j < 4; ++j) {
-                int32_t k = 4;
-                for (int32_t i = j; i < 4; ++i) {
-                    if (!equality(temp[i][j], 0.0)) {
-                        k = i;
-                        break;
-                    }
-                }
+            Matrix4x4 result;
+
+            result[0][0] = algebraic_addition(1, 2, 3, 1, 2, 3);
+            result[1][0] = -algebraic_addition(1, 2, 3, 0, 2, 3);
+            result[2][0] = algebraic_addition(1, 2, 3, 0, 1, 3);
+            result[3][0] = -algebraic_addition(1, 2, 3, 0, 1, 2);
+
+            double det = result[0][0] * matrix_[0][0] + result[1][0] * matrix_[0][1] + result[2][0] * matrix_[0][2] + result[3][0] * matrix_[0][3];
 
 #ifdef _DEBUG
-                if (k == 4) {
-                    throw GreDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
-                }
-#endif // NO _DEBUG
-                
-                for (uint32_t i = 0; i < 4 && j != k; ++i) {
-                    std::swap(result[j][i], result[k][i]);
-                    std::swap(temp[j][i], temp[k][i]);
-                }
-
-                double div = temp[j][j];
-                for (int32_t i = 3; i >= 0; --i) {
-                    result[j][i] /= div;
-                    temp[j][i] /= div;
-                }
-                for (int32_t i = 0; i < 4; ++i) {
-                    if (i == j) {
-                        continue;
-                    }
-
-                    double val = temp[i][j];
-                    for (int32_t id = 0; id < 4; ++id) {
-                        result[i][id] -= result[j][id] * val;
-                        temp[i][id] -= temp[j][id] * val;
-                    }
-                }
+            if (equality(det, 0.0)) {
+                throw GreDomainError(__FILE__, __LINE__, "inverse, the matrix is not invertible.\n\n");
             }
+#endif // _DEBUG
 
-            return result;
+            result[0][1] = -algebraic_addition(0, 2, 3, 1, 2, 3);
+            result[1][1] = algebraic_addition(0, 2, 3, 0, 2, 3);
+            result[2][1] = -algebraic_addition(0, 2, 3, 0, 1, 3);
+            result[3][1] = algebraic_addition(0, 2, 3, 0, 1, 2);
+
+            result[0][2] = algebraic_addition(0, 1, 3, 1, 2, 3);
+            result[1][2] = -algebraic_addition(0, 1, 3, 0, 2, 3);
+            result[2][2] = algebraic_addition(0, 1, 3, 0, 1, 3);
+            result[3][2] = -algebraic_addition(0, 1, 3, 0, 1, 2);
+
+            result[0][3] = -algebraic_addition(0, 1, 2, 1, 2, 3);
+            result[1][3] = algebraic_addition(0, 1, 2, 0, 2, 3);
+            result[2][3] = -algebraic_addition(0, 1, 2, 0, 1, 3);
+            result[3][3] = algebraic_addition(0, 1, 2, 0, 1, 2);
+
+            return result / det;
         }
 
         static Matrix4x4 one_matrix() noexcept {
