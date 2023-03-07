@@ -138,10 +138,13 @@ namespace gre {
 			}
 		}
 
+		// MAIN shader expected
 		void draw_meshes(size_t model_id, const Shader& shader) const {
+#ifdef _DEBUG
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "draw_meshes, invalid model id.\n\n");
 			}
+#endif // _DEBUG
 
 			shader.set_uniform_i("model_id", static_cast<GLint>(models.get_memory_id(model_id)));
 			shader.set_uniform_matrix("not_instance_model", models[model_id]);
@@ -151,6 +154,7 @@ namespace gre {
 			}
 		}
 
+		// MAIN shader expected
 		void draw_meshes(const Shader& shader) const {
 			shader.set_uniform_i("model_id", -1);
 
@@ -205,61 +209,69 @@ namespace gre {
 		}
 
 		std::vector<Vec3> get_mesh_positions(size_t model_id, size_t mesh_id) const {
+#ifdef _DEBUG
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_positions, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			const Matrix4x4& transform = models[model_id];
-			std::vector<Vec3> positions;
-			for (const Vec3& position : meshes[mesh_id].get_positions()) {
-				positions.push_back(transform * position);
+			std::vector<Vec3> positions = meshes[mesh_id].get_positions();
+			for (Vec3& position : positions) {
+				position = transform * position;
 			}
 			return positions;
 		}
 
 		std::vector<Vec3> get_mesh_normals(size_t model_id, size_t mesh_id) const {
+#ifdef _DEBUG
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_normals, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			const Matrix4x4& transform = Matrix4x4::normal_transform(models[model_id]);
-			std::vector<Vec3> normals;
-			for (const Vec3& normal : meshes[mesh_id].get_normals()) {
-				normals.push_back(transform * normal);
+			std::vector<Vec3> normals = meshes[mesh_id].get_normals();
+			for (Vec3& normal : normals) {
+				normal = transform * normal;
 			}
 			return normals;
 		}
 
 		Vec3 get_mesh_center(size_t model_id, size_t mesh_id) const {
+#ifdef _DEBUG
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_mesh_center, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			return models[model_id] * meshes[mesh_id].get_center();
 		}
 
 		Vec3 get_center(size_t model_id) const {
+#ifdef _DEBUG
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_center, invalid model id.\n\n");
 			}
 			if (meshes.size() == 0) {
 				throw GreDomainError(__FILE__, __LINE__, "get_center, object does not contain vertices.\n\n");
 			}
+#endif // _DEBUG
 
 			Vec3 center(0, 0, 0);
 			std::unordered_set<Vec3> used_positions;
 			for (const auto& [id, mesh] : meshes) {
 				for (const Vec3& position : mesh.get_positions()) {
-					if (used_positions.count(position) == 1) {
+					if (used_positions.contains(position)) {
 						continue;
 					}
 
@@ -318,13 +330,16 @@ namespace gre {
 			}
 		}
 
+		// MAIN shader expected
 		void draw(size_t model_id, size_t mesh_id, const Shader& shader) const {
+#ifdef _DEBUG
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
 			if (!meshes.contains(mesh_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "draw, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			shader.set_uniform_i("model_id", static_cast<GLint>(models.get_memory_id(model_id)));
 			shader.set_uniform_matrix("not_instance_model", models[model_id]);
@@ -338,13 +353,20 @@ namespace gre {
 
 			if (border_mask > 0) {
 				glStencilMask(0x00);
+
+#ifdef _DEBUG
+				check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 			}
 		}
 
+		// MAIN shader expected
 		void draw(size_t model_id, const Shader& shader) const {
+#ifdef _DEBUG
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
+#endif // _DEBUG
 
 			if (border_mask > 0) {
 				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
@@ -355,9 +377,14 @@ namespace gre {
 
 			if (border_mask > 0) {
 				glStencilMask(0x00);
+
+#ifdef _DEBUG
+				check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 			}
 		}
 
+		// MAIN shader expected
 		void draw(const Shader& shader) const {
 			if (border_mask > 0) {
 				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
@@ -368,6 +395,10 @@ namespace gre {
 
 			if (border_mask > 0) {
 				glStencilMask(0x00);
+
+#ifdef _DEBUG
+				check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 			}
 		}
 
@@ -409,9 +440,11 @@ namespace gre {
 		}
 
 		static GraphObject cylinder(size_t count_points, bool real_normals, size_t max_count_models) {
+#ifdef _DEBUG
 			if (count_points < 3) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "cylinder, the number of points is less than three.\n\n");
 			}
+#endif // _DEBUG
 
 			GraphObject cylinder(max_count_models);
 
@@ -455,9 +488,11 @@ namespace gre {
 		}
 
 		static GraphObject cone(size_t count_points, bool real_normals, size_t max_count_models) {
+#ifdef _DEBUG
 			if (count_points < 3) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "cone, the number of points is less than three.\n\n");
 			}
+#endif // _DEBUG
 
 			GraphObject cone(max_count_models);
 
@@ -497,9 +532,11 @@ namespace gre {
 		}
 
 		static GraphObject sphere(size_t count_points, bool real_normals, size_t max_count_models) {
+#ifdef _DEBUG
 			if (count_points < 3) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "sphere, the number of points is less than three.\n\n");
 			}
+#endif // _DEBUG
 
 			GraphObject sphere(max_count_models);
 			std::vector<Vec3> last_positions(2 * count_points, Vec3(0.0, 1.0, 0.0));
@@ -518,9 +555,11 @@ namespace gre {
 					std::vector<Vec3> positions;
 					if (i == 0) {
 						positions = { Vec3(0.0, 1.0, 0.0), current_positions[j], current_positions[next] };
-					} else if (i == count_points - 1) {
+					}
+					else if (i == count_points - 1) {
 						positions = { last_positions[j], Vec3(0.0, -1.0, 0.0), last_positions[next] };
-					} else {
+					}
+					else {
 						positions = { last_positions[next], last_positions[j], current_positions[j], current_positions[next] };
 					}
 

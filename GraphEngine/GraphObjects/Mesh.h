@@ -461,6 +461,7 @@ namespace gre {
 			set_positions(positions, update_normals);
 		}
 
+		// MAIN or not initialized shader expected
 		void draw(size_t count, const Shader& shader) const {
 			if (count == 0) {
 				return;
