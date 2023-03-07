@@ -203,203 +203,215 @@ namespace gre {
 		}
 
 		void set_uniform_f(const GLchar* uniform_name, GLfloat v0) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform1f(get_uniform_location(uniform_name), v0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform2f(get_uniform_location(uniform_name), v0, v1);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_f(const GLchar* uniform_name, const Vec2& v) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform2f(get_uniform_location(uniform_name), static_cast<GLfloat>(v.x), static_cast<GLfloat>(v.y));
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform3f(get_uniform_location(uniform_name), v0, v1, v2);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_f(const GLchar* uniform_name, const Vec3& v) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform3f(get_uniform_location(uniform_name), static_cast<GLfloat>(v.x), static_cast<GLfloat>(v.y), static_cast<GLfloat>(v.z));
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform4f(get_uniform_location(uniform_name), v0, v1, v2, v3);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_i(const GLchar* uniform_name, GLint v0) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform1i(get_uniform_location(uniform_name), v0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform2i(get_uniform_location(uniform_name), v0, v1);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1, GLint v2) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform3i(get_uniform_location(uniform_name), v0, v1, v2);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1, GLint v2, GLint v3) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform4i(get_uniform_location(uniform_name), v0, v1, v2, v3);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_ui(const GLchar* uniform_name, GLuint v0) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform1ui(get_uniform_location(uniform_name), v0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform2ui(get_uniform_location(uniform_name), v0, v1);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1, GLuint v2) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform3ui(get_uniform_location(uniform_name), v0, v1, v2);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1, GLuint v2, GLuint v3) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			glUniform4ui(get_uniform_location(uniform_name), v0, v1, v2, v3);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
-		template <size_t N>
-		void set_uniform_fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
-			switch (N) {
-			case 1:
-				glUniform1fv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 2:
-				glUniform2fv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 3:
-				glUniform3fv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 4:
-				glUniform4fv(get_uniform_location(uniform_name), count, value);
-				break;
-			default:
-				throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_fv, invalid vector size.\n\n");
-				break;
-			}
+		void set_uniform_1fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
+			use();
+			glUniform1fv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
-		template <size_t N>
-		void set_uniform_iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
-			switch (N) {
-			case 1:
-				glUniform1iv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 2:
-				glUniform2iv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 3:
-				glUniform3iv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 4:
-				glUniform4iv(get_uniform_location(uniform_name), count, value);
-				break;
-			default:
-				throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_iv, invalid vector size.\n\n");
-				break;
-			}
+		void set_uniform_2fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
+			use();
+			glUniform2fv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
-		template <size_t N>
-		void set_uniform_uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
-			switch (N) {
-			case 1:
-				glUniform1uiv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 2:
-				glUniform2uiv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 3:
-				glUniform3uiv(get_uniform_location(uniform_name), count, value);
-				break;
-			case 4:
-				glUniform4uiv(get_uniform_location(uniform_name), count, value);
-				break;
-			default:
-				throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_uiv, invalid vector size.\n\n");
-				break;
-			}
+		void set_uniform_3fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
+			use();
+			glUniform3fv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
-		void set_uniform_matrix(const GLchar* uniform_name, const Matrix4x4& matrix, GLboolean transpose = GL_FALSE) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
-			set_uniform_matrix(uniform_name, 1, &std::vector<GLfloat>(matrix)[0], 4, 4, transpose);
+		void set_uniform_4fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
+			use();
+			glUniform4fv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_1iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
+			use();
+			glUniform1iv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_2iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
+			use();
+			glUniform2iv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_3iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
+			use();
+			glUniform3iv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_4iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
+			use();
+			glUniform4iv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_1uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
+			use();
+			glUniform1uiv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_2uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
+			use();
+			glUniform2uiv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_3uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
+			use();
+			glUniform3uiv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_4uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
+			use();
+			glUniform4uiv(get_uniform_location(uniform_name), count, value);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_uniform_matrix(const GLchar* uniform_name, GLsizei count, const GLfloat* value, size_t height, size_t width, GLboolean transpose = GL_FALSE) const {
-			if (get_current_program() != program_id_) {
-				use();
-			}
+			use();
 			switch (height) {
 			case 2:
 				switch (height) {
@@ -413,7 +425,7 @@ namespace gre {
 					glUniformMatrix2x4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreInvalidArgument(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
@@ -429,7 +441,7 @@ namespace gre {
 					glUniformMatrix3x4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreInvalidArgument(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
@@ -445,15 +457,25 @@ namespace gre {
 					glUniformMatrix4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreInvalidArgument(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
 			default:
-				throw GreOutOfRange(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 				break;
 			}
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+		}
+
+		void set_uniform_matrix(const GLchar* uniform_name, const Matrix4x4& matrix, GLboolean transpose = GL_FALSE) const {
+			use();
+			glUniformMatrix4fv(get_uniform_location(uniform_name), 1, transpose, &std::vector<GLfloat>(matrix)[0]);
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		std::string get_value_vert(const std::string& variable_name) const {

@@ -67,7 +67,7 @@ namespace gre {
 				}
 			}
 
-			shader.set_uniform_fv<1>("kernel", 9, &(data[0]));
+			shader.set_uniform_1fv("kernel", 9, &(data[0]));
 		}
 
 		Kernel& set_offset(GLuint offset) noexcept {
