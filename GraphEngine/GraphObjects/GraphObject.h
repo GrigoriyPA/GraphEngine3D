@@ -138,10 +138,7 @@ namespace gre {
 			}
 		}
 
-		void draw_meshes(size_t model_id, const Shader<size_t>& shader) const {
-			if (shader.description != ShaderType::MAIN) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
-			}
+		void draw_meshes(size_t model_id, const Shader& shader) const {
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "draw_meshes, invalid model id.\n\n");
 			}
@@ -154,10 +151,7 @@ namespace gre {
 			}
 		}
 
-		void draw_meshes(const Shader<size_t>& shader) const {
-			if (shader.description != ShaderType::MAIN) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
-			}
+		void draw_meshes(const Shader& shader) const {
 			shader.set_uniform_i("model_id", -1);
 
 			for (const auto& [id, mesh] : meshes) {
@@ -320,14 +314,11 @@ namespace gre {
 					continue;
 				}
 
-				mesh.draw(models.size(), Shader<size_t>());
+				mesh.draw(models.size(), Shader());
 			}
 		}
 
-		void draw(size_t model_id, size_t mesh_id, const Shader<size_t>& shader) const {
-			if (shader.description != ShaderType::MAIN) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
-			}
+		void draw(size_t model_id, size_t mesh_id, const Shader& shader) const {
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
@@ -350,10 +341,7 @@ namespace gre {
 			}
 		}
 
-		void draw(size_t model_id, const Shader<size_t>& shader) const {
-			if (shader.description != ShaderType::MAIN) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "draw, invalid shader type.\n\n");
-			}
+		void draw(size_t model_id, const Shader& shader) const {
 			if (!models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "draw, invalid model id.\n\n");
 			}
@@ -370,11 +358,7 @@ namespace gre {
 			}
 		}
 
-		void draw(const Shader<size_t>& shader) const {
-			if (shader.description != ShaderType::MAIN) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "draw_meshes, invalid shader type.\n\n");
-			}
-
+		void draw(const Shader& shader) const {
 			if (border_mask > 0) {
 				glStencilFunc(GL_ALWAYS, border_mask, 0xFF);
 				glStencilMask(border_mask);

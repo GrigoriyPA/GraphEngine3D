@@ -56,11 +56,7 @@ namespace gre {
 
 		friend std::istream& operator>>(std::istream& fin, Kernel& kernel) noexcept;
 
-		void set_uniforms(const Shader<size_t>& shader) const {
-			if (shader.description != ShaderType::POST) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-			}
-
+		void set_uniforms(const Shader& shader) const {
 			shader.set_uniform_i("offset", offset_);
 
 			std::vector<GLfloat> data;

@@ -15,11 +15,7 @@ namespace gre {
         Vec3 specular_ = Vec3(0.0);
         Vec3 emission_ = Vec3(0.0);
 
-        void set_uniforms(const Shader<size_t>& shader) const {
-            if (shader.description != ShaderType::MAIN) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-            }
-
+        void set_uniforms(const Shader& shader) const {
             shader.set_uniform_i("use_diffuse_map", diffuse_map.get_id() != 0);
             shader.set_uniform_i("use_specular_map", specular_map.get_id() != 0);
             shader.set_uniform_i("use_emission_map", emission_map.get_id() != 0);
@@ -47,11 +43,7 @@ namespace gre {
             emission_map.activate(2);
         }
 
-        void delete_uniforms(const Shader<size_t>& shader) const {
-            if (shader.description != ShaderType::MAIN) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-            }
-
+        void delete_uniforms(const Shader& shader) const {
             shader.use();
             diffuse_map.deactive(0);
             specular_map.deactive(1);

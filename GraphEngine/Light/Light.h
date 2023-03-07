@@ -10,11 +10,7 @@ namespace gre {
         Vec3 diffuse_ = Vec3(0.5);
         Vec3 specular_ = Vec3(0.75);
 
-        void set_light_uniforms(const std::string& name, const Shader<size_t>& shader) const {
-            if (shader.description != ShaderType::MAIN) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "set_light_uniforms, invalid shader type.\n\n");
-            }
-
+        void set_light_uniforms(const std::string& name, const Shader& shader) const {
             shader.set_uniform_f((name + "ambient").c_str(), ambient_);
             shader.set_uniform_f((name + "diffuse").c_str(), diffuse_);
             shader.set_uniform_f((name + "specular").c_str(), specular_);
@@ -57,7 +53,7 @@ namespace gre {
             specular_ = specular;
         }
 
-        virtual void set_uniforms(size_t id, const Shader<size_t>& shader) const = 0;
+        virtual void set_uniforms(size_t id, const Shader& shader) const = 0;
 
         virtual Matrix4x4 get_light_space_matrix() const = 0;
 

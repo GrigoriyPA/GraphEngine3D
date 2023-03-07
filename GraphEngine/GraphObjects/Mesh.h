@@ -16,8 +16,8 @@ namespace gre {
 		size_t count_points_;
 		size_t count_indices_;
 
-		void set_uniforms(const Shader<size_t>& shader) const {
-			if (shader.description == ShaderType::MAIN) {
+		void set_uniforms(const Shader& shader) const {
+			if (shader.get_program_id() != 0) {
 				material.set_uniforms(shader);
 			}
 
@@ -25,8 +25,8 @@ namespace gre {
 			check_gl_errors(__FILE__, __LINE__, __func__);
 		}
 
-		void delete_uniforms(const Shader<size_t>& shader) const {
-			if (shader.description == ShaderType::MAIN) {
+		void delete_uniforms(const Shader& shader) const {
+			if (shader.get_program_id() != 0) {
 				material.delete_uniforms(shader);
 			}
 
@@ -413,7 +413,7 @@ namespace gre {
 			return *this;
 		}
 
-		void draw(size_t count, const Shader<size_t>& shader) const {
+		void draw(size_t count, const Shader& shader) const {
 			if (count == 0) {
 				return;
 			}

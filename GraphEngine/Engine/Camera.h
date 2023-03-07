@@ -155,22 +155,14 @@ namespace gre {
             set_projection_matrix();
         }
 
-        void set_viewport(const Shader<size_t>& shader) const {
-            if (shader.description != ShaderType::POST) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "set_viewport, invalid shader type.\n\n");
-            }
-
+        void set_viewport(const Shader& shader) const {
             glViewport(static_cast<GLint>(viewport_position_.x), static_cast<GLint>(window_->getSize().y - viewport_size_.y - viewport_position_.y), static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
             check_gl_errors(__FILE__, __LINE__, __func__);
 
             shader.set_uniform_f("screen_texture_size", static_cast<GLfloat>(viewport_size_.x / window_->getSize().x), static_cast<GLfloat>(viewport_size_.y / window_->getSize().y));
         }
 
-        void set_uniforms(const Shader<size_t>& shader) const {
-            if (shader.description != ShaderType::MAIN) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-            }
-
+        void set_uniforms(const Shader& shader) const {
             glViewport(0, 0, static_cast<GLsizei>(viewport_size_.x), static_cast<GLsizei>(viewport_size_.y));
             check_gl_errors(__FILE__, __LINE__, __func__);
 

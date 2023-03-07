@@ -22,7 +22,7 @@ namespace gre {
 		GLint* init_int_ = nullptr;
 		GLfloat* init_float_ = nullptr;
 
-		Shader<size_t>* shader_;
+		Shader* shader_;
 		size_t max_count_cameras_;
 		std::vector<size_t> cameras_index_;
 		std::vector<size_t> free_camera_id_;
@@ -106,11 +106,7 @@ namespace gre {
 			return { .exist = true, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
 		}
 
-		void create_shader_storage_buffer(size_t max_count_cameras, Shader<size_t>& shader) {
-			if (shader.description != ShaderType::MAIN) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "create_shader_storage_buffer, invalid shader type.\n\n");
-			}
-
+		void create_shader_storage_buffer(size_t max_count_cameras, Shader& shader) {
 			shader_ = &shader;
 			max_count_cameras_ = max_count_cameras;
 

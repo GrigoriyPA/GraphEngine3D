@@ -42,9 +42,9 @@ namespace gre {
 		Vec3 clear_color_ = Vec3(0.0);
 		Kernel kernel_ = Kernel();
 
-		Shader<size_t> main_shader_ = Shader<size_t>(gre::ShaderType::MAIN);
-		Shader<size_t> depth_shader_ = Shader<size_t>(gre::ShaderType::DEPTH);
-		Shader<size_t> post_shader_ = Shader<size_t>(gre::ShaderType::POST);
+		Shader main_shader_;
+		Shader depth_shader_;
+		Shader post_shader_;
 		sf::RenderWindow* window_;
 		
 		void set_active() const {

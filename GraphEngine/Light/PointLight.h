@@ -23,11 +23,7 @@ namespace gre {
             this->position = position;
         }
 
-        void set_uniforms(size_t id, const Shader<size_t>& shader) const override {
-            if (shader.description != ShaderType::MAIN) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-            }
-
+        void set_uniforms(size_t id, const Shader& shader) const override {
             std::string name = "lights[" + std::to_string(id) + "].";
             set_light_uniforms(name, shader);
 

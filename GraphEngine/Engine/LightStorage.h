@@ -49,11 +49,7 @@ namespace gre {
 			return *this;
 		}
 
-		void set_uniforms(const Shader<size_t>& shader) const {
-			if (shader.description != ShaderType::MAIN) {
-				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniforms, invalid shader type.\n\n");
-			}
-
+		void set_uniforms(const Shader& shader) const {
 			shader.set_uniform_i("number_lights", static_cast<GLint>(lights_.size()));
 			for (const auto& [id, light] : lights_) {
 				light->set_uniforms(lights_index_[id], shader);

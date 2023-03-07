@@ -6,7 +6,6 @@
 
 
 namespace gre {
-	template <typename T = void*>  // Constructors required: T(), T(T); Operators required: =(T, T)
 	class Shader {
 		size_t* count_links_ = nullptr;
 		std::string* vertex_shader_code_ = nullptr;
@@ -153,29 +152,21 @@ namespace gre {
 		}
 
 	public:
-		T description = T();
-
 		Shader() {
 			if (!glew_is_ok()) {
 				throw GreRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
 			}
 		}
 
-		explicit Shader(const T& desc_value) {
-			description = desc_value;
-		}
-
-		Shader(const std::string& vertex_shader_code, const std::string& fragment_shader_code, const T& desc_value = T()) {
+		Shader(const std::string& vertex_shader_code, const std::string& fragment_shader_code) {
 			if (!glew_is_ok()) {
 				throw GreRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
 			}
 
-			description = desc_value;
 			set_shader_code(vertex_shader_code, fragment_shader_code);
 		}
 
-		Shader(const Shader<T>& other) noexcept {
-			description = other.description;
+		Shader(const Shader& other) noexcept {
 			vertex_shader_code_ = other.vertex_shader_code_;
 			fragment_shader_code_ = other.fragment_shader_code_;
 			count_links_ = other.count_links_;
@@ -186,17 +177,17 @@ namespace gre {
 			program_id_ = link_shaders(*vertex_shader_code_, *fragment_shader_code_);
 		}
 
-		Shader(Shader<T>&& other) noexcept {
+		Shader(Shader&& other) noexcept {
 			swap(other);
 		}
 
-		Shader<T>& operator=(const Shader<T>& other)& noexcept {
-			Shader<T> object(other);
+		Shader& operator=(const Shader& other)& noexcept {
+			Shader object(other);
 			swap(object);
 			return *this;
 		}
 
-		Shader<T>& operator=(Shader<T>&& other)& noexcept {
+		Shader& operator=(Shader&& other)& noexcept {
 			clear();
 			swap(other);
 			return *this;
@@ -526,8 +517,7 @@ namespace gre {
 			set_shader_code(vertex_shader_code, fragment_shader_code);
 		}
 
-		void swap(Shader<T>& other) noexcept {
-			std::swap(description, other.description);
+		void swap(Shader& other) noexcept {
 			std::swap(count_links_, other.count_links_);
 			std::swap(program_id_, other.program_id_);
 			std::swap(vertex_shader_code_, other.vertex_shader_code_);
