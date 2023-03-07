@@ -337,7 +337,7 @@ namespace gre {
             return transform.inverse().transpose();
 #endif // NO _DEBUG
         }
-    };
+     };
 
     std::ostream& operator<<(std::ostream& fout, const Matrix4x4& matrix) {
         std::vector<std::string> output(4);

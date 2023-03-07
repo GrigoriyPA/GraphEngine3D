@@ -23,7 +23,8 @@ namespace gre {
 					path = "inline_texture" + path + "." + std::string(scene->mTextures[std::stoi(path)]->achFormatHint);
 				}
 
-				Texture texture(directory + "/" + path, true);
+				Texture texture;
+				texture.load_from_file(directory + "/" + path, true);
 				textures.push_back(texture);
 			}
 			return textures;
