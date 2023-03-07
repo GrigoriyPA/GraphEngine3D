@@ -16,22 +16,28 @@ namespace gre {
 		size_t count_points_;
 		size_t count_indices_;
 
+		// MAIN or not initialized shader expected
 		void set_uniforms(const Shader& shader) const {
 			if (shader.get_program_id() != 0) {
 				material.set_uniforms(shader);
 			}
 
 			glLineWidth(border_width_);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
+		// MAIN or not initialized shader expected
 		void delete_uniforms(const Shader& shader) const {
 			if (shader.get_program_id() != 0) {
 				material.delete_uniforms(shader);
 			}
 
 			glLineWidth(1.0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void create_vertex_array() {
@@ -42,8 +48,9 @@ namespace gre {
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
 
 			size_t memory_size = 0;
-			for (size_t element : MEMORY_CONFIGURATION)
+			for (size_t element : MEMORY_CONFIGURATION) {
 				memory_size += element;
+			}
 			glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * memory_size * count_points_, NULL, GL_STATIC_DRAW);
 
 			memory_size = 0;
@@ -58,14 +65,18 @@ namespace gre {
 			glBindVertexArray(0);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void deallocate() {
 			glDeleteVertexArrays(1, &vertex_array_);
 			glDeleteBuffers(1, &vertex_buffer_);
 			glDeleteBuffers(1, &index_buffer_);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			vertex_array_ = 0;
 			vertex_buffer_ = 0;
@@ -91,9 +102,11 @@ namespace gre {
 			if (!glew_is_ok()) {
 				throw GreRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
+#ifdef _DEBUG
 			if (count_points < 2) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "Mesh, invalid number of points.\n\n");
 			}
+#endif // _DEBUG
 
 			count_points_ = count_points;
 			count_indices_ = (count_points - 2) * 3;
@@ -123,8 +136,9 @@ namespace gre {
 			glBindBuffer(GL_COPY_WRITE_BUFFER, vertex_buffer_);
 
 			size_t memory_size = 0;
-			for (size_t element : MEMORY_CONFIGURATION)
-				memory_size += element; 
+			for (size_t element : MEMORY_CONFIGURATION) {
+				memory_size += element;
+			}
 			glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLfloat) * memory_size * count_points_);
 
 			glBindBuffer(GL_COPY_READ_BUFFER, other.index_buffer_);
@@ -137,7 +151,9 @@ namespace gre {
 			glBindBuffer(GL_COPY_READ_BUFFER, 0);
 			glBindVertexArray(0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		Mesh(Mesh&& other) noexcept {
@@ -164,19 +180,22 @@ namespace gre {
 			return !(*this == other);
 		}
 
-		Mesh& set_border_width(GLfloat border_width) {
+		void set_border_width(GLfloat border_width) {
+#ifdef _DEBUG
 			if (border_width < 0.0) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "set_border_width, invalid border width value.\n\n");
 			}
+#endif // _DEBUG
 
 			border_width_ = border_width;
-			return *this;
 		}
 
-		Mesh& set_positions(const std::vector<Vec3>& positions, bool update_normals = false) {
+		void set_positions(const std::vector<Vec3>& positions, bool update_normals = false) const {
+#ifdef _DEBUG
 			if (positions.size() != count_points_) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points.\n\n");
 			}
+#endif // _DEBUG
 
 			std::vector<GLfloat> converted_positions(count_points_ * 3);
 			for (size_t i = 0; i < count_points_; ++i) {
@@ -189,22 +208,27 @@ namespace gre {
 			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<const GLvoid*>(&converted_positions[0]));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			if (update_normals) {
+#ifdef _DEBUG
 				if (positions.size() < 3) {
 					throw GreInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points for automatic calculation of normals.\n\n");
 				}
+#endif // _DEBUG
 
 				set_normals(std::vector<Vec3>(count_points_, (positions[2] - positions[0]) ^ (positions[1] - positions[0])));
 			}
-			return *this;
 		}
 
-		Mesh& set_normals(const std::vector<Vec3>& normals) {
+		void set_normals(const std::vector<Vec3>& normals) const {
+#ifdef _DEBUG
 			if (normals.size() != count_points_) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "set_normals, invalid number of points.\n\n");
 			}
+#endif // _DEBUG
 
 			std::vector<GLfloat> converted_normals(count_points_ * 3);
 			for (size_t i = 0; i < count_points_; ++i) {
@@ -217,14 +241,17 @@ namespace gre {
 			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * count_points_, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<const GLvoid*>(&converted_normals[0]));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return *this;
+#endif // _DEBUG
 		}
 
-		Mesh& set_tex_coords(const std::vector<Vec2>& tex_coords) {
+		void set_tex_coords(const std::vector<Vec2>& tex_coords) const {
+#ifdef _DEBUG
 			if (tex_coords.size() != count_points_) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "set_tex_coords, invalid number of points.\n\n");
 			}
+#endif // _DEBUG
 
 			std::vector<GLfloat> converted_tex_coords(count_points_ * 2);
 			for (size_t i = 0; i < count_points_; ++i) {
@@ -237,14 +264,17 @@ namespace gre {
 			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * count_points_, sizeof(GLfloat) * 2 * count_points_, reinterpret_cast<const GLvoid*>(&converted_tex_coords[0]));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return *this;
+#endif // _DEBUG
 		}
 
-		Mesh& set_colors(const std::vector<Vec3>& colors) {
+		void set_colors(const std::vector<Vec3>& colors) const {
+#ifdef _DEBUG
 			if (colors.size() != count_points_) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "set_colors, invalid number of points.\n\n");
 			}
+#endif // _DEBUG
 
 			std::vector<GLfloat> converted_colors(count_points_ * 3);
 			for (size_t i = 0; i < count_points_; ++i) {
@@ -257,11 +287,12 @@ namespace gre {
 			glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8 * count_points_, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<const GLvoid*>(&converted_colors[0]));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return *this;
+#endif // _DEBUG
 		}
 
-		Mesh& set_indices(const std::vector<GLuint>& indices) {
+		void set_indices(const std::vector<GLuint>& indices) {
 			count_indices_ = indices.size();
 
 			glBindVertexArray(vertex_array_);
@@ -275,8 +306,9 @@ namespace gre {
 			glBindVertexArray(0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
-			return *this;
+#endif // _DEBUG
 		}
 
 		GLuint get_vertex_array() const noexcept {
@@ -297,13 +329,17 @@ namespace gre {
 			glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			std::vector<Vec3> result;
 			result.reserve(count_points_);
 			for (size_t i = 0; i < count_points_; ++i) {
 				result.emplace_back(static_cast<double>(buffer[3 * i]), static_cast<double>(buffer[3 * i + 1]), static_cast<double>(buffer[3 * i + 2]));
 			}
+			delete[] buffer;
+
 			return result;
 		}
 
@@ -313,13 +349,17 @@ namespace gre {
 			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * count_points_, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			std::vector<Vec3> result;
 			result.reserve(count_points_);
 			for (size_t i = 0; i < count_points_; ++i) {
 				result.emplace_back(static_cast<double>(buffer[3 * i]), static_cast<double>(buffer[3 * i + 1]), static_cast<double>(buffer[3 * i + 2]));
 			}
+			delete[] buffer;
+
 			return result;
 		}
 
@@ -329,13 +369,17 @@ namespace gre {
 			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * count_points_, sizeof(GLfloat) * 2 * count_points_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			std::vector<Vec2> result;
 			result.reserve(count_points_);
 			for (size_t i = 0; i < count_points_; ++i) {
 				result.emplace_back(static_cast<double>(buffer[2 * i]), static_cast<double>(buffer[2 * i + 1]));
 			}
+			delete[] buffer;
+
 			return result;
 		}
 
@@ -345,13 +389,17 @@ namespace gre {
 			glGetBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 8 * count_points_, sizeof(GLfloat) * 3 * count_points_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			std::vector<Vec3> result;
 			result.reserve(count_points_);
 			for (size_t i = 0; i < count_points_; ++i) {
 				result.emplace_back(static_cast<double>(buffer[3 * i]), static_cast<double>(buffer[3 * i + 1]), static_cast<double>(buffer[3 * i + 2]));
 			}
+			delete[] buffer;
+
 			return result;
 		}
 
@@ -361,7 +409,9 @@ namespace gre {
 			glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(GLuint) * count_indices_, reinterpret_cast<GLvoid*>(buffer));
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			std::vector<GLuint> result(count_indices_);
 			for (size_t i = 0; i < count_indices_; ++i) {
@@ -373,9 +423,9 @@ namespace gre {
 		}
 
 		Vec3 get_center() const {
-			std::vector<Vec3> positions = get_positions();
+			const std::vector<Vec3>& positions = get_positions();
 			Vec3 center(0.0);
-			for (const Vec3& position : get_positions()) {
+			for (const Vec3& position : positions) {
 				center += position;
 			}
 
@@ -393,8 +443,8 @@ namespace gre {
 			std::swap(material, other.material);
 		}
 
-		Mesh& apply_matrix(const Matrix4x4& transform) {
-			Matrix4x4 normal_transform = Matrix4x4::normal_transform(transform);
+		void apply_matrix(const Matrix4x4& transform) {
+			const Matrix4x4& normal_transform = Matrix4x4::normal_transform(transform);
 			std::vector<Vec3> positions = get_positions();
 			std::vector<Vec3> normals = get_normals();
 			for (size_t i = 0; i < count_points_; ++i) {
@@ -403,14 +453,12 @@ namespace gre {
 			}
 			set_positions(positions);
 			set_normals(normals);
-			return *this;
 		}
 
-		Mesh& invert_points_order(bool update_normals = false) {
+		void invert_points_order(bool update_normals = false) {
 			std::vector<Vec3> positions = get_positions();
 			std::reverse(positions.begin(), positions.end());
 			set_positions(positions, update_normals);
-			return *this;
 		}
 
 		void draw(size_t count, const Shader& shader) const {
@@ -423,12 +471,15 @@ namespace gre {
 			glBindVertexArray(vertex_array_);
 			if (!frame) {
 				glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(count_indices_), GL_UNSIGNED_INT, NULL, static_cast<GLsizei>(count));
-			} else {
+			}
+			else {
 				glDrawElementsInstanced(GL_LINE_LOOP, static_cast<GLsizei>(count_indices_), GL_UNSIGNED_INT, NULL, static_cast<GLsizei>(count));
 			}
 			glBindVertexArray(0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			delete_uniforms(shader);
 		}
