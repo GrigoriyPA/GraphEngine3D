@@ -15,7 +15,7 @@ namespace gre {
     public:
         Vec3 position;
 
-        PointLight(const Vec3& position) {
+        explicit PointLight(const Vec3& position) {
             if (!glew_is_ok()) {
                 throw GreRuntimeError(__FILE__, __LINE__, "PointLight, failed to initialize GLEW.\n\n");
             }

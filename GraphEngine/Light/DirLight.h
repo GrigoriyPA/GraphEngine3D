@@ -34,7 +34,7 @@ namespace gre {
     public:
         Vec3 shadow_position = Vec3(0.0);
 
-        DirLight(const Vec3& direction) {
+        explicit DirLight(const Vec3& direction) {
             if (!glew_is_ok()) {
                 throw GreRuntimeError(__FILE__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
             }
