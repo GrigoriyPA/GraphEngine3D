@@ -16,12 +16,14 @@ namespace gre {
         Matrix4x4 projection_;
 
         void set_projection_matrix() {
+#ifdef _DEBUG
             if (equality(shadow_width_, 0.0) || equality(shadow_height_, 0.0) || equality(shadow_depth_, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
+#endif // _DEBUG
 
             projection_ = Matrix4x4::scale_matrix(Vec3(2.0 / shadow_width_, 2.0 / shadow_height_, 2.0 / shadow_depth_));
-            projection_ *= Matrix4x4::translation_matrix(Vec3(0, 0, -shadow_depth_ / 2));
+            projection_ *= Matrix4x4::translation_matrix(Vec3(0.0, 0.0, -shadow_depth_ / 2.0));
         }
 
         Matrix4x4 get_view_matrix() const noexcept {
@@ -30,23 +32,28 @@ namespace gre {
         }
 
     public:
-        Vec3 shadow_position = Vec3(0.0, 0.0, 0.0);
+        Vec3 shadow_position = Vec3(0.0);
 
         DirLight(const Vec3& direction) {
             if (!glew_is_ok()) {
                 throw GreRuntimeError(__FILE__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
             }
 
+#ifdef _DEBUG
             try {
                 direction_ = direction.normalize();
             }
             catch (GreDomainError) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "DirLight, the direction vector has zero length.\n\n");
             }
+#else
+            direction_ = direction.normalize();
+#endif // _DEBUG
             
             set_projection_matrix();
         }
 
+        // MAIN shader expected
         void set_uniforms(size_t id, const Shader& shader) const override {
             std::string name = "lights[" + std::to_string(id) + "].";
             set_light_uniforms(name, shader);
@@ -58,44 +65,50 @@ namespace gre {
             }
         }
 
-        DirLight& set_shadow_width(double shadow_width) {
+        void set_shadow_width(double shadow_width) {
+#ifdef _DEBUG
             if (shadow_width < 0.0 || equality(shadow_width, 0.0)) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_shadow_width, not a positive shadow width.\n\n");
             }
+#endif // _DEBUG
 
             shadow_width_ = shadow_width;
             set_projection_matrix();
-            return *this;
         }
 
-        DirLight& set_shadow_height(double shadow_height) {
+        void set_shadow_height(double shadow_height) {
+#ifdef _DEBUG
             if (shadow_height < 0.0 || equality(shadow_height, 0.0)) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_shadow_height, not a positive shadow height.\n\n");
             }
+#endif // _DEBUG
 
             shadow_height_ = shadow_height;
             set_projection_matrix();
-            return *this;
         }
 
-        DirLight& set_shadow_depth(double shadow_depth) {
+        void set_shadow_depth(double shadow_depth) {
+#ifdef _DEBUG
             if (shadow_depth < 0.0 || equality(shadow_depth, 0.0)) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_shadow_depth, not a positive shadow depth.\n\n");
             }
+#endif // _DEBUG
 
             shadow_depth_ = shadow_depth;
             set_projection_matrix();
-            return *this;
         }
 
-        DirLight& set_direction(const Vec3& direction) {
+        void set_direction(const Vec3& direction) {
+#ifdef _DEBUG
             try {
                 direction_ = direction.normalize();
             }
             catch (GreDomainError) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
             }
-            return *this;
+#else
+            direction_ = direction.normalize();
+#endif // _DEBUG
         }
 
         Matrix4x4 get_light_space_matrix() const noexcept override {
@@ -106,7 +119,7 @@ namespace gre {
             GraphObject shadow_box = GraphObject::cube(1);
             shadow_box.transparent = true;
 
-            shadow_box.meshes.apply_func([](auto& mesh) {
+            shadow_box.meshes.apply_func([](Mesh& mesh) {
                 mesh.material.set_diffuse(Vec3(1.0, 1.0, 1.0));
                 mesh.material.set_alpha(0.3);
             });

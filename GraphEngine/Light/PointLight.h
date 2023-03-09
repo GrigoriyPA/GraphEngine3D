@@ -23,6 +23,7 @@ namespace gre {
             this->position = position;
         }
 
+        // MAIN shader expected
         void set_uniforms(size_t id, const Shader& shader) const override {
             std::string name = "lights[" + std::to_string(id) + "].";
             set_light_uniforms(name, shader);
@@ -34,41 +35,44 @@ namespace gre {
             shader.set_uniform_f((name + "position").c_str(), position);
         }
 
-        PointLight& set_constant(double coefficient) {
+        void set_constant(double coefficient) {
+#ifdef _DEBUG
             if (coefficient < 0.0) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_constant, negative coefficient value.\n\n");
             }
+#endif // _DEBUG
 
             constant_ = coefficient;
-            return *this;
         }
 
-        PointLight& set_linear(double coefficient) {
+        void set_linear(double coefficient) {
+#ifdef _DEBUG
             if (coefficient < 0.0) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_linear, negative coefficient value.\n\n");
             }
+#endif // _DEBUG
 
             linear_ = coefficient;
-            return *this;
         }
 
-        PointLight& set_quadratic(double coefficient) {
+        void set_quadratic(double coefficient) {
+#ifdef _DEBUG
             if (coefficient < 0.0) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_quadratic, negative coefficient value.\n\n");
             }
+#endif // _DEBUG
 
             quadratic_ = coefficient;
-            return *this;
         }
 
         Matrix4x4 get_light_space_matrix() const noexcept override {
-            return Matrix4x4();
+            return Matrix4x4(0.0);
         }
 
         GraphObject get_light_object() const {
             GraphObject light_object = GraphObject::sphere(6, true, 1);
 
-            light_object.meshes.apply_func([](auto& mesh) {
+            light_object.meshes.apply_func([](Mesh& mesh) {
                 mesh.material.set_emission(Vec3(1.0, 1.0, 1.0));
                 mesh.material.shadow = false;
             });

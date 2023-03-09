@@ -31,7 +31,9 @@ namespace gre {
         }
 
         void set_ambient(const Vec3& ambient) {
+#ifdef _DEBUG
             check_color_value(__FILE__, __LINE__, __func__, ambient);
+#endif // _DEBUG
             ambient_ = ambient;
         }
 
@@ -40,7 +42,9 @@ namespace gre {
         }
 
         void set_diffuse(const Vec3& diffuse) {
+#ifdef _DEBUG
             check_color_value(__FILE__, __LINE__, __func__, diffuse);
+#endif // _DEBUG
             diffuse_ = diffuse;
         }
 
@@ -49,10 +53,13 @@ namespace gre {
         }
 
         void set_specular(const Vec3& specular) {
+#ifdef _DEBUG
             check_color_value(__FILE__, __LINE__, __func__, specular);
+#endif // _DEBUG
             specular_ = specular;
         }
 
+        // MAIN shader expected
         virtual void set_uniforms(size_t id, const Shader& shader) const = 0;
 
         virtual Matrix4x4 get_light_space_matrix() const = 0;

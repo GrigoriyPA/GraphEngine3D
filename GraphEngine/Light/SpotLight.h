@@ -20,9 +20,11 @@ namespace gre {
         Matrix4x4 projection_;
 
         void set_projection_matrix() {
+#ifdef _DEBUG
             if (equality(tan(border_out_), 0.0) || equality(shadow_max_distance_, shadow_min_distance_) || equality(shadow_max_distance_ + shadow_min_distance_, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "set_projection_matrix, invalid matrix settings.\n\n");
             }
+#endif // _DEBUG
 
             projection_ = Matrix4x4::scale_matrix(Vec3(1.0 / tan(border_out_), 1.0 / tan(border_out_), (shadow_max_distance_ + shadow_min_distance_) / (shadow_max_distance_ - shadow_min_distance_)));
             projection_ *= Matrix4x4::translation_matrix(Vec3(0.0, 0.0, -2.0 * shadow_max_distance_ * shadow_min_distance_ / (shadow_max_distance_ + shadow_min_distance_)));
@@ -42,16 +44,20 @@ namespace gre {
             if (!glew_is_ok()) {
                 throw GreRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
             }
+
+#ifdef _DEBUG
             if (border_in < 0.0 || less_equality(PI / 2.0, border_out) || less_equality(border_out, border_in)) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "SpotLight, invalid values of the external and internal angles of the spotlight.\n\n");
             }
-
             try {
                 direction_ = direction.normalize();
             }
             catch (GreDomainError) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "SpotLight, the direction vector has zero length.\n\n");
             }
+#else
+            direction_ = direction.normalize();
+#endif // _DEBUG
 
             border_in_ = border_in;
             border_out_ = border_out;
@@ -60,6 +66,7 @@ namespace gre {
             set_projection_matrix();
         }
 
+        // MAIN shader expected
         void set_uniforms(size_t id, const Shader& shader) const override {
             std::string name = "lights[" + std::to_string(id) + "].";
             set_light_uniforms(name, shader);
@@ -77,62 +84,70 @@ namespace gre {
             }
         }
 
-        SpotLight& set_shadow_distance(double shadow_min_distance, double shadow_max_distance) {
+        void set_shadow_distance(double shadow_min_distance, double shadow_max_distance) {
+#ifdef _DEBUG
             if (less_equality(shadow_min_distance, 0.0) || less_equality(shadow_max_distance, shadow_min_distance)) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_shadow_distance, invalid shadow distance.\n\n");
             }
+#endif // _DEBUG
 
             shadow_min_distance_ = shadow_min_distance;
             shadow_max_distance_ = shadow_max_distance;
             set_projection_matrix();
-            return *this;
         }
 
-        SpotLight& set_constant(double coefficient) {
+        void set_constant(double coefficient) {
+#ifdef _DEBUG
             if (coefficient < 0.0) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_constant, negative coefficient value.\n\n");
             }
+#endif // _DEBUG
 
             constant_ = coefficient;
-            return *this;
         }
 
-        SpotLight& set_linear(double coefficient) {
+        void set_linear(double coefficient) {
+#ifdef _DEBUG
             if (coefficient < 0.0) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_linear, negative coefficient value.\n\n");
             }
+#endif // _DEBUG
 
             linear_ = coefficient;
-            return *this;
         }
 
-        SpotLight& set_quadratic(double coefficient) {
+        void set_quadratic(double coefficient) {
+#ifdef _DEBUG
             if (coefficient < 0.0) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_quadratic, negative coefficient value.\n\n");
             }
+#endif // _DEBUG
 
             quadratic_ = coefficient;
-            return *this;
         }
 
-        SpotLight& set_angle(double border_in, double border_out) {
+        void set_angle(double border_in, double border_out) {
+#ifdef _DEBUG
             if (border_in < 0.0 || less_equality(PI / 2.0, border_out) || less_equality(border_out, border_in)) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_angle, invalid values of the external and internal angles of the spotlight.\n\n");
             }
+#endif // _DEBUG
 
             border_in_ = border_in;
             border_out_ = border_out;
-            return *this;
         }
 
-        SpotLight& set_direction(const Vec3& direction) {
+        void set_direction(const Vec3& direction) {
+#ifdef _DEBUG
             try {
                 direction_ = direction.normalize();
             }
             catch (GreDomainError) {
                 throw GreInvalidArgument(__FILE__, __LINE__, "set_direction, the direction vector has zero length.\n\n");
             }
-            return *this;
+#else
+            direction_ = direction.normalize();
+#endif // _DEBUG
         }
 
         Matrix4x4 get_light_space_matrix() const noexcept override {
@@ -140,9 +155,11 @@ namespace gre {
         }
 
         GraphObject get_shadow_box() const {
+#ifdef _DEBUG
             if (equality(shadow_max_distance_, 0.0)) {
                 throw GreDomainError(__FILE__, __LINE__, "get_shadow_box, invalid matrix settings.\n\n");
             }
+#endif // _DEBUG
 
             GraphObject shadow_box(1);
             shadow_box.transparent = true;
@@ -179,7 +196,7 @@ namespace gre {
             mesh.apply_matrix(Matrix4x4::rotation_matrix(Vec3(0.0, 0.0, 1.0), PI / 2.0));
             shadow_box.meshes.insert(mesh);
 
-            shadow_box.meshes.apply_func([](auto& mesh) {
+            shadow_box.meshes.apply_func([](Mesh& mesh) {
                 mesh.material.set_diffuse(Vec3(1.0, 1.0, 1.0));
                 mesh.material.set_alpha(0.3);
             });
@@ -194,7 +211,7 @@ namespace gre {
         GraphObject get_light_object() const {
             GraphObject light_object = GraphObject::cone(20, true, 1);
 
-            light_object.meshes.apply_func([](auto& mesh) {
+            light_object.meshes.apply_func([](Mesh& mesh) {
                 mesh.material.set_emission(Vec3(1.0, 1.0, 1.0));
                 mesh.material.shadow = false;
             });

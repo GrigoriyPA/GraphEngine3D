@@ -209,7 +209,7 @@ namespace gre {
 			return *this / vect_length;
 		}
 
-		Vec3 horizont() const {
+		Vec3 horizont() const noexcept {
 			double vect_length = z * z + x * x;
 
 			if (equality(vect_length, 0.0)) {
