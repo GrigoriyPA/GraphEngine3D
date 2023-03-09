@@ -4,7 +4,9 @@
 
 
 namespace gre {
-    // Use the mouse and 'Q', 'E' to rotate camera; Use 'W', 'A', 'S', 'D', 'LeftAlt', 'Space' to move camera; Use 'LeftShift' to bust camera
+    // Use the mouse and 'Q', 'E' to rotate camera
+    // Use 'W', 'A', 'S', 'D', 'LeftAlt', 'Space' to move camera
+    // Use 'LeftShift' to bust camera
     class DefaultControlSystem : public ControlSystem {
         uint8_t active_state_ = 0;
         sf::Vector2i mouse_position_ = sf::Vector2i(0, 0);

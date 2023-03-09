@@ -533,6 +533,19 @@ namespace gre {
 			return false;
 		}
 
+		bool validate_program() const {
+			glValidateProgram(program_id_);
+
+			GLint validate_status;
+			glGetProgramiv(program_id_, GL_VALIDATE_STATUS, &validate_status);
+
+#ifdef _DEBUG
+			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
+
+			return validate_status == GL_TRUE;
+		}
+
 		void load_from_file(const std::string& vertex_shader_path, const std::string& fragment_shader_path) {
 			const std::string& vertex_shader_code = load_shader(vertex_shader_path);
 			const std::string& fragment_shader_code = load_shader(fragment_shader_path);

@@ -17,10 +17,10 @@ namespace gre {
 			size_t model_id;
 			const GraphObject* object;
 
-			TransparentObject(const Vec3& camera_position, const GraphObject* object, size_t object_id, size_t model_id) noexcept {
+			TransparentObject(const Vec3& camera_position, const GraphObject* object, size_t object_id, size_t model_id) {
+				this->object = object;
 				this->object_id = object_id;
 				this->model_id = model_id;
-				this->object = object;
 				distance_ = (camera_position - object->get_center(model_id)).length();
 			}
 
@@ -48,9 +48,13 @@ namespace gre {
 		sf::RenderWindow* window_;
 		
 		void set_active() const {
+#ifdef _DEBUG
 			if (!window_->setActive(true)) {
 				throw GreRuntimeError(__FILE__, __LINE__, "set_active, failed to activate window.\n\n");
 			}
+#else
+			window_->setActive(true);
+#endif // _DEBUG
 		}
 
 		void set_uniforms() const {
@@ -76,7 +80,9 @@ namespace gre {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_CULL_FACE);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void create_primary_frame_buffer() {
@@ -105,12 +111,16 @@ namespace gre {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_id_, 0);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depth_stencil_texture_id_, 0);
 
+#ifdef _DEBUG
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 				throw GreRuntimeError(__FILE__, __LINE__, "create_primary_frame_buffer, framebuffer is not complete.\n\n");
 			}
+#endif // _DEBUG
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void draw_objects(const Camera& camera) const {
@@ -147,7 +157,9 @@ namespace gre {
 			}
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void draw_primary_frame_buffer(const Camera& camera) const {
@@ -169,7 +181,9 @@ namespace gre {
 			glActiveTexture(GL_TEXTURE0);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void draw_mainbuffer(const Camera& camera) const {
@@ -195,14 +209,18 @@ namespace gre {
 			glBindVertexArray(0);
 
 			glEnable(GL_DEPTH_TEST);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void deallocate() {
 			glDeleteFramebuffers(1, &primary_frame_buffer_);
 			glDeleteTextures(1, &screen_texture_id_);
 			glDeleteTextures(1, &depth_stencil_texture_id_);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			primary_frame_buffer_ = 0;
 			screen_texture_id_ = 0;
@@ -241,7 +259,9 @@ namespace gre {
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			glDeleteBuffers(1, &vertex_buffer);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 	public:
@@ -262,13 +282,16 @@ namespace gre {
 			depth_shader_.load_from_file("GraphEngine/Shaders/Vertex/Depth.vert", "GraphEngine/Shaders/Fragment/Depth.frag");
 			post_shader_.load_from_file("GraphEngine/Shaders/Vertex/Post.vert", "GraphEngine/Shaders/Fragment/Post.frag");
 			main_shader_.load_from_file("GraphEngine/Shaders/Vertex/Main.vert", "GraphEngine/Shaders/Fragment/Main.frag");
-			
+
+#ifdef _DEBUG
 			const sf::ContextSettings& settings = window->getSettings();
 			if (!depth_shader_.check_window_settings(settings) || !post_shader_.check_window_settings(settings) || !main_shader_.check_window_settings(settings)) {
 				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, invalid OpenGL version.\n\n");
 			}
-			
-			// Validate programs
+			if (!depth_shader_.validate_program() || !post_shader_.validate_program() || !main_shader_.validate_program()) {
+				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, shader program validation failed.\n\n");
+			}
+#endif // _DEBUG
 
 			set_uniforms();
 
@@ -322,62 +345,62 @@ namespace gre {
 			return *this;
 		}
 
-		GraphEngine& set_grayscale(bool grayscale) {
+		void set_grayscale(bool grayscale) {
 			set_active();
 			post_shader_.set_uniform_i("grayscale", grayscale);
 			grayscale_ = grayscale;
-			return *this;
 		}
 
-		GraphEngine& set_border_width(uint32_t border_width) {
+		void set_border_width(uint32_t border_width) {
 			set_active();
 			post_shader_.set_uniform_i("border_width", border_width);
 			border_width_ = border_width;
-			return *this;
 		}
 
-		GraphEngine& set_gamma(double gamma) {
+		void set_gamma(double gamma) {
+#ifdef _DEBUG
 			if (less_equality(gamma, 0.0)) {
 				throw GreInvalidArgument(__FILE__, __LINE__, "set_gamma, not positive gamma.\n\n");
 			}
+#endif // _DEBUG
 
 			set_active();
 			post_shader_.set_uniform_f("gamma", static_cast<GLfloat>(gamma));
 			gamma_ = gamma;
-			return *this;
 		}
 
 		void set_border_color(double red, double green, double blue) {
 			set_border_color(Vec3(red, green, blue));
 		}
 
-		GraphEngine& set_border_color(const Vec3& color) {
+		void set_border_color(const Vec3& color) {
+#ifdef _DEBUG
 			check_color_value(__FILE__, __LINE__, __func__, color);
+#endif // _DEBUG
 
 			set_active();
 			post_shader_.set_uniform_f("border_color", color);
 			border_color_ = color;
-			return *this;
 		}
 
 		void set_clear_color(double red, double green, double blue) {
 			set_clear_color(Vec3(red, green, blue));
 		}
 
-		GraphEngine& set_clear_color(const Vec3& color) {
+		void set_clear_color(const Vec3& color) {
+#ifdef _DEBUG
 			check_color_value(__FILE__, __LINE__, __func__, color);
+#endif // _DEBUG
 
 			set_active();
 			glClearColor(static_cast<GLclampf>(color.x), static_cast<GLclampf>(color.y), static_cast<GLclampf>(color.z), static_cast<GLclampf>(1.0));
 			clear_color_ = color;
-			return *this;
 		}
 
-		GraphEngine& set_kernel(const Kernel& kernel) {
+		void set_kernel(const Kernel& kernel) {
 			set_active();
 			kernel.set_uniforms(post_shader_);
 			kernel_ = kernel;
-			return *this;
 		}
 
 		bool get_grayscale() const noexcept {
@@ -405,9 +428,11 @@ namespace gre {
 		}
 
 		ObjectDesc get_check_object(size_t camera_id, Vec3& intersect_point) {
+#ifdef _DEBUG
 			if (!cameras.contains(camera_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
+#endif // _DEBUG
 
 			ObjectDesc result = cameras.get_check_object(camera_id, intersect_point);
 
@@ -416,9 +441,11 @@ namespace gre {
 		}
 
 		ObjectDesc get_check_object(size_t camera_id) {
+#ifdef _DEBUG
 			if (!cameras.contains(camera_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
+#endif // _DEBUG
 
 			ObjectDesc result = cameras.get_check_object(camera_id);
 
@@ -459,7 +486,9 @@ namespace gre {
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glClear(GL_COLOR_BUFFER_BIT);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			cameras.update_storage();
 			lights.set_uniforms(main_shader_);
