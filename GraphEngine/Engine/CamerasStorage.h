@@ -60,7 +60,9 @@ namespace gre {
 			glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
 			glBindBuffer(GL_COPY_READ_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		CamerasStorage(CamerasStorage&& other) noexcept {
@@ -80,9 +82,11 @@ namespace gre {
 		}
 
 		ObjectDesc get_check_object(size_t id, Vec3& intersect_point) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
+#endif // _DEBUG
 
 			load_buffer_data();
 
@@ -91,21 +95,24 @@ namespace gre {
 
 			GLint object_id = intersect_id_[cameras_index_[id]];
 			GLint model_id = intersect_id_[cameras_index_[id] + max_count_cameras_];
-			return { .exist = true, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
+			return { .exist = object_id >= 0 && model_id >= 0, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
 		}
 
 		ObjectDesc get_check_object(size_t id) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
+#endif // _DEBUG
 
 			load_buffer_data();
 
 			GLint object_id = intersect_id_[cameras_index_[id]];
 			GLint model_id = intersect_id_[cameras_index_[id] + max_count_cameras_];
-			return { .exist = true, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
+			return { .exist = object_id >= 0 && model_id >= 0, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
 		}
 
+		// MAIN shader expected
 		void create_shader_storage_buffer(size_t max_count_cameras, Shader& shader) {
 			shader_ = &shader;
 			max_count_cameras_ = max_count_cameras;
@@ -133,7 +140,9 @@ namespace gre {
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void load_buffer_data() {
@@ -148,7 +157,9 @@ namespace gre {
 			glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, intersect_dist_);
 			
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void update_storage() {
@@ -162,10 +173,12 @@ namespace gre {
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
-		void swap(CamerasStorage& other) {
+		void swap(CamerasStorage& other) noexcept {
 			std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
 			std::swap(is_actual_, other.is_actual_);
 			std::swap(intersect_id_, other.intersect_id_);
@@ -181,7 +194,9 @@ namespace gre {
 
 		void deallocate() {
 			glDeleteBuffers(1, &shader_storage_buffer_);
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 
 			delete[] intersect_id_;
 			delete[] intersect_dist_;
@@ -200,33 +215,41 @@ namespace gre {
 		using ConstIterator = std::vector<std::pair<size_t, Camera>>::const_iterator;
 
 		Camera& operator[](size_t id) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid camera id.\n\n");
 			}
+#endif // _DEBUG
 
 			return cameras_[cameras_index_[id]].second;
 		}
 
 		const Camera& operator[](size_t id) const {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid camera id.\n\n");
 			}
+#endif // _DEBUG
 
 			return cameras_[cameras_index_[id]].second;
 		}
 
 		size_t get_memory_id(size_t id) const {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid camera id.\n\n");
 			}
+#endif // _DEBUG
 
 			return cameras_index_[id];
 		}
 
 		size_t get_id(size_t memory_id) const {
+#ifdef _DEBUG
 			if (cameras_.size() <= memory_id) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
+#endif // _DEBUG
 
 			return cameras_[memory_id].first;
 		}
@@ -267,10 +290,12 @@ namespace gre {
 			return cameras_.end();
 		}
 
-		CamerasStorage& erase(size_t id) {
+		void erase(size_t id) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid camera id.\n\n");
 			}
+#endif // _DEBUG
 
 			free_camera_id_.push_back(id);
 
@@ -279,21 +304,20 @@ namespace gre {
 
 			cameras_.pop_back();
 			cameras_index_[id] = std::numeric_limits<size_t>::max();
-			return *this;
 		}
 
-		CamerasStorage& clear() noexcept {
+		void clear() noexcept {
 			cameras_index_.clear();
 			free_camera_id_.clear();
 			cameras_.clear();
-			return *this;
 		}
 
 		size_t insert(const Camera& camera) {
 			size_t free_camera_id = cameras_index_.size();
 			if (free_camera_id_.empty()) {
 				cameras_index_.push_back(cameras_.size());
-			} else {
+			}
+			else {
 				free_camera_id = free_camera_id_.back();
 				free_camera_id_.pop_back();
 				cameras_index_[free_camera_id] = cameras_.size();

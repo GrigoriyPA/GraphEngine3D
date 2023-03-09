@@ -436,7 +436,7 @@ namespace gre {
 
 			ObjectDesc result = cameras.get_check_object(camera_id, intersect_point);
 
-			result.exist = result.object_id >= 0 && result.model_id >= 0 && objects.contains(result.object_id) && objects[result.object_id].models.contains_memory(result.model_id);
+			result.exist = result.exist && objects.contains(result.object_id) && objects[result.object_id].models.contains_memory(result.model_id);
 			return result;
 		}
 
@@ -449,7 +449,7 @@ namespace gre {
 
 			ObjectDesc result = cameras.get_check_object(camera_id);
 
-			result.exist = result.object_id >= 0 && result.model_id >= 0 && objects.contains(result.object_id) && objects[result.object_id].models.contains_memory(result.model_id);
+			result.exist = result.exist && objects.contains(result.object_id) && objects[result.object_id].models.contains_memory(result.model_id);
 			return result;
 		}
 

@@ -29,33 +29,41 @@ namespace gre {
 		using ConstIterator = std::vector<std::pair<size_t, GraphObject>>::const_iterator;
 
 		GraphObject& operator[](size_t id) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
 			}
+#endif // _DEBUG
 
 			return objects_[objects_index_[id]].second;
 		}
 
 		const GraphObject& operator[](size_t id) const {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid object id.\n\n");
 			}
+#endif // _DEBUG
 
 			return objects_[objects_index_[id]].second;
 		}
 
 		size_t get_memory_id(size_t id) const {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid object id.\n\n");
 			}
+#endif // _DEBUG
 
 			return objects_index_[id];
 		}
 
 		size_t get_id(size_t memory_id) const {
+#ifdef _DEBUG
 			if (objects_.size() <= memory_id) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
+#endif // _DEBUG
 
 			return objects_[memory_id].first;
 		}
@@ -93,12 +101,14 @@ namespace gre {
 		}
 
 		bool erase(size_t id, size_t model_id) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
 			}
 			if (!objects_[objects_index_[id]].second.models.contains(model_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid model id.\n\n");
 			}
+#endif // _DEBUG
 
 			objects_[objects_index_[id]].second.models.erase(model_id);
 			if (objects_[objects_index_[id]].second.models.empty()) {
@@ -108,10 +118,12 @@ namespace gre {
 			return false;
 		}
 
-		GraphObjectStorage& erase(size_t id) {
+		void erase(size_t id) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid object id.\n\n");
 			}
+#endif // _DEBUG
 
 			free_object_id_.push_back(id);
 
@@ -120,17 +132,15 @@ namespace gre {
 
 			objects_.pop_back();
 			objects_index_[id] = std::numeric_limits<size_t>::max();
-			return *this;
 		}
 
-		GraphObjectStorage& clear() noexcept {
+		void clear() noexcept {
 			objects_index_.clear();
 			free_object_id_.clear();
 			objects_.clear();
-			return *this;
 		}
 
-		size_t insert(const GraphObject& object) noexcept {
+		size_t insert(const GraphObject& object) {
 			size_t free_object_id = objects_index_.size();
 			if (free_object_id_.empty()) {
 				objects_index_.push_back(objects_.size());
