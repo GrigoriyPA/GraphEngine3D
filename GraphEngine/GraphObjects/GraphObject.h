@@ -353,7 +353,6 @@ namespace gre {
 
 			if (border_mask > 0) {
 				glStencilMask(0x00);
-
 #ifdef _DEBUG
 				check_gl_errors(__FILE__, __LINE__, __func__);
 #endif // _DEBUG
@@ -377,7 +376,6 @@ namespace gre {
 
 			if (border_mask > 0) {
 				glStencilMask(0x00);
-
 #ifdef _DEBUG
 				check_gl_errors(__FILE__, __LINE__, __func__);
 #endif // _DEBUG
@@ -395,7 +393,6 @@ namespace gre {
 
 			if (border_mask > 0) {
 				glStencilMask(0x00);
-
 #ifdef _DEBUG
 				check_gl_errors(__FILE__, __LINE__, __func__);
 #endif // _DEBUG

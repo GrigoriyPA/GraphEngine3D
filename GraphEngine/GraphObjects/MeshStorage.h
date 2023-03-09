@@ -57,7 +57,9 @@ namespace gre {
 			glBindVertexArray(0);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#ifdef _DEBUG
 			check_gl_errors(__FILE__, __LINE__, __func__);
+#endif // _DEBUG
 		}
 
 		void set_matrix_buffer(GLuint matrix_buffer) {
@@ -74,42 +76,50 @@ namespace gre {
 
 		void swap(MeshStorage& other) noexcept {
 			std::swap(matrix_buffer_, other.matrix_buffer_);
-			std::swap(meshes_index_, other.meshes_index_);
-			std::swap(free_mesh_id_, other.free_mesh_id_);
-			std::swap(meshes_, other.meshes_);
+			meshes_index_.swap(other.meshes_index_);
+			free_mesh_id_.swap(other.free_mesh_id_);
+			meshes_.swap(other.meshes_);
 		}
 
 	public:
-		using Iterator = std::vector<std::pair<size_t, Mesh>>::const_iterator;
+		using ConstIterator = std::vector<std::pair<size_t, Mesh>>::const_iterator;
 
 		const Mesh& operator[](size_t id) const {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			return meshes_[meshes_index_[id]].second;
 		}
 
 		Mesh get(size_t id) const {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			return meshes_[meshes_index_[id]].second;
 		}
 
 		size_t get_memory_id(size_t id) const {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_memory_id, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			return meshes_index_[id];
 		}
 
 		size_t get_id(size_t memory_id) const {
+#ifdef _DEBUG
 			if (meshes_.size() <= memory_id) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_id, invalid memory id.\n\n");
 			}
+#endif // _DEBUG
 
 			return meshes_[memory_id].first;
 		}
@@ -130,18 +140,20 @@ namespace gre {
 			return meshes_.empty();
 		}
 
-		Iterator begin() const noexcept {
+		ConstIterator begin() const noexcept {
 			return meshes_.begin();
 		}
 
-		Iterator end() const noexcept {
+		ConstIterator end() const noexcept {
 			return meshes_.end();
 		}
 
-		MeshStorage& erase(size_t id) {
+		void erase(size_t id) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "erase, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			free_mesh_id_.push_back(id);
 
@@ -150,21 +162,20 @@ namespace gre {
 
 			meshes_.pop_back();
 			meshes_index_[id] = std::numeric_limits<size_t>::max();
-			return *this;
 		}
 
-		MeshStorage& clear() noexcept {
+		void clear() noexcept {
 			meshes_index_.clear();
 			free_mesh_id_.clear();
 			meshes_.clear();
-			return *this;
 		}
 
 		size_t insert(const Mesh& mesh) {
 			size_t free_mesh_id = meshes_index_.size();
 			if (free_mesh_id_.empty()) {
 				meshes_index_.push_back(meshes_.size());
-			} else {
+			}
+			else {
 				free_mesh_id = free_mesh_id_.back();
 				free_mesh_id_.pop_back();
 				meshes_index_[free_mesh_id] = meshes_.size();
@@ -175,36 +186,37 @@ namespace gre {
 			return free_mesh_id;
 		}
 
-		MeshStorage& modify(size_t id, const Mesh& mesh) {
+		void modify(size_t id, const Mesh& mesh) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "modify, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			set_mesh_matrix_buffer(meshes_[meshes_index_[id]].second = mesh);
-			return *this;
 		}
 
-		MeshStorage& apply_func(size_t id, std::function<void(Mesh&)> func) {
+		void apply_func(size_t id, std::function<void(Mesh&)> func) {
+#ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "apply_func, invalid mesh id.\n\n");
 			}
+#endif // _DEBUG
 
 			Mesh object(meshes_[meshes_index_[id]].second);
 			func(object);
 			set_mesh_matrix_buffer(meshes_[meshes_index_[id]].second = object);
-			return *this;
 		}
 
-		MeshStorage& apply_func(std::function<void(Mesh&)> func) {
+		void apply_func(std::function<void(Mesh&)> func) {
 			for (auto& [id, mesh] : meshes_) {
 				Mesh object(mesh);
 				func(object);
 				set_mesh_matrix_buffer(mesh = object);
 			}
-			return *this;
 		}
 
-		MeshStorage& compress() {
+		void compress() {
 			std::vector<Mesh> new_meshes;
 			while (!meshes_.empty()) {
 				Mesh current_mesh = meshes_[0].second;
@@ -250,7 +262,6 @@ namespace gre {
 			for (const Mesh& mesh : new_meshes) {
 				insert(mesh);
 			}
-			return *this;
 		}
 	};
 }
