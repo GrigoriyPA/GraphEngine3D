@@ -11,7 +11,7 @@
 namespace gre {
 	class GraphObject {
 		// ...
-		std::vector<Texture> loadMaterialTextures(const aiMaterial* material, aiTextureType type, const aiScene* scene, const std::string& directory, std::unordered_map<std::string, Texture>& uploaded_textures) {
+		std::vector<Texture> load_material_textures(const aiMaterial* material, aiTextureType type, const aiScene* scene, const std::string& directory, std::unordered_map<std::string, Texture>& uploaded_textures) {
 			size_t number_textures = material->GetTextureCount(type);
 			std::vector<Texture> textures(number_textures);
 			for (size_t i = 0; i < number_textures; ++i) {
@@ -37,7 +37,7 @@ namespace gre {
 		}
 
 		// ...
-		Mesh processMesh(const aiMesh* mesh, const aiScene* scene, const std::string& directory, const Matrix4x4& transform, std::unordered_map<std::string, Texture>& uploaded_textures) {
+		Mesh process_mesh(const aiMesh* mesh, const aiScene* scene, const std::string& directory, const Matrix4x4& transform, std::unordered_map<std::string, Texture>& uploaded_textures) {
 			std::vector<Vec2> tex_coords(mesh->mNumVertices, Vec2(0.0));
 			std::vector<Vec3> colors(mesh->mNumVertices, Vec3(0.0));
 			std::vector<Vec3> positions;
@@ -83,17 +83,17 @@ namespace gre {
 				aiColor3D color(0, 0, 0);
 				const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-				std::vector<Texture> diffuse_textures = loadMaterialTextures(material, aiTextureType_DIFFUSE, scene, directory, uploaded_textures);
+				std::vector<Texture> diffuse_textures = load_material_textures(material, aiTextureType_DIFFUSE, scene, directory, uploaded_textures);
 				if (!diffuse_textures.empty())
 					polygon_mesh.material.diffuse_map = diffuse_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
 
-				std::vector<Texture> specular_textures = loadMaterialTextures(material, aiTextureType_SPECULAR, scene, directory, uploaded_textures);
+				std::vector<Texture> specular_textures = load_material_textures(material, aiTextureType_SPECULAR, scene, directory, uploaded_textures);
 				if (!specular_textures.empty())
 					polygon_mesh.material.specular_map = specular_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_SPECULAR) << "\n";
 
-				std::vector<Texture> emissive_textures = loadMaterialTextures(material, aiTextureType_EMISSIVE, scene, directory, uploaded_textures);
+				std::vector<Texture> emissive_textures = load_material_textures(material, aiTextureType_EMISSIVE, scene, directory, uploaded_textures);
 				if (!emissive_textures.empty())
 					polygon_mesh.material.emission_map = emissive_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";
@@ -136,7 +136,7 @@ namespace gre {
 			transform = Matrix4x4(node->mTransformation) * transform;
 
 			for (size_t i = 0; i < node->mNumMeshes; i++) {
-				meshes.insert(processMesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform, uploaded_textures));
+				meshes.insert(process_mesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform, uploaded_textures));
 			}
 
 			for (size_t i = 0; i < node->mNumChildren; i++) {
