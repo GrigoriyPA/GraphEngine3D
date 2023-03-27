@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assimp/scene.h>
 #include <initializer_list>
 #include <iostream>
 #include <SFML/System.hpp>
@@ -40,6 +41,11 @@ namespace gre {
         }
 
         explicit Vec2(const sf::Vector2f& init) noexcept {
+            x = init.x;
+            y = init.y;
+        }
+
+        explicit Vec2(const aiVector2D& init) noexcept {
             x = init.x;
             y = init.y;
         }

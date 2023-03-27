@@ -171,6 +171,15 @@ namespace gre {
 			set_image(image, gamma);
 		}
 
+		void load_from_memory(const void* data, size_t size, bool gamma = true) {
+			sf::Image image;
+			if (!image.loadFromMemory(data, size)) {
+				throw GreRuntimeError(__FILE__, __LINE__, "Texture, texture loading from memory failed.\n\n");
+			}
+
+			set_image(image, gamma);
+		}
+
 		void swap(Texture& other) noexcept {
 			std::swap(width_, other.width_);
 			std::swap(height_, other.height_);

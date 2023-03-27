@@ -1,8 +1,8 @@
 #pragma once
 
 #include <assimp/postprocess.h>
-#include <assimp/scene.h>
 #include <assimp/Importer.hpp>
+#include <unordered_map>
 #include <unordered_set>
 #include "MeshStorage.h"
 #include "ModelStorage.h"
@@ -11,76 +11,89 @@
 namespace gre {
 	class GraphObject {
 		// ...
-		std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, const aiScene* scene, std::string& directory) {
-			std::vector<Texture> textures;
-			for (unsigned int i = 0; i < material->GetTextureCount(type); i++) {
-				aiString str;
-				material->GetTexture(type, i, &str);
+		std::vector<Texture> loadMaterialTextures(const aiMaterial* material, aiTextureType type, const aiScene* scene, const std::string& directory, std::unordered_map<std::string, Texture>& uploaded_textures) {
+			size_t number_textures = material->GetTextureCount(type);
+			std::vector<Texture> textures(number_textures);
+			for (size_t i = 0; i < number_textures; ++i) {
+				aiString texture_path;
+				material->GetTexture(type, i, &texture_path);
+				const std::string& path(texture_path.data);
 
-				std::string path(str.data);
-				if (path[0] == '*') {
-					path.erase(path.begin());
-					path = "inline_texture" + path + "." + std::string(scene->mTextures[std::stoi(path)]->achFormatHint);
+				if (uploaded_textures.contains(path)) {
+					textures[i] = uploaded_textures[path];
+					continue;
 				}
 
-				Texture texture;
-				texture.load_from_file(directory + "/" + path, true);
-				textures.push_back(texture);
+				if (path[0] == '*') {
+					const aiTexture* texture = scene->mTextures[std::stoi(path.substr(1, path.size() - 1))];
+					textures[i].load_from_memory(reinterpret_cast<void*>(texture->pcData), std::max(texture->mHeight, 1u) * texture->mWidth, true);
+				}
+				else {
+					textures[i].load_from_file(directory + "/" + path, true);
+				}
+				uploaded_textures[path] = textures[i];
 			}
 			return textures;
 		}
 
 		// ...
-		Mesh processMesh(aiMesh* mesh, const aiScene* scene, std::string& directory, Matrix4x4 transform) {
-			std::vector < Vec2 > tex_coords;
-			std::vector < Vec3 > positions, normals;
-			std::vector < Vec3 > colors;
-			std::vector<unsigned int> indices;
+		Mesh processMesh(const aiMesh* mesh, const aiScene* scene, const std::string& directory, const Matrix4x4& transform, std::unordered_map<std::string, Texture>& uploaded_textures) {
+			std::vector<Vec2> tex_coords(mesh->mNumVertices, Vec2(0.0));
+			std::vector<Vec3> colors(mesh->mNumVertices, Vec3(0.0));
+			std::vector<Vec3> positions;
+			std::vector<Vec3> normals;
+			positions.reserve(mesh->mNumVertices);
+			normals.reserve(mesh->mNumVertices);
 
-			Matrix4x4 norm_transform = transform.inverse().transpose();
-			for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-				positions.push_back(transform * Vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z));
-				if (mesh->mNormals)
-					normals.push_back(norm_transform * Vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z));
-				if (mesh->mTextureCoords[0])
-					tex_coords.push_back(Vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y));
-				else
-					tex_coords.push_back(Vec2(0, 0));
-				if (mesh->mColors[0])
-					colors.push_back(Vec3(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b));
-				else
-					colors.push_back(Vec3(0, 0, 0));
+			const Matrix4x4& norm_transform = Matrix4x4::normal_transform(transform);
+			for (size_t i = 0; i < mesh->mNumVertices; ++i) {
+				positions.push_back(transform * Vec3(mesh->mVertices[i]));
+				if (mesh->mNormals != NULL) {
+					normals.push_back(norm_transform * Vec3(mesh->mNormals[i]));
+				}
+
+				if (mesh->mTextureCoords[0] != NULL) {
+					tex_coords[i] = Vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+				}
+
+				if (mesh->mColors[0] != NULL) {
+					colors[i] = Vec3(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b);
+				}
 			}
-			Mesh polygon_mesh(positions.size());
+			Mesh polygon_mesh(mesh->mNumVertices);
 			polygon_mesh.set_positions(positions, normals.empty());
-			if (!normals.empty())
+			if (!normals.empty()) {
 				polygon_mesh.set_normals(normals);
+			}
 			polygon_mesh.set_tex_coords(tex_coords);
 			polygon_mesh.set_colors(colors);
 
-			polygon_mesh.material.set_diffuse(Vec3(1, 1, 1));
-			for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
-				aiFace face = mesh->mFaces[i];
-				for (unsigned int j = 0; j < face.mNumIndices; j++)
-					indices.push_back(face.mIndices[j]);
+			std::vector<GLuint> indices;
+			indices.reserve(3 * mesh->mNumFaces);
+			for (size_t i = 0; i < mesh->mNumFaces; ++i) {
+				const aiFace& face = mesh->mFaces[i];
+				for (size_t j = 0; j < face.mNumIndices; ++j) {
+					indices.push_back(static_cast<GLuint>(face.mIndices[j]));
+				}
 			}
 			polygon_mesh.set_indices(indices);
 
+			polygon_mesh.material.set_diffuse(Vec3(1.0));
 			if (mesh->mMaterialIndex >= 0) {
 				aiColor3D color(0, 0, 0);
-				aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+				const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-				std::vector<Texture> diffuse_textures = loadMaterialTextures(material, aiTextureType_DIFFUSE, scene, directory);
+				std::vector<Texture> diffuse_textures = loadMaterialTextures(material, aiTextureType_DIFFUSE, scene, directory, uploaded_textures);
 				if (!diffuse_textures.empty())
 					polygon_mesh.material.diffuse_map = diffuse_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
 
-				std::vector<Texture> specular_textures = loadMaterialTextures(material, aiTextureType_SPECULAR, scene, directory);
+				std::vector<Texture> specular_textures = loadMaterialTextures(material, aiTextureType_SPECULAR, scene, directory, uploaded_textures);
 				if (!specular_textures.empty())
 					polygon_mesh.material.specular_map = specular_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_SPECULAR) << "\n";
 
-				std::vector<Texture> emissive_textures = loadMaterialTextures(material, aiTextureType_EMISSIVE, scene, directory);
+				std::vector<Texture> emissive_textures = loadMaterialTextures(material, aiTextureType_EMISSIVE, scene, directory, uploaded_textures);
 				if (!emissive_textures.empty())
 					polygon_mesh.material.emission_map = emissive_textures[0];
 				//std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";
@@ -119,22 +132,15 @@ namespace gre {
 		}
 
 		// ...
-		void processNode(aiNode* node, const aiScene* scene, std::string& directory, Matrix4x4 transform) {
-			Matrix4x4 trans(0);
-			aiMatrix4x4 cur_transform = node->mTransformation;
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++)
-					trans[i][j] = cur_transform[i][j];
-			}
-			transform = trans * transform;
+		void process_node(const aiNode* node, const aiScene* scene, const std::string& directory, Matrix4x4 transform, std::unordered_map<std::string, Texture>& uploaded_textures) {
+			transform = Matrix4x4(node->mTransformation) * transform;
 
 			for (size_t i = 0; i < node->mNumMeshes; i++) {
-				meshes.insert(processMesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform));
-				break;
+				meshes.insert(processMesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform, uploaded_textures));
 			}
 
-			for (unsigned int i = 0; i < node->mNumChildren; i++) {
-				processNode(node->mChildren[i], scene, directory, transform);
+			for (size_t i = 0; i < node->mNumChildren; i++) {
+				process_node(node->mChildren[i], scene, directory, transform, uploaded_textures);
 			}
 		}
 
@@ -292,32 +298,20 @@ namespace gre {
 		}
 
 		// ...
-		void importFromFile(std::string path) {
+		void load_from_file(const std::string& path) {
 			meshes.clear();
 
 			Assimp::Importer importer;
 			const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals);
 
+#ifdef _DEBUG
 			if (scene == NULL || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || scene->mRootNode == NULL) {
-				//std::cout << "ERROR::GRAPH_OBJECT::IMPORT\n" << importer.GetErrorString() << "\n";
-				//assert(0);
+				throw GreRuntimeError(__FILE__, __LINE__, "load_from_file, failed to load model, description \\/\n" + std::string(importer.GetErrorString()) + "\n\n");
 			}
-			std::string directory = path.substr(0, path.find_last_of('/'));
+#endif // _DEBUG
 
-			if (scene == nullptr) {
-				return;
-			}
-
-			for (size_t i = 0; i < scene->mNumTextures; i++) {
-				aiTexture* tex = scene->mTextures[i];
-
-				if (tex->mHeight == 0) {
-					std::ofstream fout(directory + "/inline_texture" + std::to_string(i) + "." + std::string(tex->achFormatHint), std::ios::binary);
-					fout.write((const char*)tex->pcData, tex->mWidth);
-				}
-			}
-
-			processNode(scene->mRootNode, scene, directory, Matrix4x4::one_matrix());
+			std::unordered_map<std::string, Texture> uploaded_textures;
+			process_node(scene->mRootNode, scene, path.substr(0, path.find_last_of('/')), Matrix4x4::one_matrix(), uploaded_textures);
 		}
 
 		void draw_depth_map() const {

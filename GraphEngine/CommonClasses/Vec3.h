@@ -58,6 +58,18 @@ namespace gre {
 			z = color.b;
 		}
 
+		explicit Vec3(const sf::Vector3f& init) noexcept {
+			x = init.x;
+			y = init.y;
+			z = init.z;
+		}
+
+		explicit Vec3(const aiVector3D& init) noexcept {
+			x = init.x;
+			y = init.y;
+			z = init.z;
+		}
+
 		double& operator[](size_t index) {
 			if (index == 0) {
 				return x;

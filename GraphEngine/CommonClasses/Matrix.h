@@ -69,6 +69,14 @@ namespace gre {
             });
         }
 
+        explicit Matrix4x4(const aiMatrix4x4& init) noexcept {
+            for (uint32_t i = 0; i < 4; ++i) {
+                for (uint32_t j = 0; j < 4; ++j) {
+                    matrix_[i][j] = init[i][j];
+                }
+            }
+        }
+
         template <typename T>  // Constructors required: T(double)
         explicit operator std::vector<T>() const {
             std::vector<T> result;

@@ -288,9 +288,6 @@ namespace gre {
 			if (!depth_shader_.check_window_settings(settings) || !post_shader_.check_window_settings(settings) || !main_shader_.check_window_settings(settings)) {
 				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, invalid OpenGL version.\n\n");
 			}
-			if (!depth_shader_.validate_program() || !post_shader_.validate_program() || !main_shader_.validate_program()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, shader program validation failed.\n\n");
-			}
 #endif // _DEBUG
 
 			set_uniforms();
@@ -302,6 +299,12 @@ namespace gre {
 			cameras.create_shader_storage_buffer(std::stoi(main_shader_.get_value_frag("NR_CAMERAS")), main_shader_);
 			create_screen_vertex_array();
 			create_primary_frame_buffer();
+
+#ifdef _DEBUG
+			if (!depth_shader_.validate_program() || !post_shader_.validate_program() || !main_shader_.validate_program()) {
+				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, shader program validation failed.\n\n");
+			}
+#endif // _DEBUG
 		}
 
 		GraphEngine(const GraphEngine& other) {
