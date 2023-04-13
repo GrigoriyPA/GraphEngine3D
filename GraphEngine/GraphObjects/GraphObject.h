@@ -36,111 +36,163 @@ namespace gre {
 			return textures;
 		}
 
-		// ...
-		Mesh process_mesh(const aiMesh* mesh, const aiScene* scene, const std::string& directory, const Matrix4x4& transform, std::unordered_map<std::string, Texture>& uploaded_textures) {
-			std::vector<Vec2> tex_coords(mesh->mNumVertices, Vec2(0.0));
-			std::vector<Vec3> colors(mesh->mNumVertices, Vec3(0.0));
-			std::vector<Vec3> positions;
-			std::vector<Vec3> normals;
-			positions.reserve(mesh->mNumVertices);
-			normals.reserve(mesh->mNumVertices);
+		Material load_material_data(const aiMaterial* material, const aiScene* scene, const std::string& directory, std::unordered_map<std::string, Texture>& uploaded_textures) {
+			Material mesh_material;
 
-			const Matrix4x4& norm_transform = Matrix4x4::normal_transform(transform);
-			for (size_t i = 0; i < mesh->mNumVertices; ++i) {
-				positions.push_back(transform * Vec3(mesh->mVertices[i]));
-				if (mesh->mNormals != NULL) {
-					normals.push_back(norm_transform * Vec3(mesh->mNormals[i]));
-				}
 
-				if (mesh->mTextureCoords[0] != NULL) {
-					tex_coords[i] = Vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-				}
+			
+			//aiColor3D color(0, 0, 0);
 
-				if (mesh->mColors[0] != NULL) {
-					colors[i] = Vec3(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b);
-				}
+			//std::vector<Texture> diffuse_textures = load_material_textures(material, aiTextureType_DIFFUSE, scene, directory, uploaded_textures);
+			//if (!diffuse_textures.empty())
+			//	polygon_mesh.material.diffuse_map = diffuse_textures[0];
+			////std::cout << material->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
+
+			//std::vector<Texture> specular_textures = load_material_textures(material, aiTextureType_SPECULAR, scene, directory, uploaded_textures);
+			//if (!specular_textures.empty())
+			//	polygon_mesh.material.specular_map = specular_textures[0];
+			////std::cout << material->GetTextureCount(aiTextureType_SPECULAR) << "\n";
+
+			//std::vector<Texture> emissive_textures = load_material_textures(material, aiTextureType_EMISSIVE, scene, directory, uploaded_textures);
+			//if (!emissive_textures.empty())
+			//	polygon_mesh.material.emission_map = emissive_textures[0];
+			////std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";
+
+			//material->Get(AI_MATKEY_COLOR_AMBIENT, color);
+			//polygon_mesh.material.set_ambient(Vec3(color.r, color.g, color.b));
+			////polygon_mesh.material.ambient.print();
+
+			//material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+			//polygon_mesh.material.set_diffuse(Vec3(color.r, color.g, color.b));
+			////polygon_mesh.material.diffuse.print();
+
+			//material->Get(AI_MATKEY_COLOR_SPECULAR, color);
+			//polygon_mesh.material.set_specular(Vec3(color.r, color.g, color.b));
+			////polygon_mesh.material.specular.print();
+
+			//material->Get(AI_MATKEY_COLOR_EMISSIVE, color);
+			//polygon_mesh.material.set_emission(Vec3(color.r, color.g, color.b));
+			////polygon_mesh.material.emission.print();
+
+			//float opacity;
+			//material->Get(AI_MATKEY_OPACITY, opacity);
+			//polygon_mesh.material.set_alpha(opacity);
+			////std::cout << polygon_mesh.material.alpha << "\n";
+
+			//float shininess;
+			//material->Get(AI_MATKEY_SHININESS, shininess);
+			//polygon_mesh.material.set_shininess(shininess);
+			//std::cout << polygon_mesh.material.shininess << "\n";
+
+			/*if (shininess > 0)
+				polygon_mesh.material.set_specular(Vec3(1, 1, 1));*/
+
+			return mesh_material;
+		}
+
+		Mesh load_mesh_data(const aiMesh* mesh) {
+#ifdef _DEBUG
+			if (mesh->mPrimitiveTypes & aiPrimitiveType_POINT) {
+				std::cout << "Object loading warning, unable to load point primitive type.\n\n";
 			}
+			if (mesh->mPrimitiveTypes & aiPrimitiveType_LINE) {
+				std::cout << "Object loading warning, unable to load line primitive type.\n\n";
+			}
+			if (mesh->mPrimitiveTypes & aiPrimitiveType_POLYGON) {
+				std::cout << "Object loading warning, unable to load polygon primitive type.\n\n";
+			}
+#endif // _DEBUG
+
 			Mesh polygon_mesh(mesh->mNumVertices);
-			polygon_mesh.set_positions(positions, normals.empty());
-			if (!normals.empty()) {
+
+			// Loading vertex positions
+			std::vector<Vec3> positions;
+			positions.reserve(mesh->mNumVertices);
+			for (size_t i = 0; i < mesh->mNumVertices; ++i) {
+				positions.emplace_back(mesh->mVertices[i]);
+			}
+			polygon_mesh.set_positions(positions, !mesh->HasNormals());
+
+			// Loading normals of vertexes
+			if (mesh->HasNormals()) {
+				std::vector<Vec3> normals;
+				normals.reserve(mesh->mNumVertices);
+				for (size_t i = 0; i < mesh->mNumVertices; ++i) {
+					normals.emplace_back(mesh->mNormals[i]);
+				}
 				polygon_mesh.set_normals(normals);
 			}
-			polygon_mesh.set_tex_coords(tex_coords);
-			polygon_mesh.set_colors(colors);
 
+			// Loading texture coordinates of vertexes
+			if (mesh->GetNumUVChannels() > 0) {
+#ifdef _DEBUG
+				if (mesh->GetNumUVChannels() > 1) {
+					std::cout << "Object loading warning, unable to load all texture coordinates.\n\n";
+				}
+				if (mesh->mNumUVComponents[0] != 2) {
+					std::cout << "Object loading warning, unable to load not 2D texture coordinates.\n\n";
+				}
+#endif // _DEBUG
+
+				std::vector<Vec2> tex_coords;
+				tex_coords.reserve(mesh->mNumVertices);
+				for (size_t i = 0; i < mesh->mNumVertices; ++i) {
+					tex_coords.emplace_back(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+				}
+				polygon_mesh.set_tex_coords(tex_coords);
+			}
+
+			// Loading colors of vertexes
+			if (mesh->GetNumColorChannels() > 0) {
+#ifdef _DEBUG
+				if (mesh->GetNumColorChannels() > 1) {
+					std::cout << "Object loading warning, unable to load all texture colors.\n\n";
+				}
+#endif // _DEBUG
+
+				std::vector<Vec3> colors;
+				colors.reserve(mesh->mNumVertices);
+				for (size_t i = 0; i < mesh->mNumVertices; ++i) {
+#ifdef _DEBUG
+					if (mesh->mColors[0][i].a != 1.0) {
+						std::cout << "Object loading warning, unable to load alpha component of texture color.\n\n";
+					}
+#endif // _DEBUG
+					colors.push_back(Vec3(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b));
+				}
+				polygon_mesh.set_colors(colors);
+			}
+
+			// Loading index array of mesh
 			std::vector<GLuint> indices;
-			indices.reserve(3 * mesh->mNumFaces);
-			for (size_t i = 0; i < mesh->mNumFaces; ++i) {
-				const aiFace& face = mesh->mFaces[i];
-				for (size_t j = 0; j < face.mNumIndices; ++j) {
-					indices.push_back(static_cast<GLuint>(face.mIndices[j]));
+			indices.reserve(3ull * mesh->mNumFaces);
+			for (size_t face_id = 0; face_id < mesh->mNumFaces; ++face_id) {
+#ifdef _DEBUG
+				if (mesh->mFaces[face_id].mNumIndices != 3) {
+					std::cout << "Object loading warning, unable to load not triangle face.\n\n";
+				}
+#endif // _DEBUG
+
+				for (size_t i = 0; i < mesh->mFaces[face_id].mNumIndices; ++i) {
+					indices.push_back(static_cast<GLuint>(mesh->mFaces[face_id].mIndices[i]));
 				}
 			}
 			polygon_mesh.set_indices(indices);
 
-			polygon_mesh.material.set_diffuse(Vec3(1.0));
-			if (mesh->mMaterialIndex >= 0) {
-				aiColor3D color(0, 0, 0);
-				const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-				std::vector<Texture> diffuse_textures = load_material_textures(material, aiTextureType_DIFFUSE, scene, directory, uploaded_textures);
-				if (!diffuse_textures.empty())
-					polygon_mesh.material.diffuse_map = diffuse_textures[0];
-				//std::cout << material->GetTextureCount(aiTextureType_DIFFUSE) << "\n";
-
-				std::vector<Texture> specular_textures = load_material_textures(material, aiTextureType_SPECULAR, scene, directory, uploaded_textures);
-				if (!specular_textures.empty())
-					polygon_mesh.material.specular_map = specular_textures[0];
-				//std::cout << material->GetTextureCount(aiTextureType_SPECULAR) << "\n";
-
-				std::vector<Texture> emissive_textures = load_material_textures(material, aiTextureType_EMISSIVE, scene, directory, uploaded_textures);
-				if (!emissive_textures.empty())
-					polygon_mesh.material.emission_map = emissive_textures[0];
-				//std::cout << material->GetTextureCount(aiTextureType_EMISSIVE) << "\n";
-
-				material->Get(AI_MATKEY_COLOR_AMBIENT, color);
-				polygon_mesh.material.set_ambient(Vec3(color.r, color.g, color.b));
-				//polygon_mesh.material.ambient.print();
-
-				material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-				polygon_mesh.material.set_diffuse(Vec3(color.r, color.g, color.b));
-				//polygon_mesh.material.diffuse.print();
-
-				material->Get(AI_MATKEY_COLOR_SPECULAR, color);
-				polygon_mesh.material.set_specular(Vec3(color.r, color.g, color.b));
-				//polygon_mesh.material.specular.print();
-
-				material->Get(AI_MATKEY_COLOR_EMISSIVE, color);
-				polygon_mesh.material.set_emission(Vec3(color.r, color.g, color.b));
-				//polygon_mesh.material.emission.print();
-
-				float opacity;
-				material->Get(AI_MATKEY_OPACITY, opacity);
-				polygon_mesh.material.set_alpha(opacity);
-				//std::cout << polygon_mesh.material.alpha << "\n";
-
-				float shininess;
-				material->Get(AI_MATKEY_SHININESS, shininess);
-				polygon_mesh.material.set_shininess(shininess);
-				//std::cout << polygon_mesh.material.shininess << "\n";
-
-				/*if (shininess > 0)
-					polygon_mesh.material.set_specular(Vec3(1, 1, 1));*/
-			}
-
 			return polygon_mesh;
 		}
 
-		// ...
-		void process_node(const aiNode* node, const aiScene* scene, const std::string& directory, Matrix4x4 transform, std::unordered_map<std::string, Texture>& uploaded_textures) {
+		void process_node(const aiNode* node, Matrix4x4 transform, const std::vector<Mesh>& scene_meshes) {
 			transform = Matrix4x4(node->mTransformation) * transform;
 
-			for (size_t i = 0; i < node->mNumMeshes; i++) {
-				meshes.insert(process_mesh(scene->mMeshes[node->mMeshes[i]], scene, directory, transform, uploaded_textures));
+			for (size_t i = 0; i < node->mNumMeshes; ++i) {
+				Mesh mesh = scene_meshes[node->mMeshes[i]];
+				mesh.apply_matrix(transform);
+				meshes.insert(mesh);
 			}
 
-			for (size_t i = 0; i < node->mNumChildren; i++) {
-				process_node(node->mChildren[i], scene, directory, transform, uploaded_textures);
+			for (size_t i = 0; i < node->mNumChildren; ++i) {
+				process_node(node->mChildren[i], transform, scene_meshes);
 			}
 		}
 
@@ -297,12 +349,15 @@ namespace gre {
 			meshes.set_matrix_buffer(models.matrix_buffer_);
 		}
 
-		// ...
 		void load_from_file(const std::string& path) {
 			meshes.clear();
 
 			Assimp::Importer importer;
-			const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals);
+			/*const aiScene* scene = importer.ReadFile(path, aiProcess_ValidateDataStructure | aiProcess_MakeLeftHanded | 
+				aiProcess_JoinIdenticalVertices | aiProcess_FindInstances | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | 
+				aiProcess_RemoveRedundantMaterials | aiProcess_FindInvalidData | aiProcess_Triangulate | 
+				aiProcess_GenNormals | aiProcess_GenUVCoords);*/
+			const aiScene* scene = importer.ReadFile(path, aiProcess_MakeLeftHanded | aiProcess_Triangulate);
 
 #ifdef _DEBUG
 			if (scene == NULL || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || scene->mRootNode == NULL) {
@@ -310,8 +365,25 @@ namespace gre {
 			}
 #endif // _DEBUG
 
+			// Loading all materials
 			std::unordered_map<std::string, Texture> uploaded_textures;
-			process_node(scene->mRootNode, scene, path.substr(0, path.find_last_of('/')), Matrix4x4::one_matrix(), uploaded_textures);
+			const std::string directory = path.substr(0, path.find_last_of('/'));
+			std::vector<Material> materials;
+			materials.reserve(scene->mNumMaterials);
+			for (size_t i = 0; i < scene->mNumMaterials; ++i) {
+				materials.push_back(load_material_data(scene->mMaterials[i], scene, directory, uploaded_textures));
+			}
+
+			// Loading all meshes
+			std::vector<Mesh> scene_meshes;
+			scene_meshes.reserve(scene->mNumMeshes);
+			for (size_t i = 0; i < scene->mNumMeshes; ++i) {
+				scene_meshes.push_back(load_mesh_data(scene->mMeshes[i]));
+				scene_meshes.back().material = materials[scene->mMeshes[i]->mMaterialIndex];
+				scene_meshes.back().material.use_vertex_color = scene->mMeshes[i]->GetNumColorChannels() > 0;
+			}
+
+			process_node(scene->mRootNode, Matrix4x4::one_matrix(), scene_meshes);
 		}
 
 		void draw_depth_map() const {
