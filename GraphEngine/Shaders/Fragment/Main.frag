@@ -1,7 +1,7 @@
 #version 430 core
 
 const int NR_LIGHTS = 3;
-const int NR_CAMERAS = 2;
+const int NR_CAMERAS = 1;
 
 
 struct Light {

@@ -213,13 +213,20 @@ namespace gre {
 #endif // _DEBUG
 
 			if (update_normals) {
-#ifdef _DEBUG
-				if (positions.size() < 3) {
-					throw GreInvalidArgument(__FILE__, __LINE__, "set_positions, invalid number of points for automatic calculation of normals.\n\n");
-				}
-#endif // _DEBUG
+				std::vector<Vec3> normals(count_points_, Vec3(0.0));
+				std::vector<GLuint> indices = get_indices();
+				for (size_t i = 0; i < count_indices_; i += 3) {
+					Vec3 normal = (positions[indices[i + 2]] - positions[indices[i]]) ^ (positions[indices[i + 1]] - positions[indices[i]]);
+					if (normal.length() > EPS) {
+						normal = normal.normalize();
+					}
 
-				set_normals(std::vector<Vec3>(count_points_, (positions[2] - positions[0]) ^ (positions[1] - positions[0])));
+					normals[indices[i]] += normal;
+					normals[indices[i + 1]] += normal;
+					normals[indices[i + 2]] += normal;
+				}
+
+				set_normals(normals);
 			}
 		}
 
@@ -294,6 +301,11 @@ namespace gre {
 
 		void set_indices(const std::vector<GLuint>& indices) {
 			count_indices_ = indices.size();
+#ifdef _DEBUG
+			if (count_indices_ % 3 != 0) {
+				throw GreInvalidArgument(__FILE__, __LINE__, "set_indices, invalid number of indices.\n\n");
+			}
+#endif // _DEBUG
 
 			glBindVertexArray(vertex_array_);
 
