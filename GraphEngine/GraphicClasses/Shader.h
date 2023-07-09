@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include "GraphicFunctions.h"
-#include "../CommonClasses/Matrix.h"
 
 
 namespace gre {

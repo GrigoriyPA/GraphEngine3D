@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../CommonClasses/Matrix.h"
-#include "../GraphicClasses/GraphicFunctions.h"
+#include "Material.h"
 
 
 namespace gre {

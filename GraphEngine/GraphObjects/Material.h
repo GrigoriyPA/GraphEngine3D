@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../GraphicClasses/Shader.h"
-#include "../GraphicClasses/Texture.h"
+#include "../GraphicClasses/graphic_classes.h"
 
 
 namespace gre {

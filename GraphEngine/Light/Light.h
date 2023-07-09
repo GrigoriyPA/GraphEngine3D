@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../GraphicClasses/Shader.h"
+#include "../GraphObjects/graph_objects.h"
 
 
 namespace gre {

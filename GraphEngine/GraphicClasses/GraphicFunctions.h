@@ -1,8 +1,7 @@
 #pragma once
 
 #include <GL/glew.h>
-#include "../CommonClasses/Functions.h"
-#include "../CommonClasses/Vec3.h"
+#include "../CommonClasses/common_classes.h"
 
 
 namespace gre {

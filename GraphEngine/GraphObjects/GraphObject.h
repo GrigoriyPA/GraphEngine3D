@@ -40,7 +40,7 @@ namespace gre {
             Texture result_texture;
             if (path[0] == '*') {
                 const aiTexture* texture = scene->mTextures[std::stoi(path.substr(1, path.size() - 1))];
-                result_texture.load_from_memory(reinterpret_cast<void*>(texture->pcData), std::max(texture->mHeight, 1u) * texture->mWidth, true);
+                result_texture.load_from_memory(reinterpret_cast<void*>(texture->pcData), static_cast<size_t>(std::max(texture->mHeight, 1u)) * static_cast<size_t>(texture->mWidth), true);
             }
             else {
                 result_texture.load_from_file(directory + "/" + path, true);
@@ -242,7 +242,7 @@ namespace gre {
         }
 
         void process_node(const aiNode* node, Matrix4x4 transform, const std::vector<Mesh>& scene_meshes) {
-            transform = Matrix4x4(node->mTransformation) * transform;
+            transform *= Matrix4x4(node->mTransformation);
 
             for (size_t i = 0; i < node->mNumMeshes; ++i) {
                 Mesh mesh = scene_meshes[node->mMeshes[i]];

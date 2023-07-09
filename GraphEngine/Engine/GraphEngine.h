@@ -1,10 +1,7 @@
 #pragma once
 
-#include "CamerasStorage.h"
-#include "DefaultControlSystem.h"
-#include "GraphObjectStorage.h"
-#include "LightStorage.h"
-#include "../GraphicClasses/Kernel.h"
+#include "../Cameras/cameras.h"
+#include "../Light/lights.h"
 
 
 namespace gre {

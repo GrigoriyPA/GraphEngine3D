@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Light.h"
-#include "../GraphObjects/GraphObject.h"
 
 
 namespace gre {

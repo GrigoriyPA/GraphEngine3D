@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../GraphObjects/GraphObject.h"
+#include "GraphObject.h"
 
 
 namespace gre {
