@@ -1,7 +1,7 @@
 # GraphEngine3D
 
 The project was created to develop and test a 3D graphics engine.
-For use you need to instal SFML, GLEW, Assimp and add them to standard include path:
+For use you need to instal SFML, GLEW, Assimp and add them to standart include path:
 
 #include <SFML/...>
 
@@ -9,4 +9,4 @@ For use you need to instal SFML, GLEW, Assimp and add them to standard include p
 
 #include <assimp/...>
 
-Must to work in your project.
+Must work in your project.
