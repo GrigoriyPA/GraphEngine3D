@@ -27,7 +27,7 @@ void main() {
         object_model_id = gl_InstanceID;
     }
 
-    gl_Position =  projection * view * model * vec4(position, 1.0);
+    gl_Position = projection * view * model * vec4(position, 1.0);
     tex_coord = vec2(texture_coord.x, 1.0 - texture_coord.y);
     frag_pos = vec3(model * vec4(position, 1.0f));
     norm = transpose(inverse(mat3(model))) * vertex_normal;

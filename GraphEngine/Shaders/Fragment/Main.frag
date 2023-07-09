@@ -153,17 +153,17 @@ void main() {
 
     Material material = object_material;
     if (object_material.use_vertex_color) {
-		material.ambient = vert_color;
+        material.ambient = vert_color;
         material.diffuse = vert_color;
     }
-	if (use_diffuse_map) {
+    if (use_diffuse_map) {
         vec4 diffuse_color = texture(diffuse_map, tex_coord);
-		material.ambient = vec3(diffuse_color);
-		material.diffuse = vec3(diffuse_color);
+        material.ambient = vec3(diffuse_color);
+        material.diffuse = vec3(diffuse_color);
         material.alpha = diffuse_color.w;
-	}
-	if (use_specular_map)
-		material.specular = vec3(texture(specular_map, tex_coord));
+    }
+    if (use_specular_map)
+        material.specular = vec3(texture(specular_map, tex_coord));
     if (use_emission_map)
         material.emission = vec3(texture(emission_map, tex_coord));
 
@@ -174,12 +174,12 @@ void main() {
     vec3 view_dir = normalize(view_pos - frag_pos);
 
     vec3 result_color = vec3(0.0);
-    for(int i = 0; i < NR_LIGHTS; i++) {
+    for (int i = 0; i < NR_LIGHTS; i++) {
         if (i == number_lights)
             break;
 
         if (lights[i].type == 0)
-  	        result_color += calc_dir_light(lights[i], normal, view_dir, material, i);
+            result_color += calc_dir_light(lights[i], normal, view_dir, material, i);
         else if (lights[i].type == 1)
             result_color += calc_point_light(lights[i], normal, view_dir, material, i);
         else

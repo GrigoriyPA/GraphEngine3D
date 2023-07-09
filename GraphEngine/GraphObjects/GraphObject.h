@@ -115,70 +115,34 @@ namespace gre {
             Material mesh_material;
 
             aiColor3D color(0.0, 0.0, 0.0);
-            aiReturn result = material->Get(AI_MATKEY_COLOR_AMBIENT, color);
-            if (result == aiReturn_SUCCESS) {
+            if (material->Get(AI_MATKEY_COLOR_AMBIENT, color) == aiReturn_SUCCESS) {
                 mesh_material.set_ambient(color.r, color.g, color.b);
             }
-#ifdef _DEBUG
-            else {
-                std::cout << "Material loading warning, unable to load ambient color. Error code: " << result << "\n\n";
-            }
-#endif // _DEBUG
             
             color = aiColor3D(0.0, 0.0, 0.0);
-            result = material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-            if (result == aiReturn_SUCCESS) {
+            if (material->Get(AI_MATKEY_COLOR_DIFFUSE, color) == aiReturn_SUCCESS) {
                 mesh_material.set_diffuse(color.r, color.g, color.b);
             }
-#ifdef _DEBUG
-            else {
-                std::cout << "Material loading warning, unable to load diffuse color. Error code: " << result << "\n\n";
-            }
-#endif // _DEBUG
             
             color = aiColor3D(0.0, 0.0, 0.0);
-            result = material->Get(AI_MATKEY_COLOR_SPECULAR, color);
-            if (result == aiReturn_SUCCESS) {
+            if (material->Get(AI_MATKEY_COLOR_SPECULAR, color) == aiReturn_SUCCESS) {
                 mesh_material.set_specular(color.r, color.g, color.b);
             }
-#ifdef _DEBUG
-            else {
-                std::cout << "Material loading warning, unable to load specular color. Error code: " << result << "\n\n";
-            }
-#endif // _DEBUG
             
             color = aiColor3D(0.0, 0.0, 0.0);
-            result = material->Get(AI_MATKEY_COLOR_EMISSIVE, color);
-            if (result == aiReturn_SUCCESS) {
+            if (material->Get(AI_MATKEY_COLOR_EMISSIVE, color) == aiReturn_SUCCESS) {
                 mesh_material.set_emission(color.r, color.g, color.b);
             }
-#ifdef _DEBUG
-            else {
-                std::cout << "Material loading warning, unable to load emissive color. Error code: " << result << "\n\n";
-            }
-#endif // _DEBUG
             
             float opacity;
-            result = material->Get(AI_MATKEY_OPACITY, opacity);
-            if (result == aiReturn_SUCCESS) {
+            if (material->Get(AI_MATKEY_OPACITY, opacity) == aiReturn_SUCCESS) {
                 mesh_material.set_alpha(opacity);
             }
-#ifdef _DEBUG
-            else {
-                std::cout << "Material loading warning, unable to load opacity. Error code: " << result << "\n\n";
-            }
-#endif // _DEBUG
 
             float shininess;
-            result = material->Get(AI_MATKEY_OPACITY, shininess);
-            if (result == aiReturn_SUCCESS) {
+            if (material->Get(AI_MATKEY_OPACITY, shininess) == aiReturn_SUCCESS) {
                 mesh_material.set_shininess(shininess);
             }
-#ifdef _DEBUG
-            else {
-                std::cout << "Material loading warning, unable to load shininess. Error code: " << result << "\n\n";
-            }
-#endif // _DEBUG
 
             load_material_textures(mesh_material, material, scene, directory, uploaded_textures);
 
