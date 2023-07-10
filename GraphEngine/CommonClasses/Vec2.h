@@ -4,7 +4,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <SFML/System.hpp>
-#include "Functions.h"
+#include "Functions/Functions.h"
 
 
 namespace gre {
@@ -195,7 +195,7 @@ namespace gre {
         }
     };
 
-    std::ostream& operator<<(std::ostream& fout, const Vec2& vector) noexcept {
+    std::ostream& operator<<(std::ostream& fout, const Vec2& vector) {
         fout << '(' << vector.x << ", " << vector.y << ')';
         return fout;
     }
