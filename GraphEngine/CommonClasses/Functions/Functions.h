@@ -1,22 +1,10 @@
 #pragma once
 
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
-
-
-#ifdef _DEBUG
-#define DEBUG_LVL2
-#endif // _DEBUG
-
-#ifdef DEBUG_LVL3
-#define DEBUG_LVL2
-#endif // DEBUG_LVL3
-
-#ifdef DEBUG_LVL2
-#define DEBUG_LVL1
-#endif // DEBUG_LVL2
 
 
 // GRE global constants
@@ -60,29 +48,32 @@ namespace gre {
 
 // GRE main log storage
 namespace gre {
-    // GRE main log storage
-    class MainLog {
-    public:
-        struct LogEntry {
-            std::string message;
-            const char* filename;
-            uint32_t line;
-        };
-
-        using const_iterator = std::vector<LogEntry>::const_iterator;
-
-        static void push_entry(const std::string& message, const char* filename, uint32_t line);
-        static void push_entry(const std::string& message);
-
-        static const_iterator begin();
-        static const_iterator end();
-
+    // GRE main log manager
+    class LogManager {
     private:
-        inline static std::vector<LogEntry> log_entries_;
+        inline static LogManager* log_manager_ = nullptr;
+
+        std::ofstream log_out_;
+
+        LogManager();
+
+    public:
+        LogManager(const LogManager& other) = delete;
+
+        void operator=(const LogManager&) = delete;
+
+        static LogManager* GetInstance();
+
+        std::ofstream& log_stream();
     };
 
-    std::ostream& operator<<(std::ostream& fout, const MainLog::LogEntry& entry);
-    std::ostream& operator<<(std::ostream& fout, const MainLog& main_log);
+#define GRE_LOG_ERROR(stream) (gre::LogManager::GetInstance()->log_stream() << "ERROR in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
+
+#ifdef GRE_WARNING_LOG_ENABLED
+    #define GRE_LOG_WARNING(stream) (gre::LogManager::GetInstance()->log_stream() << "WARNING in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
+#else
+    #define GRE_LOG_WARNING(stream)
+#endif
 }  // namespace gre
 
 

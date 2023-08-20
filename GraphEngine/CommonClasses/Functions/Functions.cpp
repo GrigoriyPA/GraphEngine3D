@@ -23,45 +23,19 @@ namespace gre {
 
 // MainLog
 namespace gre {
-    // Changing
-    void MainLog::push_entry(const std::string& message, const char* filename, uint32_t line) {
-        log_entries_.push_back({ .message = message, .filename = filename, .line = line });
-#ifdef DEBUG_LVL3
-        std::cout << log_entries_.back();
-#endif // DEBUG_LVL2
-    }
+    LogManager::LogManager()
+        : log_out_("gre_log.txt")
+    {}
 
-    void MainLog::push_entry(const std::string& message) {
-        push_entry(message, nullptr, 0);
-    }
-
-
-    // Iterating
-    MainLog::const_iterator MainLog::begin() {
-        return log_entries_.begin();
-    }
-
-    MainLog::const_iterator MainLog::end() {
-        return log_entries_.begin();
-    }
-
-    
-    // External operators
-    std::ostream& operator<<(std::ostream& fout, const MainLog::LogEntry& entry) {
-        if (entry.filename != nullptr) {
-            fout << "[GRE_LOG] Error in file " << entry.filename << " line " << entry.line << ", description:\n" << entry.message;
+    LogManager* LogManager::GetInstance() {
+        if (log_manager_ == nullptr) {
+            log_manager_ = new LogManager();
         }
-        else {
-            fout << "[GRE_LOG] Error with description: \n" << entry.message;
-        }
-        return fout;
+        return log_manager_;
     }
 
-    std::ostream& operator<<(std::ostream& fout, const MainLog& main_log) {
-        for (const MainLog::LogEntry& entry : main_log) {
-            fout << entry;
-        }
-        return fout;
+    std::ofstream& LogManager::log_stream() {
+        return log_out_;
     }
 }  // namespace gre
 
