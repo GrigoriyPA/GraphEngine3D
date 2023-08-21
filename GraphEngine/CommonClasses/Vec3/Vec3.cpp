@@ -7,47 +7,47 @@ namespace gre {
 	Vec3::Vec3() noexcept {
 	}
 
-	Vec3::Vec3(double value) noexcept {
-		x = value;
-		y = value;
-		z = value;
-	}
+	Vec3::Vec3(double value) noexcept
+		: x(value)
+		, y(value)
+		, z(value)
+	{}
 
-	Vec3::Vec3(double x, double y, double z) noexcept {
-		this->x = x;
-		this->y = y;
-		this->z = z;
-	}
+	Vec3::Vec3(double x, double y, double z) noexcept
+		: x(x)
+		, y(y)
+		, z(z)
+	{}
 
-	Vec3::Vec3(const Vec2& xy, double z) noexcept {
-		x = xy.x;
-		y = xy.y;
-		this->z = z;
-	}
+	Vec3::Vec3(const Vec2& xy, double z) noexcept
+		: x(xy.x)
+		, y(xy.y)
+		, z(z)
+	{}
 
-	Vec3::Vec3(double x, const Vec2& yz) noexcept {
-		this->x = x;
-		y = yz.x;
-		z = yz.y;
-	}
+	Vec3::Vec3(double x, const Vec2& yz) noexcept
+		: x(x)
+		, y(yz.x)
+		, z(yz.y)
+	{}
 
-	Vec3::Vec3(const sf::Color& color) noexcept {
-		x = color.r;
-		y = color.g;
-		z = color.b;
-	}
+	Vec3::Vec3(const sf::Color& color) noexcept
+		: x(color.r)
+		, y(color.g)
+		, z(color.b)
+	{}
 
-	Vec3::Vec3(const sf::Vector3f& init) noexcept {
-		x = init.x;
-		y = init.y;
-		z = init.z;
-	}
+	Vec3::Vec3(const sf::Vector3f& init) noexcept
+		: x(init.x)
+		, y(init.y)
+		, z(init.z)
+	{}
 
-	Vec3::Vec3(const aiVector3D& init) noexcept {
-		x = init.x;
-		y = init.y;
-		z = init.z;
-	}
+	Vec3::Vec3(const aiVector3D& init) noexcept
+		: x(init.x)
+		, y(init.y)
+		, z(init.z)
+	{}
 
 	// Operators
 	double& Vec3::operator[](size_t index) {

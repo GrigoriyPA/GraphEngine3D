@@ -50,7 +50,7 @@ namespace gre {
 
 		Vec3& operator+=(const Vec3& other)& noexcept;
 
-		Vec3& operator-=(const Vec3& other) & noexcept;
+		Vec3& operator-=(const Vec3& other)& noexcept;
 
 		Vec3& operator*=(double other)& noexcept;
 

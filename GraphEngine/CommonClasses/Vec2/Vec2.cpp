@@ -7,25 +7,25 @@ namespace gre {
 	Vec2::Vec2() noexcept {
 	}
 
-    Vec2::Vec2(double value) noexcept {
-        x = value;
-        y = value;
-    }
+    Vec2::Vec2(double value) noexcept
+        : x(value)
+        , y(value)
+    {}
 
-    Vec2::Vec2(double x, double y) noexcept {
-        this->x = x;
-        this->y = y;
-    }
+    Vec2::Vec2(double x, double y) noexcept
+        : x(x)
+        , y(y)
+    {}
 
-    Vec2::Vec2(const sf::Vector2f& init) noexcept {
-        x = init.x;
-        y = init.y;
-    }
+    Vec2::Vec2(const sf::Vector2f& init) noexcept
+        : x(init.x)
+        , y(init.y)
+    {}
 
-    Vec2::Vec2(const aiVector2D& init) noexcept {
-        x = init.x;
-        y = init.y;
-    }
+    Vec2::Vec2(const aiVector2D& init) noexcept
+        : x(init.x)
+        , y(init.y)
+    {}
 
     // Operators
     Vec2::operator sf::Vector2f() const {
