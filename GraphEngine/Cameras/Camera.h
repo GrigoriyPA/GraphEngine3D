@@ -118,7 +118,7 @@ namespace gre {
             window_ = window;
 
             viewport_size_ = Vec2(window->getSize().x, window->getSize().y);
-            horizont_ = direction_.horizont();
+            horizont_ = direction_.horizon();
             viewport_position_ = Vec2(0.0);
             position = last_position_;
 
@@ -155,7 +155,7 @@ namespace gre {
             viewport_position_ = viewport_position;
             this->position = position;
 
-            horizont_ = direction.horizont();
+            horizont_ = direction.horizon();
             last_position_ = position;
 
             set_projection_matrix();
@@ -263,7 +263,7 @@ namespace gre {
             direction_ = direction.normalize();
 #endif // _DEBUG
 
-            horizont_ = direction.horizont();
+            horizont_ = direction.horizon();
         }
 
         void set_minimal_fps_update_time(double minimal_update_time) {

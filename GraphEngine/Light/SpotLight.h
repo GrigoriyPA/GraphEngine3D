@@ -32,7 +32,7 @@ namespace gre {
         }
 
         Matrix4x4 get_view_matrix() const noexcept {
-            const Vec3& horizont = direction_.horizont();
+            const Vec3& horizont = direction_.horizon();
             return Matrix4x4(horizont, direction_ ^ horizont, direction_).transpose() * Matrix4x4::translation_matrix(-position);
         }
 

@@ -618,7 +618,7 @@ namespace gre {
             std::vector<Vec3> normals;
             for (size_t i = 0; i < count_points; ++i) {
                 positions.push_back(Vec3(cos((2.0 * PI / count_points) * i), 0.0, sin((2.0 * PI / count_points) * i)));
-                normals.push_back((positions.back().horizont() ^ (Vec3(0.0, 1.0, 0.0) - positions.back())).normalize());
+                normals.push_back((positions.back().horizon() ^ (Vec3(0.0, 1.0, 0.0) - positions.back())).normalize());
             }
 
             Mesh mesh(count_points);

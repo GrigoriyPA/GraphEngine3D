@@ -23,11 +23,7 @@ namespace gre {
 
         template <typename T>  // Casts required: double(T)
         Vec2(const std::initializer_list<T>& init) {
-#ifdef _DEBUG
-            if (init.size() != 2) {
-                throw GreInvalidArgument(__FILE__, __LINE__, "Vec2, invalid initializer list size.\n\n");
-            }
-#endif // _DEBUG
+            GRE_ENSURE(init.size() == 2, GreInvalidArgument, "invalid initializer list size");
 
             size_t comp_id = 0;
             for (const T& element : init) {
