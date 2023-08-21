@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include "Vec2.h"
+#include "Vec2/Vec2.h"
 
 
 namespace gre {

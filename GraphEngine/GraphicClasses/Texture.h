@@ -15,7 +15,7 @@ namespace gre {
 	public:
 		Texture() {
 			if (!glew_is_ok()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
 			}
 
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_image_units_);
@@ -23,7 +23,7 @@ namespace gre {
 
 		explicit Texture(const sf::Image& image, bool gamma = true) {
 			if (!glew_is_ok()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "Texture, failed to initialize GLEW.\n\n");
 			}
 
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_image_units_);
@@ -165,7 +165,7 @@ namespace gre {
 		void load_from_file(const std::string& texture_path, bool gamma = true) {
 			sf::Image image;
 			if (!image.loadFromFile(texture_path)) {
-				throw GreRuntimeError(__FILE__, __LINE__, "Texture, texture file loading failed.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "Texture, texture file loading failed.\n\n");
 			}
 
 			set_image(image, gamma);
@@ -174,7 +174,7 @@ namespace gre {
 		void load_from_memory(const void* data, size_t size, bool gamma = true) {
 			sf::Image image;
 			if (!image.loadFromMemory(data, size)) {
-				throw GreRuntimeError(__FILE__, __LINE__, "Texture, texture loading from memory failed.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "Texture, texture loading from memory failed.\n\n");
 			}
 
 			set_image(image, gamma);

@@ -35,7 +35,7 @@ namespace gre {
 
         explicit DirLight(const Vec3& direction) {
             if (!glew_is_ok()) {
-                throw GreRuntimeError(__FILE__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __func__, __LINE__, "DirLight, failed to initialize GLEW.\n\n");
             }
 
 #ifdef _DEBUG

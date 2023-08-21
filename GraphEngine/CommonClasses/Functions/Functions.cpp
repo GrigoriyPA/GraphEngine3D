@@ -3,20 +3,20 @@
 
 // Exceptions
 namespace gre {
-    GreDomainError::GreDomainError(const char* filename, uint32_t line, const std::string& message)
-        : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message)
+    GreDomainError::GreDomainError(const char* filename, const char* function, uint32_t line, const std::string & message)
+        : domain_error("Domain error.\nFilename: " + std::string(filename) + "\nFunction: " + std::string(function) + "\nLine: " + std::to_string(line) + "\nDescription: " + message + "\n\n")
     {}
 
-    GreInvalidArgument::GreInvalidArgument(const char* filename, uint32_t line, const std::string& message) 
-        : invalid_argument("Invalid argument error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message)
+    GreInvalidArgument::GreInvalidArgument(const char* filename, const char* function, uint32_t line, const std::string & message)
+        : invalid_argument("Invalid argument error.\nFilename: " + std::string(filename) + "\nFunction: " + std::string(function) + "\nLine: " + std::to_string(line) + "\nDescription: " + message + "\n\n")
     {}
 
-    GreOutOfRange::GreOutOfRange(const char* filename, uint32_t line, const std::string& message)
-        : out_of_range("Out of range error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message)
+    GreOutOfRange::GreOutOfRange(const char* filename, const char* function, uint32_t line, const std::string & message)
+        : out_of_range("Out of range error.\nFilename: " + std::string(filename) + "\nFunction: " + std::string(function) + "\nLine: " + std::to_string(line) + "\nDescription: " + message + "\n\n")
     {}
 
-    GreRuntimeError::GreRuntimeError(const char* filename, uint32_t line, const std::string& message)
-        : runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nLine: " + std::to_string(line) + "\nDescription: " + message)
+    GreRuntimeError::GreRuntimeError(const char* filename, const char* function, uint32_t line, const std::string & message)
+        : runtime_error("Runtime error.\nFilename: " + std::string(filename) + "\nFunction: " + std::string(function) + "\nLine: " + std::to_string(line) + "\nDescription: " + message + "\n\n")
     {}
 }  // namespace gre
 

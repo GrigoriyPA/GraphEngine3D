@@ -23,25 +23,25 @@ namespace gre {
     // GRE exception for domain error, inheritor of std::domain_error
     class GreDomainError : public std::domain_error {
     public:
-        GreDomainError(const char* filename, uint32_t line, const std::string& message);
+        GreDomainError(const char* filename, const char* function, uint32_t line, const std::string& message);
     };
 
     // GRE exception for invalid argument error, inheritor of std::invalid_argument
     class GreInvalidArgument : public std::invalid_argument {
     public:
-        GreInvalidArgument(const char* filename, uint32_t line, const std::string& message);
+        GreInvalidArgument(const char* filename, const char* function, uint32_t line, const std::string& message);
     };
 
     // GRE exception for out of range error, inheritor of std::out_of_range
     class GreOutOfRange : public std::out_of_range {
     public:
-        GreOutOfRange(const char* filename, uint32_t line, const std::string& message);
+        GreOutOfRange(const char* filename, const char* function, uint32_t line, const std::string& message);
     };
 
     // GRE exception for runtime error, inheritor of std::runtime_error
     class GreRuntimeError : public std::runtime_error {
     public:
-        GreRuntimeError(const char* filename, uint32_t line, const std::string& message);
+        GreRuntimeError(const char* filename, const char* function, uint32_t line, const std::string& message);
     };
 }  // namespace gre
 
@@ -67,12 +67,33 @@ namespace gre {
         std::ofstream& log_stream();
     };
 
+    // GRE log functions
 #define GRE_LOG_ERROR(stream) (gre::LogManager::GetInstance()->log_stream() << "ERROR in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
+#define GRE_ENSURE(condition, error_type, stream)                                   \
+    do {                                                                            \
+        if (!(condition)) {                                                         \
+            GRE_LOG_ERROR(stream);                                                  \
+            std::stringstream str_stream;                                           \
+            str_stream << stream;                                                   \
+            throw error_type(__FILE__, __func__, __LINE__, str_stream.str());       \
+        }                                                                           \
+    } while (false)                                                                 \
 
 #ifdef GRE_WARNING_LOG_ENABLED
+
     #define GRE_LOG_WARNING(stream) (gre::LogManager::GetInstance()->log_stream() << "WARNING in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
+    #define GRE_CHECK(condition, stream)                                                \
+        do {                                                                            \
+            if (!(condition)) {                                                         \
+                GRE_LOG_WARNING(stream);                                                \
+            }                                                                           \
+        } while (false)                                                                 \
+
 #else
+
     #define GRE_LOG_WARNING(stream)
+    #define GRE_CHECK(condition, error_type, stream)
+
 #endif
 }  // namespace gre
 

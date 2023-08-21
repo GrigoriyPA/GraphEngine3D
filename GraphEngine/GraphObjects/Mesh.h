@@ -90,7 +90,7 @@ namespace gre {
 
 		Mesh() {
 			if (!glew_is_ok()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
 
 			count_points_ = 0;
@@ -100,7 +100,7 @@ namespace gre {
 		// Default polygon shape
 		explicit Mesh(size_t count_points) {
 			if (!glew_is_ok()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "Mesh, failed to initialize GLEW.\n\n");
 			}
 #ifdef _DEBUG
 			if (count_points < 2) {

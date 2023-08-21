@@ -289,13 +289,13 @@ namespace gre {
 
         GraphObject() {
             if (!glew_is_ok()) {
-                throw GreRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __func__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
             }
         }
 
         explicit GraphObject(size_t max_count_models) {
             if (!glew_is_ok()) {
-                throw GreRuntimeError(__FILE__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __func__, __LINE__, "GraphObject, failed to initialize GLEW.\n\n");
             }
 
             meshes.set_matrix_buffer(models.create_matrix_buffer(max_count_models));

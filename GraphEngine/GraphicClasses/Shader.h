@@ -14,7 +14,7 @@ namespace gre {
 		std::string load_shader(const std::string& shader_path) {
 			std::ifstream shader_file(shader_path);
 			if (shader_file.fail()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "load_shader, the shader file does not exist.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "load_shader, the shader file does not exist.\n\n");
 			}
 
 			std::string shader_code;
@@ -99,7 +99,7 @@ namespace gre {
 					return split_code[i + 2];
 				}
 			}
-			throw GreInvalidArgument(__FILE__, __LINE__, "find_value, variable not found.\n\n");
+			throw GreInvalidArgument(__FILE__, __func__, __LINE__, "find_value, variable not found.\n\n");
 		}
 
 		static uint64_t find_version(const std::string& code) {
@@ -115,7 +115,7 @@ namespace gre {
 					return std::stoull(split_code[i + 1]);
 				}
 			}
-			throw GreInvalidArgument(__FILE__, __LINE__, "find_version, version not found.\n\n");
+			throw GreInvalidArgument(__FILE__, __func__, __LINE__, "find_version, version not found.\n\n");
 		}
 
 		static std::string load_shader_info_log(GLuint shader) {
@@ -153,13 +153,13 @@ namespace gre {
 	public:
 		Shader() {
 			if (!glew_is_ok()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
 			}
 		}
 
 		Shader(const std::string& vertex_shader_code, const std::string& fragment_shader_code) {
 			if (!glew_is_ok()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "Shader, failed to initialize GLEW.\n\n");
 			}
 
 			set_shader_code(vertex_shader_code, fragment_shader_code);
@@ -424,7 +424,7 @@ namespace gre {
 					glUniformMatrix2x4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw GreInvalidArgument(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreInvalidArgument(__FILE__, __func__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
@@ -440,7 +440,7 @@ namespace gre {
 					glUniformMatrix3x4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw GreInvalidArgument(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreInvalidArgument(__FILE__, __func__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
@@ -456,12 +456,12 @@ namespace gre {
 					glUniformMatrix4fv(get_uniform_location(uniform_name), count, transpose, value);
 					break;
 				default:
-					throw GreInvalidArgument(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+					throw GreInvalidArgument(__FILE__, __func__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 					break;
 				}
 				break;
 			default:
-				throw GreInvalidArgument(__FILE__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
+				throw GreInvalidArgument(__FILE__, __func__, __LINE__, "set_uniform_matrix, invalid matrix size.\n\n");
 				break;
 			}
 #ifdef _DEBUG

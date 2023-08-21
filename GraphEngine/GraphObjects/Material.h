@@ -61,7 +61,7 @@ namespace gre {
 
         Material() {
             if (!glew_is_ok()) {
-                throw GreRuntimeError(__FILE__, __LINE__, "Material, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __func__, __LINE__, "Material, failed to initialize GLEW.\n\n");
             }
         }
 
@@ -108,7 +108,7 @@ namespace gre {
 
         void set_ambient(const Vec3& ambient) {
 #ifdef _DEBUG
-            check_color_value(__FILE__, __LINE__, __func__, ambient);
+            check_color_value(__FILE__, __func__, __LINE__, ambient);
 #endif // _DEBUG
             ambient_ = ambient;
         }
@@ -119,7 +119,7 @@ namespace gre {
 
         void set_diffuse(const Vec3& diffuse) {
 #ifdef _DEBUG
-            check_color_value(__FILE__, __LINE__, __func__, diffuse);
+            check_color_value(__FILE__, __func__, __LINE__, diffuse);
 #endif // _DEBUG
             diffuse_ = diffuse;
         }
@@ -130,7 +130,7 @@ namespace gre {
 
         void set_specular(const Vec3& specular) {
 #ifdef _DEBUG
-            check_color_value(__FILE__, __LINE__, __func__, specular);
+            check_color_value(__FILE__, __func__, __LINE__, specular);
 #endif // _DEBUG
             specular_ = specular;
         }
@@ -141,7 +141,7 @@ namespace gre {
 
         void set_emission(const Vec3& emission) {
 #ifdef _DEBUG
-            check_color_value(__FILE__, __LINE__, __func__, emission);
+            check_color_value(__FILE__, __func__, __LINE__, emission);
 #endif // _DEBUG
             emission_ = emission;
         }

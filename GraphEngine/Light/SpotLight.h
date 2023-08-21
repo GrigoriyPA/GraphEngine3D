@@ -41,7 +41,7 @@ namespace gre {
 
         SpotLight(const Vec3& position, const Vec3& direction, double border_in, double border_out) {
             if (!glew_is_ok()) {
-                throw GreRuntimeError(__FILE__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
+                throw GreRuntimeError(__FILE__, __func__, __LINE__, "SpotLight, failed to initialize GLEW.\n\n");
             }
 
 #ifdef _DEBUG

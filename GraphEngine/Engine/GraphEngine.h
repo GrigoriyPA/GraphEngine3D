@@ -273,7 +273,7 @@ namespace gre {
 			set_active();
 
 			if (!glew_is_ok()) {
-				throw GreRuntimeError(__FILE__, __LINE__, "GraphEngine, failed to initialize GLEW.\n\n");
+				throw GreRuntimeError(__FILE__, __func__, __LINE__, "GraphEngine, failed to initialize GLEW.\n\n");
 			}
 
 			depth_shader_.load_from_file("GraphEngine/Shaders/Vertex/Depth.vert", "GraphEngine/Shaders/Fragment/Depth.frag");
@@ -375,7 +375,7 @@ namespace gre {
 
 		void set_border_color(const Vec3& color) {
 #ifdef _DEBUG
-			check_color_value(__FILE__, __LINE__, __func__, color);
+			check_color_value(__FILE__, __func__, __LINE__, color);
 #endif // _DEBUG
 
 			set_active();
@@ -389,7 +389,7 @@ namespace gre {
 
 		void set_clear_color(const Vec3& color) {
 #ifdef _DEBUG
-			check_color_value(__FILE__, __LINE__, __func__, color);
+			check_color_value(__FILE__, __func__, __LINE__, color);
 #endif // _DEBUG
 
 			set_active();

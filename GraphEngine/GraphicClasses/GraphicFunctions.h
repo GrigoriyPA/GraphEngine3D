@@ -30,12 +30,12 @@ namespace gre {
 			default:                               error = "UNKNOWN"; break;
 		}
 
-		throw GreRuntimeError(filename, line, std::string(func_name) + ", GL error with name \"" + error + "\".\n\n");
+		throw GreRuntimeError(filename, __func__, line, std::string(func_name) + ", GL error with name \"" + error + "\".\n\n");
 	}
 
 	void check_color_value(const char* filename, uint32_t line, const char* func_name, const Vec3& color) {
 		if (color.x < 0.0 || 1.0 < color.x || color.y < 0.0 || 1.0 < color.y || color.z < 0.0 || 1.0 < color.z) {
-			throw GreInvalidArgument(filename, line, std::string(func_name) + ", invalid color value.\n\n");
+			throw GreInvalidArgument(filename, __func__, line, std::string(func_name) + ", invalid color value.\n\n");
 		}
 	}
 }
