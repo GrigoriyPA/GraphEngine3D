@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <functional>
-#include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -92,7 +92,7 @@ namespace gre {
 #else
 
     #define GRE_LOG_WARNING(stream)
-    #define GRE_CHECK(condition, error_type, stream)
+    #define GRE_CHECK(condition, stream)
 
 #endif
 }  // namespace gre

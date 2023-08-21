@@ -4,27 +4,22 @@
 #include <initializer_list>
 #include <iostream>
 #include <SFML/System.hpp>
-#include "Functions/Functions.h"
+#include "../Functions/Functions.h"
 
 
+// Representation of a two-dimensional vector
 namespace gre {
     class Vec2 {
     public:
         double x = 0.0;
         double y = 0.0;
 
-        Vec2() noexcept {
-        }
+        // Constructors
+        Vec2() noexcept;
 
-        explicit Vec2(double value) noexcept {
-            x = value;
-            y = value;
-        }
+        explicit Vec2(double value) noexcept;
 
-        Vec2(double x, double y) noexcept {
-            this->x = x;
-            this->y = y;
-        }
+        Vec2(double x, double y) noexcept;
 
         template <typename T>  // Casts required: double(T)
         Vec2(const std::initializer_list<T>& init) {
@@ -40,170 +35,58 @@ namespace gre {
             }
         }
 
-        explicit Vec2(const sf::Vector2f& init) noexcept {
-            x = init.x;
-            y = init.y;
-        }
+        explicit Vec2(const sf::Vector2f& init) noexcept;
 
-        explicit Vec2(const aiVector2D& init) noexcept {
-            x = init.x;
-            y = init.y;
-        }
+        explicit Vec2(const aiVector2D& init) noexcept;
 
-        explicit operator sf::Vector2f() const {
-            return sf::Vector2f(static_cast<float>(x), static_cast<float>(y));
-        }
+        // Operators
+        explicit operator sf::Vector2f() const;
 
-        double& operator[](size_t index) {
-            if (index == 0) {
-                return x;
-            }
+        double& operator[](size_t index);
 
-#ifdef _DEBUG
-            if (index == 1) {
-                return y;
-            }
-            throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
-#endif // _DEBUG
+        const double& operator[](size_t index) const;
 
-            return y;
-        }
+        bool operator==(const Vec2& other) const noexcept;
 
-        const double& operator[](size_t index) const {
-            if (index == 0) {
-                return x;
-            }
+        bool operator!=(const Vec2& other) const noexcept;
 
-#ifdef _DEBUG
-            if (index == 1) {
-                return y;
-            }
-            throw GreOutOfRange(__FILE__, __LINE__, "operator[], invalid index.\n\n");
-#endif // _DEBUG
+        Vec2& operator+=(const Vec2& other)& noexcept;
 
-            return y;
-        }
+        Vec2& operator-=(const Vec2& other)& noexcept;
 
-        bool operator==(const Vec2& other) const noexcept {
-            return equality(x, other.x) && equality(y, other.y);
-        }
+        Vec2& operator*=(double other)& noexcept;
 
-        bool operator!=(const Vec2& other) const noexcept {
-            return !equality(x, other.x) || !equality(y, other.y);
-        }
+        Vec2& operator/=(double other)&;
 
-        Vec2& operator+=(const Vec2& other)& noexcept {
-            x += other.x;
-            y += other.y;
-            return *this;
-        }
+        Vec2& operator^=(double other)&;
 
-        Vec2& operator-=(const Vec2& other)& noexcept {
-            x -= other.x;
-            y -= other.y;
-            return *this;
-        }
+        Vec2 operator-() const noexcept;
 
-        Vec2& operator*=(double other)& noexcept {
-            x *= other;
-            y *= other;
-            return *this;
-        }
+        Vec2 operator+(const Vec2& other) const noexcept;
 
-        Vec2& operator/=(double other)& {
-#ifdef _DEBUG
-            if (equality(other, 0.0)) {
-                throw GreDomainError(__FILE__, __LINE__, "operator/=, division by zero.\n\n");
-            }
-#endif // _DEBUG
+        Vec2 operator-(const Vec2& other) const noexcept;
 
-            x /= other;
-            y /= other;
-            return *this;
-        }
+        Vec2 operator*(double other) const noexcept;
 
-        Vec2& operator^=(double other)& {
-#ifdef _DEBUG
-            if (x < 0.0 || y < 0.0) {
-                throw GreDomainError(__FILE__, __LINE__, "operator^=, raising a negative number to a power.\n\n");
-            }
-#endif // _DEBUG
+        double operator*(const Vec2& other) const noexcept;
 
-            x = std::pow(x, other);
-            y = std::pow(y, other);
-            return *this;
-        }
+        double operator^(const Vec2& other) const noexcept;
 
-        Vec2 operator-() const noexcept {
-            return Vec2(-x, -y);
-        }
+        Vec2 operator^(double other) const;
 
-        Vec2 operator+(const Vec2& other) const noexcept {
-            return Vec2(x + other.x, y + other.y);
-        }
+        Vec2 operator/(double other) const;
 
-        Vec2 operator-(const Vec2& other) const noexcept {
-            return Vec2(x - other.x, y - other.y);
-        }
+        // Math functions
+        double length() const;
 
-        Vec2 operator*(double other) const noexcept {
-            return Vec2(x * other, y * other);
-        }
-
-        double operator*(const Vec2& other) const noexcept {
-            return x * other.x + y * other.y;
-        }
-
-        double operator^(const Vec2& other) const noexcept {
-            return x * other.y - y * other.x;
-        }
-
-        Vec2 operator^(double other) const {
-#ifdef _DEBUG
-            if (x < 0.0 || y < 0.0) {
-                throw GreDomainError(__FILE__, __LINE__, "operator^, raising a negative number to a power.\n\n");
-            }
-#endif // _DEBUG
-
-            return Vec2(std::pow(x, other), std::pow(y, other));
-        }
-
-        Vec2 operator/(double other) const {
-#ifdef _DEBUG
-            if (equality(other, 0.0)) {
-                throw GreDomainError(__FILE__, __LINE__, "operator/, division by zero.\n\n");
-            }
-#endif // _DEBUG
-
-            return Vec2(x / other, y / other);
-        }
-
-        double length() const {
-            return std::sqrt(x * x + y * y);
-        }
-
-        Vec2 normalize() const {
-            double vect_length = length();
-
-#ifdef _DEBUG
-            if (equality(vect_length, 0.0)) {
-                throw GreDomainError(__FILE__, __LINE__, "normalize, null vector normalization.\n\n");
-            }
-#endif // _DEBUG
-
-            return *this / vect_length;
-        }
+        Vec2 normalize() const;
     };
 
-    std::ostream& operator<<(std::ostream& fout, const Vec2& vector) {
-        fout << '(' << vector.x << ", " << vector.y << ')';
-        return fout;
-    }
+    // External operators
+    std::ostream& operator<<(std::ostream& fout, const Vec2& vector);
 
-    Vec2 operator*(double value, const Vec2& vector) noexcept {
-        return Vec2(vector.x * value, vector.y * value);
-    }
-}
+    Vec2 operator*(double value, const Vec2& vector) noexcept;
+}  // namespace gre
 
 template <>
 struct std::hash<gre::Vec2> {
