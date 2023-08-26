@@ -54,9 +54,9 @@ namespace gre {
 
 		Vec3& operator*=(double other)& noexcept;
 
-		Vec3& operator/=(double other)&;
+		Vec3& operator/=(double other)& noexcept;
 
-		Vec3& operator^=(double other)&;
+		Vec3& operator^=(double other)& noexcept;
 
 		Vec3 operator-() const noexcept;
 
@@ -68,16 +68,16 @@ namespace gre {
 
 		double operator*(const Vec3& other) const noexcept;
 
-		Vec3 operator/(double other) const;
+		Vec3 operator/(double other) const noexcept;
 
 		Vec3 operator^(const Vec3& other) const noexcept;
 
-		Vec3 operator^(double other) const;
+		Vec3 operator^(double other) const noexcept;
 
 		// Math functions
 		double length() const;
 
-		Vec3 normalize() const;
+		Vec3 normalize() const noexcept;
 
 		// Other functions
 		Vec3 horizon() const noexcept;

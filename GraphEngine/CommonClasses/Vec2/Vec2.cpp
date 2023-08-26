@@ -70,7 +70,7 @@ namespace gre {
         return *this;
     }
 
-    Vec2& Vec2::operator/=(double other)& {
+    Vec2& Vec2::operator/=(double other)& noexcept {
         GRE_CHECK(!equality(other, 0.0), "division by zero");
 
         x /= other;
@@ -78,7 +78,7 @@ namespace gre {
         return *this;
     }
 
-    Vec2& Vec2::operator^=(double other)& {
+    Vec2& Vec2::operator^=(double other)& noexcept {
         GRE_CHECK(x >= 0.0 && y >= 0.0, "raising a negative number to a power");
 
         x = std::pow(x, other);
@@ -110,13 +110,13 @@ namespace gre {
         return x * other.y - y * other.x;
     }
 
-    Vec2 Vec2::operator^(double other) const {
+    Vec2 Vec2::operator^(double other) const noexcept {
         GRE_CHECK(x >= 0.0 && y >= 0.0, "raising a negative number to a power");
 
         return Vec2(std::pow(x, other), std::pow(y, other));
     }
 
-    Vec2 Vec2::operator/(double other) const {
+    Vec2 Vec2::operator/(double other) const noexcept {
         GRE_CHECK(!equality(other, 0.0), "division by zero");
 
         return Vec2(x / other, y / other);
@@ -127,7 +127,7 @@ namespace gre {
         return std::sqrt(x * x + y * y);
     }
 
-    Vec2 Vec2::normalize() const {
+    Vec2 Vec2::normalize() const noexcept {
         double vect_length = length();
 
         GRE_CHECK(!equality(vect_length, 0.0), "null vector normalization");

@@ -52,9 +52,9 @@ namespace gre {
 
         Vec2& operator*=(double other)& noexcept;
 
-        Vec2& operator/=(double other)&;
+        Vec2& operator/=(double other)& noexcept;
 
-        Vec2& operator^=(double other)&;
+        Vec2& operator^=(double other)& noexcept;
 
         Vec2 operator-() const noexcept;
 
@@ -68,14 +68,14 @@ namespace gre {
 
         double operator^(const Vec2& other) const noexcept;
 
-        Vec2 operator^(double other) const;
+        Vec2 operator^(double other) const noexcept;
 
-        Vec2 operator/(double other) const;
+        Vec2 operator/(double other) const noexcept;
 
         // Math functions
         double length() const;
 
-        Vec2 normalize() const;
+        Vec2 normalize() const noexcept;
     };
 
     // External operators

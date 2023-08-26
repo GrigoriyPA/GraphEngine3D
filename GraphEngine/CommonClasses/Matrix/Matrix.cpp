@@ -25,7 +25,7 @@ namespace gre {
             { vector_x.x, vector_y.x, vector_z.x, 0.0 },
             { vector_x.y, vector_y.y, vector_z.y, 0.0 },
             { vector_x.z, vector_y.z, vector_z.z, 0.0 },
-            {        0.0,        0.0,        0.0, 1.0 },
+            {        0.0,        0.0,        0.0, 1.0 }
         });
     }
 
@@ -97,7 +97,7 @@ namespace gre {
         return *this;
     }
 
-    Matrix4x4& Matrix4x4::operator/=(double other)& {
+    Matrix4x4& Matrix4x4::operator/=(double other)& noexcept {
         GRE_CHECK(!equality(other, 0.0), "division by zero");
 
         for (uint32_t i = 0; i < 4; i++) {
@@ -148,7 +148,7 @@ namespace gre {
         return result;
     }
 
-    Matrix4x4 Matrix4x4::operator/(double other) const {
+    Matrix4x4 Matrix4x4::operator/(double other) const noexcept {
         GRE_CHECK(!equality(other, 0.0), "division by zero");
 
         Matrix4x4 result = *this;
@@ -166,7 +166,7 @@ namespace gre {
         return result;
     }
 
-    Matrix4x4 Matrix4x4::inverse() const {
+    Matrix4x4 Matrix4x4::inverse() const noexcept {
         Matrix4x4 result;
 
         result[0][0] = algebraic_addition(1, 2, 3, 1, 2, 3);
@@ -196,7 +196,7 @@ namespace gre {
         return result / det;
     }
 
-    Matrix4x4 Matrix4x4::normal_transform(const Matrix4x4& transform) {
+    Matrix4x4 Matrix4x4::normal_transform(const Matrix4x4& transform) noexcept {
         return transform.inverse().transpose();
     }
 
@@ -206,7 +206,7 @@ namespace gre {
             { 1.0, 0.0, 0.0, 0.0 },
             { 0.0, 1.0, 0.0, 0.0 },
             { 0.0, 0.0, 1.0, 0.0 },
-            { 0.0, 0.0, 0.0, 1.0 },
+            { 0.0, 0.0, 0.0, 1.0 }
         });
     }
 
@@ -215,7 +215,7 @@ namespace gre {
             { scale_x,     0.0,     0.0, 0.0 },
             {     0.0, scale_y,     0.0, 0.0 },
             {     0.0,     0.0, scale_z, 0.0 },
-            {     0.0,     0.0,     0.0, 1.0 },
+            {     0.0,     0.0,     0.0, 1.0 }
         });
     }
 
@@ -224,7 +224,7 @@ namespace gre {
             { scale.x,     0.0,     0.0, 0.0 },
             {     0.0, scale.y,     0.0, 0.0 },
             {     0.0,     0.0, scale.z, 0.0 },
-            {     0.0,     0.0,     0.0, 1.0 },
+            {     0.0,     0.0,     0.0, 1.0 }
         });
     }
 
@@ -233,7 +233,7 @@ namespace gre {
             { scale,   0.0,   0.0, 0.0 },
             {   0.0, scale,   0.0, 0.0 },
             {   0.0,   0.0, scale, 0.0 },
-            {   0.0,   0.0,   0.0, 1.0 },
+            {   0.0,   0.0,   0.0, 1.0 }
         });
     }
 
@@ -242,11 +242,11 @@ namespace gre {
             { 1.0, 0.0, 0.0, translation.x },
             { 0.0, 1.0, 0.0, translation.y },
             { 0.0, 0.0, 1.0, translation.z },
-            { 0.0, 0.0, 0.0,           1.0 },
+            { 0.0, 0.0, 0.0,           1.0 }
         });
     }
 
-    Matrix4x4 Matrix4x4::rotation_matrix(const Vec3& axis, double angle) {
+    Matrix4x4 Matrix4x4::rotation_matrix(const Vec3& axis, double angle) noexcept {
         GRE_CHECK(!equality(axis.length(), 0.0), "the axis vector has zero length");
 
         const Vec3& norm_axis = axis.normalize();
@@ -260,8 +260,17 @@ namespace gre {
             {     c + x * x * (1.0 - c), x * y * (1.0 - c) - z * s, x * z * (1.0 - c) + y * s, 0.0 },
             { y * x * (1.0 - c) + z * s,     c + y * y * (1.0 - c), y * z * (1.0 - c) - x * s, 0.0 },
             { z * x * (1.0 - c) - y * s, z * y * (1.0 - c) + x * s,     c + z * z * (1.0 - c), 0.0 },
-            {                       0.0,                       0.0,                       0.0, 1.0 },
+            {                       0.0,                       0.0,                       0.0, 1.0 }
         });
+    }
+
+    Matrix4x4 Matrix4x4::rotation_matrix(const Quaternion& rotation_quaternion) noexcept {
+        GRE_CHECK(axis.length() <= 1.0, "quaternion does not represent rotation");
+
+        Vec3 axis = rotation_quaternion.get_imaginary();
+        double angle = 2.0 * atan2(axis.length(), rotation_quaternion.x);
+
+        return rotation_matrix(axis, angle);
     }
 
     // Private functions

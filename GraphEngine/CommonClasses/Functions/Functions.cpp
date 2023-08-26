@@ -34,7 +34,7 @@ namespace gre {
         return log_manager_;
     }
 
-    std::ofstream& LogManager::log_stream() {
+    std::ofstream& LogManager::log_stream() noexcept {
         return log_out_;
     }
 }  // namespace gre

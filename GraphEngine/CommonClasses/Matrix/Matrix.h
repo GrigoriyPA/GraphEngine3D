@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Vec3/Vec3.h"
+#include "../Quaternion/Quaternion.h"
 
 
 // Representation of a 4x4 matrix
@@ -65,7 +65,7 @@ namespace gre {
 
         Matrix4x4& operator*=(const Matrix4x4& other)& noexcept;
 
-        Matrix4x4& operator/=(double other)&;
+        Matrix4x4& operator/=(double other)& noexcept;
 
         Matrix4x4 operator-() const noexcept;
 
@@ -79,14 +79,14 @@ namespace gre {
 
         Vec3 operator*(const Vec3& other) const noexcept;
 
-        Matrix4x4 operator/(double other) const;
+        Matrix4x4 operator/(double other) const noexcept;
 
         // Math functions
         Matrix4x4 transpose() const noexcept;
 
-        Matrix4x4 inverse() const;
+        Matrix4x4 inverse() const noexcept;
 
-        static Matrix4x4 normal_transform(const Matrix4x4& transform);
+        static Matrix4x4 normal_transform(const Matrix4x4& transform) noexcept;
 
         // Precalculated matrices
         static Matrix4x4 one_matrix() noexcept;
@@ -99,7 +99,9 @@ namespace gre {
 
         static Matrix4x4 translation_matrix(const Vec3& translation) noexcept;
 
-        static Matrix4x4 rotation_matrix(const Vec3& axis, double angle);
+        static Matrix4x4 rotation_matrix(const Vec3& axis, double angle) noexcept;
+
+        static Matrix4x4 rotation_matrix(const Quaternion& rotation_quaternion) noexcept;
     };
 
     // External operators

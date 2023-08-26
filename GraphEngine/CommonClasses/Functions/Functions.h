@@ -64,7 +64,7 @@ namespace gre {
 
         static LogManager* GetInstance();
 
-        std::ofstream& log_stream();
+        std::ofstream& log_stream() noexcept;
     };
 
     // GRE log functions

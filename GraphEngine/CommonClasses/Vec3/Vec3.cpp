@@ -53,25 +53,21 @@ namespace gre {
 	double& Vec3::operator[](size_t index) {
 		GRE_ENSURE(index <= 2, GreOutOfRange, "index out of range");
 
-		if (index == 0) {
-			return x;
+		switch (index) {
+			case 0: return x;
+			case 1: return y;
+			case 2: return z;
 		}
-		if (index == 1) {
-			return y;
-		}
-		return z;
 	}
 
 	const double& Vec3::operator[](size_t index) const {
 		GRE_ENSURE(index <= 2, GreOutOfRange, "index out of range");
 
-		if (index == 0) {
-			return x;
+		switch (index) {
+			case 0: return x;
+			case 1: return y;
+			case 2: return z;
 		}
-		if (index == 1) {
-			return y;
-		}
-		return z;
 	}
 
 	bool Vec3::operator==(const Vec3& other) const noexcept {
@@ -103,7 +99,7 @@ namespace gre {
 		return *this;
 	}
 
-	Vec3& Vec3::operator/=(double other)& {
+	Vec3& Vec3::operator/=(double other)& noexcept {
 		GRE_CHECK(!equality(other, 0.0), "division by zero");
 
 		x /= other;
@@ -112,7 +108,7 @@ namespace gre {
 		return *this;
 	}
 
-	Vec3& Vec3::operator^=(double other)& {
+	Vec3& Vec3::operator^=(double other)& noexcept {
 		GRE_CHECK(x >= 0.0 && y >= 0.0 && x >= 0.0, "raising a negative number to a power");
 
 		x = std::pow(x, other);
@@ -141,7 +137,7 @@ namespace gre {
 		return x * other.x + y * other.y + z * other.z;
 	}
 
-	Vec3 Vec3::operator/(double other) const {
+	Vec3 Vec3::operator/(double other) const noexcept {
 		GRE_CHECK(!equality(other, 0.0), "division by zero");
 
 		return Vec3(x / other, y / other, z / other);
@@ -151,7 +147,7 @@ namespace gre {
 		return Vec3(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x);
 	}
 
-	Vec3 Vec3::operator^(double other) const {
+	Vec3 Vec3::operator^(double other) const noexcept {
 		GRE_CHECK(x >= 0.0 && y >= 0.0 && z >= 0.0, "raising a negative number to a power");
 
 		return Vec3(std::pow(x, other), std::pow(y, other), std::pow(z, other));
@@ -162,7 +158,7 @@ namespace gre {
 		return std::sqrt(x * x + y * y + z * z);
 	}
 
-	Vec3 Vec3::normalize() const {
+	Vec3 Vec3::normalize() const noexcept {
 		double vect_length = length();
 
 		GRE_CHECK(!equality(vect_length, 0.0), "null vector normalization");
