@@ -4,7 +4,7 @@
 #include <initializer_list>
 #include <iostream>
 #include <SFML/System.hpp>
-#include "../Functions/Functions.h"
+#include "../Utils/Functions.h"
 
 
 // Representation of a two-dimensional vector

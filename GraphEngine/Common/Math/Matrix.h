@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Quaternion/Quaternion.h"
+#include "Quaternion.h"
 
 
 // Representation of a 4x4 matrix

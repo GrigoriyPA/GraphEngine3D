@@ -1,7 +1,7 @@
 #pragma once
 
 #include <GL/glew.h>
-#include "../CommonClasses/common_classes.h"
+#include "../Common/common.h"
 
 
 namespace gre {
