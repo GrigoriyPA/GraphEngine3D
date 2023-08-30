@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include "Vec2.h"
+#include "Vec2.hpp"
 
 
 // Representation of a three-dimensional vector
