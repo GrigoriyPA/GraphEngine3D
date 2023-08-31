@@ -124,4 +124,4 @@ namespace gre {
 
 		static GLint get_current_program();
 	};
-}
+}  // namespace gre
