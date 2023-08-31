@@ -68,6 +68,7 @@ namespace gre {
         std::ofstream& log_stream() noexcept;
     };
 
+#define GRE_WARNING_LOG_ENABLED
 
     // GRE log functions
 #define GRE_LOG_ERROR(stream) (gre::LogManager::GetInstance()->log_stream() << "ERROR in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
