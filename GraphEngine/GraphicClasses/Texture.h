@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GraphicFunctions.h"
+#include "../Common/common.hpp"
 
 
 namespace gre {

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Camera.h"
+#include "Camera/Camera.hpp"
 
 
 namespace gre {
-	struct ObjectDesc {
+	struct ObjectDescription {
 		bool exist = false;
 		size_t object_id = 0;
 		size_t model_id = 0;
@@ -81,7 +81,7 @@ namespace gre {
 			return *this;
 		}
 
-		ObjectDesc get_check_object(size_t id, Vec3& intersect_point) {
+		ObjectDescription get_check_object(size_t id, Vec3& intersect_point) {
 #ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
@@ -98,7 +98,7 @@ namespace gre {
 			return { .exist = object_id >= 0 && model_id >= 0, .object_id = static_cast<size_t>(object_id), .model_id = static_cast<size_t>(model_id) };
 		}
 
-		ObjectDesc get_check_object(size_t id) {
+		ObjectDescription get_check_object(size_t id) {
 #ifdef _DEBUG
 			if (!contains(id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");

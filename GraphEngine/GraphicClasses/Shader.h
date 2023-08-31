@@ -1,7 +1,7 @@
 #pragma once
 
 #include <fstream>
-#include "GraphicFunctions.h"
+#include "../Common/common.hpp"
 
 
 namespace gre {

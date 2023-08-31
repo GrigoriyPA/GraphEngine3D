@@ -1,5 +1,6 @@
 #pragma once
 
+#include <GL/glew.h>
 #include <fstream>
 #include <functional>
 #include <sstream>
@@ -67,32 +68,59 @@ namespace gre {
         std::ofstream& log_stream() noexcept;
     };
 
+
     // GRE log functions
 #define GRE_LOG_ERROR(stream) (gre::LogManager::GetInstance()->log_stream() << "ERROR in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
-#define GRE_ENSURE(condition, error_type, stream)                                   \
-    do {                                                                            \
-        if (!(condition)) {                                                         \
-            GRE_LOG_ERROR(stream);                                                  \
-            std::stringstream str_stream;                                           \
-            str_stream << stream;                                                   \
-            throw error_type(__FILE__, __func__, __LINE__, str_stream.str());       \
-        }                                                                           \
-    } while (false)                                                                 \
+
+#define GRE_ENSURE(condition, error_type, stream)                                                           \
+    do {                                                                                                    \
+        if (!(condition)) {                                                                                 \
+            GRE_LOG_ERROR(stream);                                                                          \
+            std::stringstream str_stream;                                                                   \
+            str_stream << stream;                                                                           \
+            throw error_type(__FILE__, __func__, __LINE__, str_stream.str());                               \
+        }                                                                                                   \
+    } while (false)
+
 
 #ifdef GRE_WARNING_LOG_ENABLED
 
     #define GRE_LOG_WARNING(stream) (gre::LogManager::GetInstance()->log_stream() << "WARNING in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
-    #define GRE_CHECK(condition, stream)                                                \
-        do {                                                                            \
-            if (!(condition)) {                                                         \
-                GRE_LOG_WARNING(stream);                                                \
-            }                                                                           \
-        } while (false)                                                                 \
+    
+    #define GRE_CHECK(condition, stream)                                                                    \
+        do {                                                                                                \
+            if (!(condition)) {                                                                             \
+                GRE_LOG_WARNING(stream);                                                                    \
+            }                                                                                               \
+        } while (false)
+
+    #define CHECK_GL_ERRORS                                                                                 \
+        do {                                                                                                \
+            GLenum error_code = glGetError();                                                               \
+            if (error_code == GL_NO_ERROR) {                                                                \
+                break;                                                                                      \
+            }                                                                                               \
+                                                                                                            \
+            std::string error;                                                                              \
+            switch (error_code) {                                                                           \
+                case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;                       \
+                case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;                      \
+                case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;                  \
+                case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;                     \
+                case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;                    \
+                case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;                      \
+                case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;      \
+                default:                               error = "UNKNOWN"; break;                            \
+            }                                                                                               \
+                                                                                                            \
+            GRE_LOG_WARNING("GL error with name \"" << error << "\"");                                      \
+        } while (false)
 
 #else
 
     #define GRE_LOG_WARNING(stream)
     #define GRE_CHECK(condition, stream)
+    #define CHECK_GL_ERRORS
 
 #endif
 }  // namespace gre
@@ -114,4 +142,7 @@ namespace gre {
     void hash_combine(size_t& hash, const T& value, const Hasher& hasher = Hasher()) {
         hash ^= hasher(value) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
     }
+
+    // GLEW initialization
+    bool glew_is_ok() noexcept;
 }  // namespace gre

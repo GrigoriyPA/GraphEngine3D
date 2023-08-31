@@ -265,11 +265,10 @@ namespace gre {
     }
 
     Matrix4x4 Matrix4x4::rotation_matrix(const Quaternion& rotation_quaternion) noexcept {
+        Vec3 axis = rotation_quaternion.get_imaginary();
         GRE_CHECK(axis.length() <= 1.0, "quaternion does not represent rotation");
 
-        Vec3 axis = rotation_quaternion.get_imaginary();
         double angle = 2.0 * atan2(axis.length(), rotation_quaternion.x);
-
         return rotation_matrix(axis, angle);
     }
 

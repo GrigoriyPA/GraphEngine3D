@@ -427,27 +427,27 @@ namespace gre {
 			return kernel_;
 		}
 
-		ObjectDesc get_check_object(size_t camera_id, Vec3& intersect_point) {
+		ObjectDescription get_check_object(size_t camera_id, Vec3& intersect_point) {
 #ifdef _DEBUG
 			if (!cameras.contains(camera_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
 #endif // _DEBUG
 
-			ObjectDesc result = cameras.get_check_object(camera_id, intersect_point);
+			ObjectDescription result = cameras.get_check_object(camera_id, intersect_point);
 
 			result.exist = result.exist && objects.contains(result.object_id) && objects[result.object_id].models.contains_memory(result.model_id);
 			return result;
 		}
 
-		ObjectDesc get_check_object(size_t camera_id) {
+		ObjectDescription get_check_object(size_t camera_id) {
 #ifdef _DEBUG
 			if (!cameras.contains(camera_id)) {
 				throw GreOutOfRange(__FILE__, __LINE__, "get_check_object, invalid camera id.\n\n");
 			}
 #endif // _DEBUG
 
-			ObjectDesc result = cameras.get_check_object(camera_id);
+			ObjectDescription result = cameras.get_check_object(camera_id);
 
 			result.exist = result.exist && objects.contains(result.object_id) && objects[result.object_id].models.contains_memory(result.model_id);
 			return result;

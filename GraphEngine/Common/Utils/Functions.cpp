@@ -1,6 +1,11 @@
 #include "Functions.hpp"
 
 
+namespace {
+    bool GLEW_IS_OK = false;
+}  // anonymous namespace
+
+
 // Exceptions
 namespace gre {
     GreDomainError::GreDomainError(const char* filename, const char* function, uint32_t line, const std::string & message)
@@ -51,7 +56,6 @@ namespace gre {
         return left < right || equality(left, right);
     }
 
-
     // Work with strings
     std::vector<std::string> split(const std::string& str, std::function<bool(char)> pred) {
         std::vector<std::string> split_str(1);
@@ -68,5 +72,11 @@ namespace gre {
             split_str.pop_back();
         }
         return split_str;
+    }
+
+    // GLEW initialization
+    bool glew_is_ok() noexcept {
+        glewExperimental = GL_TRUE;
+        return GLEW_IS_OK = GLEW_IS_OK ? true : glewInit() == GLEW_OK;
     }
 }  // namespace gre

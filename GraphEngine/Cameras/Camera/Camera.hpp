@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../GraphicClasses/graphic_classes.h"
+#include "../../GraphicClasses/graphic_classes.h"
 
 
 namespace gre {
