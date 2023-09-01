@@ -95,7 +95,7 @@ namespace gre {
             }                                                                                               \
         } while (false)
 
-    #define CHECK_GL_ERRORS                                                                                 \
+    #define GRE_CHECK_GL_ERRORS                                                                             \
         do {                                                                                                \
             GLenum error_code = glGetError();                                                               \
             if (error_code == GL_NO_ERROR) {                                                                \
@@ -121,7 +121,7 @@ namespace gre {
 
     #define GRE_LOG_WARNING(stream)
     #define GRE_CHECK(condition, stream)
-    #define CHECK_GL_ERRORS
+    #define GRE_CHECK_GL_ERRORS
 
 #endif
 }  // namespace gre

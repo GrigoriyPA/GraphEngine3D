@@ -1,4 +1,4 @@
 #pragma once
 
 #include "Kernel/Kernel.hpp"
-#include "Texture.h"
+#include "Texture/Texture.hpp"

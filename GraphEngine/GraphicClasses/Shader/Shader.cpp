@@ -24,7 +24,7 @@ namespace gre {
 		glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
 		GRE_ENSURE(success == GL_TRUE, GreRuntimeError, "compilation failed, description --/\n" << load_shader_info_log(vertex_shader));
 		
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 		return vertex_shader;
 	}
 
@@ -38,7 +38,7 @@ namespace gre {
 		glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
 		GRE_ENSURE(success == GL_TRUE, GreRuntimeError, "compilation failed, description --/\n" << load_shader_info_log(fragment_shader));
 		
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 		return fragment_shader;
 	}
 
@@ -57,7 +57,7 @@ namespace gre {
 
 		glDeleteShader(vertex_shader);
 		glDeleteShader(fragment_shader);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 		return program;
 	}
 
@@ -93,7 +93,7 @@ namespace gre {
 		GLchar* info_log = new GLchar[info_log_size];
 		glGetShaderInfoLog(shader, info_log_size, NULL, info_log);
 
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 
 		std::string result(info_log);
 		delete[] info_log;
@@ -107,7 +107,7 @@ namespace gre {
 		GLchar* info_log = new GLchar[info_log_size];
 		glGetProgramInfoLog(program, info_log_size, NULL, info_log);
 
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 
 		std::string result(info_log);
 		delete[] info_log;
@@ -163,157 +163,157 @@ namespace gre {
 	void Shader::set_uniform_f(const GLchar* uniform_name, GLfloat v0) const {
 		use();
 		glUniform1f(get_uniform_location(uniform_name), v0);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1) const {
 		use();
 		glUniform2f(get_uniform_location(uniform_name), v0, v1);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_f(const GLchar* uniform_name, const Vec2& v) const {
 		use();
 		glUniform2f(get_uniform_location(uniform_name), static_cast<GLfloat>(v.x), static_cast<GLfloat>(v.y));
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2) const {
 		use();
 		glUniform3f(get_uniform_location(uniform_name), v0, v1, v2);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_f(const GLchar* uniform_name, const Vec3& v) const {
 		use();
 		glUniform3f(get_uniform_location(uniform_name), static_cast<GLfloat>(v.x), static_cast<GLfloat>(v.y), static_cast<GLfloat>(v.z));
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_f(const GLchar* uniform_name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) const {
 		use();
 		glUniform4f(get_uniform_location(uniform_name), v0, v1, v2, v3);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_i(const GLchar* uniform_name, GLint v0) const {
 		use();
 		glUniform1i(get_uniform_location(uniform_name), v0);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1) const {
 		use();
 		glUniform2i(get_uniform_location(uniform_name), v0, v1);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1, GLint v2) const {
 		use();
 		glUniform3i(get_uniform_location(uniform_name), v0, v1, v2);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_i(const GLchar* uniform_name, GLint v0, GLint v1, GLint v2, GLint v3) const {
 		use();
 		glUniform4i(get_uniform_location(uniform_name), v0, v1, v2, v3);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_ui(const GLchar* uniform_name, GLuint v0) const {
 		use();
 		glUniform1ui(get_uniform_location(uniform_name), v0);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1) const {
 		use();
 		glUniform2ui(get_uniform_location(uniform_name), v0, v1);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1, GLuint v2) const {
 		use();
 		glUniform3ui(get_uniform_location(uniform_name), v0, v1, v2);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_ui(const GLchar* uniform_name, GLuint v0, GLuint v1, GLuint v2, GLuint v3) const {
 		use();
 		glUniform4ui(get_uniform_location(uniform_name), v0, v1, v2, v3);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_1fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
 		use();
 		glUniform1fv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_2fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
 		use();
 		glUniform2fv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_3fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
 		use();
 		glUniform3fv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_4fv(const GLchar* uniform_name, GLsizei count, const GLfloat* value) const {
 		use();
 		glUniform4fv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_1iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
 		use();
 		glUniform1iv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_2iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
 		use();
 		glUniform2iv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_3iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
 		use();
 		glUniform3iv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_4iv(const GLchar* uniform_name, GLsizei count, const GLint* value) const {
 		use();
 		glUniform4iv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_1uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
 		use();
 		glUniform1uiv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_2uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
 		use();
 		glUniform2uiv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_3uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
 		use();
 		glUniform3uiv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_4uiv(const GLchar* uniform_name, GLsizei count, const GLuint* value) const {
 		use();
 		glUniform4uiv(get_uniform_location(uniform_name), count, value);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_matrix(const GLchar* uniform_name, GLsizei count, const GLfloat* value, size_t height, size_t width, GLboolean transpose) const {
@@ -371,13 +371,13 @@ namespace gre {
 			GRE_ENSURE(false, GreInvalidArgument, "invalid matrix size");
 			break;
 		}
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	void Shader::set_uniform_matrix(const GLchar* uniform_name, const Matrix4x4& matrix, GLboolean transpose) const {
 		use();
 		glUniformMatrix4fv(get_uniform_location(uniform_name), 1, transpose, &std::vector<GLfloat>(matrix)[0]);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	std::string Shader::get_value_vert(const std::string& variable_name) const {
@@ -390,7 +390,7 @@ namespace gre {
 
 	GLint Shader::get_uniform_location(const GLchar* uniform_name) const {
 		GLint uniform_location = glGetUniformLocation(program_id_, uniform_name);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 		return uniform_location;
 	}
 
@@ -409,7 +409,7 @@ namespace gre {
 
 	void Shader::use() const {
 		glUseProgram(program_id_);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 	}
 
 	bool Shader::validate_program(std::string& validate_status_description) const {
@@ -418,7 +418,7 @@ namespace gre {
 		GLint validate_status;
 		glGetProgramiv(program_id_, GL_VALIDATE_STATUS, &validate_status);
 
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 
 		if (validate_status == GL_TRUE) {
 			validate_status_description = "Validate status: success\n\n";
@@ -435,7 +435,7 @@ namespace gre {
 		GLint validate_status;
 		glGetProgramiv(program_id_, GL_VALIDATE_STATUS, &validate_status);
 
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 
 		return validate_status == GL_TRUE;
 	}
@@ -467,7 +467,7 @@ namespace gre {
 		fragment_shader_code_ = nullptr;
 
 		glDeleteProgram(program_id_);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 
 		program_id_ = 0;
 	}
@@ -479,7 +479,7 @@ namespace gre {
 	GLint Shader::get_current_program() {
 		GLint result = 0;
 		glGetIntegerv(GL_CURRENT_PROGRAM, &result);
-		CHECK_GL_ERRORS;
+		GRE_CHECK_GL_ERRORS;
 		return result;
 	}
 }  // namespace gre
