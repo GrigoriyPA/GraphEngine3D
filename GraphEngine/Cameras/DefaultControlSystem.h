@@ -39,7 +39,7 @@ namespace gre {
             case sf::Event::MouseMoved:
                 if (active_state_ == 2) {
                     camera.rotate(camera.get_vertical(), (event.mouseMove.x - window->getSize().x / 2.0) * sensitivity);
-                    camera.rotate(camera.get_horizont(), (event.mouseMove.y - window->getSize().y / 2.0) * sensitivity);
+                    camera.rotate(camera.get_horizon(), (event.mouseMove.y - window->getSize().y / 2.0) * sensitivity);
                     sf::Mouse::setPosition(sf::Vector2i(window->getSize().x / 2 + window->getPosition().x, window->getSize().y / 2 + window->getPosition().y));
                 } else if (active_state_ == 1) {
                     active_state_ = 2;
@@ -67,10 +67,10 @@ namespace gre {
                 delta_time *= speed_delt;
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-                camera.position += speed * delta_time * camera.get_horizont();
+                camera.position += speed * delta_time * camera.get_horizon();
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-                camera.position -= speed * delta_time * camera.get_horizont();
+                camera.position -= speed * delta_time * camera.get_horizon();
             }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
                 camera.position += speed * delta_time * camera.get_direction();
