@@ -25,14 +25,7 @@ namespace gre {
 			swap(other);
 		}
 
-		AssociativeStorage<ValueType>& operator=(const AssociativeStorage<ValueType>& other)& {
-			AssociativeStorage<ValueType> object(other);
-			swap(object);
-			return *this;
-		}
-
-		AssociativeStorage<ValueType>& operator=(AssociativeStorage<ValueType>&& other)& noexcept {
-			deallocate();
+		AssociativeStorage<ValueType>& operator=(AssociativeStorage<ValueType> other)& {
 			swap(other);
 			return *this;
 		}
@@ -41,9 +34,6 @@ namespace gre {
 			values_index_.swap(other.values_index_);
 			free_value_id_.swap(other.free_value_id_);
 			values_.swap(other.values_);
-		}
-
-		virtual void deallocate() noexcept {
 		}
 
 	public:
@@ -140,7 +130,6 @@ namespace gre {
 		}
 
 		virtual ~AssociativeStorage() {
-			deallocate();
 		}
 	};
 }  // namespace gre

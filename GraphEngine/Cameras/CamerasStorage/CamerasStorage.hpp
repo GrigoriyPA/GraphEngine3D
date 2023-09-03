@@ -33,6 +33,10 @@ namespace gre {
 
 		CamerasStorage(const CamerasStorage& other);
 
+		CamerasStorage(CamerasStorage&& other) noexcept;
+
+		CamerasStorage& operator=(CamerasStorage other)&;
+
 		// Fetching check object internal
 		ObjectDescription get_check_object(size_t id, Vec3& intersect_point);
 
@@ -46,7 +50,7 @@ namespace gre {
 		// Private functions
 		void swap(CamerasStorage& other) noexcept;
 
-		void deallocate() noexcept override;
+		void deallocate() noexcept;
 
 		// Uploading into shader
 
@@ -66,5 +70,7 @@ namespace gre {
 		void compute_event(const sf::Event& event);
 
 		void update();
+
+		~CamerasStorage() override;
 	};
 }  // namespace gre

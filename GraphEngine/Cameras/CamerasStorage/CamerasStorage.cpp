@@ -33,6 +33,15 @@ namespace gre {
 		GRE_CHECK_GL_ERRORS;
 	}
 
+	CamerasStorage::CamerasStorage(CamerasStorage&& other) noexcept {
+		swap(other);
+	}
+
+	CamerasStorage& CamerasStorage::operator=(CamerasStorage other)& {
+		swap(other);
+		return *this;
+	}
+
 	// Getters
 	size_t CamerasStorage::get_max_count_cameras() const noexcept {
 		return max_count_cameras_;
@@ -186,5 +195,9 @@ namespace gre {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 		GRE_CHECK_GL_ERRORS;
+	}
+
+	CamerasStorage::~CamerasStorage() {
+		deallocate();
 	}
 }  // namespace gre
