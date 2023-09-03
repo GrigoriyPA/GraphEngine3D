@@ -8,18 +8,6 @@ namespace gre {
 	}
 
 	CamerasStorage::CamerasStorage(const CamerasStorage& other) : TBase(other) {
-		if (other.max_count_cameras_ > 0) {
-			intersect_id_ = new GLint[2 * other.max_count_cameras_];
-			intersect_dist_ = new GLfloat[other.max_count_cameras_];
-			init_int_ = new GLint[2 * other.max_count_cameras_];
-			init_float_ = new GLfloat[other.max_count_cameras_];
-			for (size_t i = 0; i < other.max_count_cameras_; ++i) {
-				init_int_[2 * i] = -1;
-				init_int_[2 * i + 1] = -1;
-				init_float_[i] = 1;
-			}
-		}
-
 		create_shader_storage_buffer(other.max_count_cameras_, *other.shader_);
 
 		glBindBuffer(GL_COPY_READ_BUFFER, other.shader_storage_buffer_);
@@ -109,8 +97,8 @@ namespace gre {
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
 
-		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint) * max_count_cameras_, intersect_id_);
-		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, intersect_dist_);
+		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint) * max_count_cameras_, intersect_id_.get());
+		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, intersect_dist_.get());
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -124,8 +112,8 @@ namespace gre {
 		shader_->use();
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
 
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint) * max_count_cameras_, init_int_);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, init_float_);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, 2 * sizeof(GLint) * max_count_cameras_, init_int_.get());
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, init_float_.get());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -139,28 +127,20 @@ namespace gre {
 
 		std::swap(shader_storage_buffer_, other.shader_storage_buffer_);
 		std::swap(is_actual_, other.is_actual_);
-		std::swap(intersect_id_, other.intersect_id_);
-		std::swap(intersect_dist_, other.intersect_dist_);
-		std::swap(init_int_, other.init_int_);
-		std::swap(init_float_, other.init_float_);
-		std::swap(shader_, other.shader_);
 		std::swap(max_count_cameras_, other.max_count_cameras_);
+		std::swap(shader_, other.shader_);
+
+		intersect_id_.swap(other.intersect_id_);
+		intersect_dist_.swap(other.intersect_dist_);
+		init_int_.swap(other.init_int_);
+		init_float_.swap(other.init_float_);
 	}
 
 	void CamerasStorage::deallocate() noexcept {
 		glDeleteBuffers(1, &shader_storage_buffer_);
 		GRE_CHECK_GL_ERRORS;
 
-		delete[] intersect_id_;
-		delete[] intersect_dist_;
-		delete[] init_int_;
-		delete[] init_float_;
-
 		shader_storage_buffer_ = 0;
-		intersect_id_ = nullptr;
-		intersect_dist_ = nullptr;
-		init_int_ = nullptr;
-		init_float_ = nullptr;
 	}
 
 	// Uploading into shader
@@ -170,26 +150,24 @@ namespace gre {
 		shader_ = &shader;
 		max_count_cameras_ = max_count_cameras;
 
-		delete[] intersect_id_;
-		delete[] intersect_dist_;
-		delete[] init_int_;
-		delete[] init_float_;
-		intersect_id_ = new GLint[2 * max_count_cameras_];
-		intersect_dist_ = new GLfloat[max_count_cameras_];
-		init_int_ = new GLint[2 * max_count_cameras_];
-		init_float_ = new GLfloat[max_count_cameras_];
-		for (size_t i = 0; i < max_count_cameras_; ++i) {
-			init_int_[2 * i] = -1;
-			init_int_[2 * i + 1] = -1;
-			init_float_[i] = 1;
+		if (max_count_cameras > 0) {
+			init_int_ = std::make_unique<GLint[]>(2 * max_count_cameras);
+			intersect_id_ = std::make_unique<GLint[]>(2 * max_count_cameras);
+			init_float_ = std::make_unique<GLfloat[]>(max_count_cameras);
+			intersect_dist_ = std::make_unique<GLfloat[]>(max_count_cameras);
+			for (size_t i = 0; i < max_count_cameras; ++i) {
+				init_int_[2 * i] = -1;
+				init_int_[2 * i + 1] = -1;
+				init_float_[i] = 1;
+			}
 		}
 
 		shader.use();
 		glGenBuffers(1, &shader_storage_buffer_);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, shader_storage_buffer_);
 
-		glBufferData(GL_SHADER_STORAGE_BUFFER, (2 * sizeof(GLint) + sizeof(GLfloat)) * max_count_cameras_, init_int_, GL_DYNAMIC_READ);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, init_float_);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, (2 * sizeof(GLint) + sizeof(GLfloat)) * max_count_cameras_, init_int_.get(), GL_DYNAMIC_READ);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLint) * max_count_cameras_, sizeof(GLfloat) * max_count_cameras_, init_float_.get());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, shader_storage_buffer_);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

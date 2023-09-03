@@ -18,15 +18,14 @@ namespace gre {
 
 		GLuint shader_storage_buffer_ = 0;
 
-		Shader* shader_ = nullptr;
-		size_t max_count_cameras_ = 0;
-
 		bool is_actual_ = false;
-		GLint* intersect_id_ = nullptr;
-		GLfloat* intersect_dist_ = nullptr;
+		size_t max_count_cameras_ = 0;
+		Shader* shader_ = nullptr;
 
-		GLint* init_int_ = nullptr;
-		GLfloat* init_float_ = nullptr;
+		std::unique_ptr<GLint[]> init_int_;
+		std::unique_ptr<GLint[]> intersect_id_;
+		std::unique_ptr<GLfloat[]> init_float_;
+		std::unique_ptr<GLfloat[]> intersect_dist_;
 
 		// Constructors
 		CamerasStorage();
