@@ -4,8 +4,8 @@
 // Vec2
 namespace gre {
     // Constructors
-	Vec2::Vec2() noexcept {
-	}
+    Vec2::Vec2() noexcept {
+    }
 
     Vec2::Vec2(double value) noexcept
         : x(value)
