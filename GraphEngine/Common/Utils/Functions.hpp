@@ -71,7 +71,17 @@ namespace gre {
 #define GRE_WARNING_LOG_ENABLED
 
     // GRE log functions
-#define GRE_LOG_ERROR(stream) (gre::LogManager::GetInstance()->log_stream() << "ERROR in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
+#define GRE_LOG_MESSAGE(stream, type)                                                                       \
+    do {                                                                                                    \
+        auto log_stream(std::move(gre::LogManager::GetInstance()->log_stream()));                           \
+        log_stream << type << " in file: " << __FILE__;                                                     \
+        log_stream << ", function: " << __func__;                                                           \
+        log_stream << ", line: " << __LINE__;                                                               \
+        log_stream << "\n" << stream << "\n\n";                                                             \
+        log_stream.close();                                                                                 \
+    } while (false)  
+
+#define GRE_LOG_ERROR(stream) GRE_LOG_MESSAGE(stream, "ERROR")
 
 #define GRE_ENSURE(condition, error_type, stream)                                                           \
     do {                                                                                                    \
@@ -86,7 +96,7 @@ namespace gre {
 
 #ifdef GRE_WARNING_LOG_ENABLED
 
-    #define GRE_LOG_WARNING(stream) (gre::LogManager::GetInstance()->log_stream() << "WARNING in file: " << __FILE__ << ", function: " << __func__ << ", line: " << __LINE__ << "\n" << stream << "\n\n");
+    #define GRE_LOG_WARNING(stream) GRE_LOG_MESSAGE(stream, "WARNING")
     
     #define GRE_CHECK(condition, stream)                                                                    \
         do {                                                                                                \

@@ -1,4 +1,4 @@
 #pragma once
 
-#include "CamerasStorage.h"
+#include "CamerasStorage/CamerasStorage.hpp"
 #include "DefaultControlSystem.h"

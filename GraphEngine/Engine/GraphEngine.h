@@ -289,13 +289,13 @@ namespace gre {
 
 			set_uniforms();
 
-			cameras.insert(Camera(window, &default_control_system));
-
 			init_gl();
 			lights.create_depth_map_frame_buffer(std::stoi(main_shader_.get_value_frag("NR_LIGHTS")));
 			cameras.create_shader_storage_buffer(std::stoi(main_shader_.get_value_frag("NR_CAMERAS")), main_shader_);
 			create_screen_vertex_array();
 			create_primary_frame_buffer();
+
+			cameras.insert(Camera(window, &default_control_system));
 
 #ifdef _DEBUG
 			if (!depth_shader_.validate_program() || !post_shader_.validate_program() || !main_shader_.validate_program()) {

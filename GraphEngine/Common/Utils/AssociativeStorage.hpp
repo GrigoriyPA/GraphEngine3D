@@ -37,7 +37,7 @@ namespace gre {
 			return *this;
 		}
 
-		virtual void swap(AssociativeStorage& other) noexcept {
+		void swap(AssociativeStorage& other) noexcept {
 			values_index_.swap(other.values_index_);
 			free_value_id_.swap(other.free_value_id_);
 			values_.swap(other.values_);
@@ -124,7 +124,7 @@ namespace gre {
 			values_.clear();
 		}
 
-		size_t insert(const ValueType& camera) {
+		virtual size_t insert(ValueType value) {
 			size_t free_value_id = values_index_.size();
 			if (free_value_id_.empty()) {
 				values_index_.push_back(values_.size());
@@ -135,7 +135,7 @@ namespace gre {
 				values_index_[free_value_id] = values_.size();
 			}
 
-			values_.push_back({ free_value_id, camera });
+			values_.push_back({ free_value_id, std::move(value) });
 			return free_value_id;
 		}
 

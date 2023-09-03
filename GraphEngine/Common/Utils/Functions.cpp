@@ -28,9 +28,8 @@ namespace gre {
 
 // MainLog
 namespace gre {
-    LogManager::LogManager()
-        : log_out_("gre_log.txt")
-    {}
+    LogManager::LogManager() {
+    }
 
     LogManager* LogManager::GetInstance() {
         if (log_manager_ == nullptr) {
@@ -40,6 +39,7 @@ namespace gre {
     }
 
     std::ofstream& LogManager::log_stream() noexcept {
+        log_out_.open("gre_log.txt");
         return log_out_;
     }
 }  // namespace gre
